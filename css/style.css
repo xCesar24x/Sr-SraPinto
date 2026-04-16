@@ -1,37 +1,516 @@
+/* ============================================
+   SISTEMA DE DISEÑO - Sr. & Sra. Pinto Hub
+   ============================================ */
+
 :root {
     --burgundy: #630C16;
     --pink: #E91350;
     --cream: #FDF5E6;
+    --white: #FFFFFF;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.1);
+    --shadow-md: 8px 8px 0px 0px rgba(99, 12, 22, 0.3);
+    --shadow-lg: 12px 12px 0px 0px rgba(233, 19, 80, 0.3);
+    --transition-smooth: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     background-color: var(--cream);
     font-family: 'Fredoka One', cursive;
     color: var(--burgundy);
+    line-height: 1.6;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
-/* Estilo de Botón "Pinto Pro" */
-.link-card {
-    background: white;
-    border: 4px solid var(--burgundy);
-    box-shadow: 8px 8px 0px 0px var(--burgundy);
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    overflow: visible;
+
+.bg-cream {
+    background-color: var(--cream);
 }
-.link-card:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: 12px 12px 0px 0px var(--pink);
-}
-.link-card:active {
-    transform: translate(4px, 4px);
-    box-shadow: 0px 0px 0px 0px var(--burgundy);
-}
-/* Decoración de fondo */
+
+/* ============================================
+   PATRÓN DE FONDO
+   ============================================ */
+
 .bg-pattern {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: -1;
-    opacity: 0.1;
-    background-image: url('../assets/images/avocado.png'); /* Usamos el aguacate como patrón suave */
-    background-size: 100px;
+    opacity: 0.05;
+    background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 35px, 
+        var(--burgundy) 35px, var(--burgundy) 70px);
+    pointer-events: none;
+}
+
+/* ============================================
+   SISTEMA DE MENÚ
+   ============================================ */
+
+.menu-btn {
+    background: var(--white);
+    border: 3px solid var(--burgundy);
+    color: var(--burgundy);
+    padding: 0.75rem 1.5rem;
+    font-weight: bold;
+    font-family: 'Fredoka One', cursive;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: var(--transition-smooth);
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.menu-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.menu-btn.active {
+    background: var(--pink);
+    color: var(--white);
+    box-shadow: var(--shadow-lg);
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .menu-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* ============================================
+   SISTEMA DE SECCIONES
+   ============================================ */
+
+.category-section {
+    display: none;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.category-section.active {
+    display: grid;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   TARJETAS DEL CATÁLOGO
+   ============================================ */
+
+.catalog-card {
+    background: var(--white);
+    border: 3px solid var(--burgundy);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.catalog-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+}
+
+.catalog-card:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.catalog-card:active {
+    transform: translate(2px, 2px);
+}
+
+.featured-card {
+    border: 4px solid var(--pink);
+}
+
+/* ============================================
+   TARJETAS DE REDES SOCIALES
+   ============================================ */
+
+.social-link-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1.5rem;
+    background: var(--white);
+    border: 3px solid var(--burgundy);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--burgundy);
+    transition: var(--transition-smooth);
+}
+
+.social-link-card:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.social-link-card.facebook {
+    border-left: 8px solid #1877F2;
+}
+
+.social-link-card.facebook:hover {
+    background: rgba(24, 119, 242, 0.05);
+}
+
+.social-link-card.instagram {
+    border-left: 8px solid #E4405F;
+}
+
+.social-link-card.instagram:hover {
+    background: rgba(228, 64, 95, 0.05);
+}
+
+.social-link-card.whatsapp {
+    border-left: 8px solid #25D366;
+}
+
+.social-link-card.whatsapp:hover {
+    background: rgba(37, 211, 102, 0.05);
+}
+
+.social-link-card.tiktok {
+    border-left: 8px solid #000000;
+}
+
+.social-link-card.tiktok:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 0.75rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.facebook-icon {
+    background: #1877F2;
+}
+
+.instagram-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.whatsapp-icon {
+    background: #25D366;
+}
+
+.tiktok-icon {
+    background: #000000;
+}
+
+/* ============================================
+   TARJETAS DE PRODUCTOS
+   ============================================ */
+
+.product-card {
+    background: var(--white);
+    border: 3px solid var(--burgundy);
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.product-image {
+    height: 180px;
+    background: linear-gradient(135deg, rgba(233, 19, 80, 0.1) 0%, rgba(99, 12, 22, 0.05) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 3px solid var(--burgundy);
+}
+
+.image-placeholder {
+    font-size: 4rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.product-info {
+    padding: 1.5rem;
+}
+
+.product-info h5 {
+    color: var(--burgundy);
+    margin-bottom: 0.5rem;
+}
+
+.rating {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .product-image {
+        height: 140px;
+    }
+    .image-placeholder {
+        font-size: 3rem;
+    }
+}
+
+/* ============================================
+   TARJETAS DE CONTACTO
+   ============================================ */
+
+.contact-card {
+    background: var(--white);
+    border: 3px solid var(--burgundy);
+    border-radius: 1rem;
+    padding: 2rem;
+}
+
+.contact-info-card {
+    background: var(--white);
+    border: 3px solid var(--pink);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+input, textarea {
+    font-family: 'Fredoka One', cursive;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--burgundy);
+    opacity: 0.5;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--pink) !important;
+    background: rgba(233, 19, 80, 0.02);
+}
+
+button[type="submit"] {
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-md);
+    font-family: 'Fredoka One', cursive;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* ============================================
+   PERSONAJE FLOTANTE
+   ============================================ */
+
+.character-floating-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 4px solid var(--burgundy);
+    font-size: 2rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.character-floating-btn:hover {
+    transform: scale(1.1) rotate(10deg);
+    box-shadow: var(--shadow-lg);
+}
+
+.character-floating-btn:active {
+    transform: scale(0.95);
+}
+
+.speech-bubble {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: var(--white);
+    border: 2px solid var(--burgundy);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: bold;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+    box-shadow: var(--shadow-md);
+    animation: popIn 0.3s ease;
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    right: 15px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 0px solid transparent;
+    border-top: 10px solid var(--white);
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   ANIMACIONES DE ENTRADA
+   ============================================ */
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.character-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================
+   RESPONSIVE - MOBILE OPTIMIZADO
+   ============================================ */
+
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    .social-link-card {
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .icon-wrapper {
+        width: 50px;
+        height: 50px;
+    }
+
+    .icon-wrapper svg {
+        width: 24px !important;
+        height: 24px !important;
+    }
+
+    .character-floating-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+
+    .speech-bubble {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .contact-card {
+        padding: 1.5rem;
+    }
+
+    
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Scroll suave */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Dark mode support (opcional para futuro) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --cream: #1a1a1a;
+        --white: #2d2d2d;
+    }
 }
