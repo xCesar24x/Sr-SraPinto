@@ -134,53 +134,116 @@ const UIController = {
     },
     
     /**
-     * Setup del formulario de contacto
+     * Setup del formulario de contacto con validación robusta
      */
     setupFormHandling() {
         const contactForm = document.getElementById('contactForm');
-        if (contactForm) {
-            contactForm.addEventListener('submit', (e) => {
-                e.preventDefault();
+        if (!contactForm) return;
+        
+        // Validador de email
+        const validateEmail = (email) => {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        };
+        
+        // Limpiar errores en tiempo real
+        contactForm.querySelectorAll('input, textarea').forEach(field => {
+            field.addEventListener('input', function() {
+                const errorSpan = this.parentElement.querySelector('.error-message');
+                if (errorSpan) {
+                    errorSpan.classList.add('hidden');
+                    this.classList.remove('border-red-600');
+                }
+            });
+        });
+        
+        // Submit del formulario
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const nombre = contactForm.querySelector('#nombre');
+            const email = contactForm.querySelector('#email');
+            const mensaje = contactForm.querySelector('#mensaje');
+            let isValid = true;
+            
+            // Limpiar errores previos
+            contactForm.querySelectorAll('.error-message').forEach(err => {
+                err.classList.add('hidden');
+            });
+            
+            // Validar nombre
+            if (!nombre.value.trim() || nombre.value.trim().length < 2) {
+                nombre.parentElement.querySelector('.error-message').classList.remove('hidden');
+                nombre.classList.add('border-red-600');
+                isValid = false;
+            }
+            
+            // Validar email
+            if (!email.value.trim() || !validateEmail(email.value.trim())) {
+                email.parentElement.querySelector('.error-message').classList.remove('hidden');
+                email.classList.add('border-red-600');
+                isValid = false;
+            }
+            
+            // Validar mensaje
+            if (!mensaje.value.trim() || mensaje.value.trim().length < 5) {
+                mensaje.parentElement.querySelector('.error-message').classList.remove('hidden');
+                mensaje.classList.add('border-red-600');
+                isValid = false;
+            }
+            
+            if (isValid) {
+                // Animación de envío
+                const submitBtn = contactForm.querySelector('button[type="submit"]');
+                const successMsg = document.getElementById('successMessage');
+                const originalText = submitBtn.textContent;
                 
-                // Validación simple
-                const inputs = contactForm.querySelectorAll('input, textarea');
-                let isValid = true;
-                
-                inputs.forEach(input => {
-                    if (!input.value.trim()) {
-                        isValid = false;
-                        gsap.to(input, { 
-                            duration: 0.2,
-                            borderColor: '#E91350'
-                        });
-                    }
+                // Deshabilitar botón y mostrar estado
+                submitBtn.disabled = true;
+                gsap.to(submitBtn, {
+                    scale: 0.95,
+                    duration: 0.2
                 });
                 
-                if (isValid) {
-                    // Simulación de envío
-                    const submitBtn = contactForm.querySelector('button[type="submit"]');
-                    const originalText = submitBtn.textContent;
-                    
+                submitBtn.innerHTML = '<span class="inline-block animate-spin">⏳</span> Enviando...';
+                
+                // Simular envío (en producción, aquí iría un fetch a un servidor)
+                setTimeout(() => {
+                    submitBtn.textContent = '✅ ¡Enviado exitosamente!';
                     gsap.to(submitBtn, {
-                        scale: 0.95,
-                        duration: 0.2
+                        scale: 1,
+                        backgroundColor: '#25D366',
+                        duration: 0.3
                     });
                     
-                    submitBtn.textContent = '✓ Enviado!';
-                    submitBtn.disabled = true;
+                    // Mostrar mensaje de éxito
+                    gsap.to(successMsg, {
+                        opacity: 1,
+                        duration: 0.4,
+                        onStart: () => {
+                            successMsg.classList.remove('hidden');
+                        }
+                    });
                     
+                    // Resetear formulario después de 2.5s
                     setTimeout(() => {
                         contactForm.reset();
                         submitBtn.textContent = originalText;
                         submitBtn.disabled = false;
-                        gsap.to(submitBtn, {
-                            scale: 1,
-                            duration: 0.2
+                        gsap.to([submitBtn, successMsg], {
+                            opacity: 0,
+                            duration: 0.3,
+                            onComplete: () => {
+                                successMsg.classList.add('hidden');
+                                gsap.set(submitBtn, { 
+                                    backgroundColor: '',
+                                    opacity: 1
+                                });
+                            }
                         });
-                    }, 2000);
-                }
-            });
-        }
+                    }, 2500);
+                }, 1200);
+            }
+        });
     }
 };
 

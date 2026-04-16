@@ -280,11 +280,21 @@ body {
 .product-info h5 {
     color: var(--burgundy);
     margin-bottom: 0.5rem;
+    font-weight: 900;
+    font-size: 1.1rem;
+}
+
+.product-info p {
+    color: var(--burgundy);
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .rating {
     font-size: 0.875rem;
     margin-top: 0.5rem;
+    font-weight: 700;
+    color: #1f2937;
 }
 
 @media (max-width: 768px) {
@@ -305,6 +315,7 @@ body {
     border: 3px solid var(--burgundy);
     border-radius: 1rem;
     padding: 2rem;
+    box-shadow: var(--shadow-md);
 }
 
 .contact-info-card {
@@ -315,36 +326,85 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    box-shadow: var(--shadow-sm);
 }
 
-input, textarea {
+.form-group {
+    position: relative;
+}
+
+.form-group input, 
+.form-group textarea {
     font-family: 'Fredoka One', cursive;
+    color: var(--burgundy);
 }
 
 input::placeholder, textarea::placeholder {
     color: var(--burgundy);
-    opacity: 0.5;
+    opacity: 0.6;
+    font-weight: 500;
 }
 
 input:focus, textarea:focus {
     outline: none;
     border-color: var(--pink) !important;
     background: rgba(233, 19, 80, 0.02);
+    box-shadow: 0 0 0 4px rgba(233, 19, 80, 0.1);
+}
+
+input:invalid:not(:placeholder-shown),
+textarea:invalid:not(:placeholder-shown) {
+    border-color: #dc2626 !important;
+    background: rgba(220, 38, 38, 0.05);
+}
+
+.error-message {
+    display: block;
+    color: #dc2626;
+    font-weight: bold;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.error-message:not(.hidden) {
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 button[type="submit"] {
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     box-shadow: var(--shadow-md);
     font-family: 'Fredoka One', cursive;
+    border: none;
+    cursor: pointer;
+    font-weight: 900;
+    letter-spacing: 1px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-button[type="submit"]:hover {
-    transform: translateY(-2px);
+button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.02);
     box-shadow: var(--shadow-lg);
+    filter: brightness(0.95);
 }
 
-button[type="submit"]:active {
-    transform: translateY(0);
+button[type="submit"]:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 /* ============================================
@@ -479,6 +539,33 @@ button[type="submit"]:active {
 }
 
 /* ============================================
+   SYSTEM DE COLORES Y TIPOGRAFÍA - ACCESIBILIDAD
+   ============================================ */
+
+.contact-info-card h5 {
+    color: var(--burgundy);
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+.contact-info-card p {
+    color: var(--burgundy);
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+/* Spinner de carga para formulario */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+/* ============================================
    RESPONSIVE - MOBILE OPTIMIZADO
    ============================================ */
 
@@ -497,7 +584,7 @@ button[type="submit"]:active {
         height: 50px;
     }
 
-    .icon-wrapper svg {
+    .social-link-card h4 {\n    font-weight: 900;\n    text-decoration: none;\n    color: var(--burgundy);\n}\n\n.social-link-card p {\n    color: var(--burgundy);\n    font-weight: 600;\n    opacity: 0.85;\n}
         width: 24px !important;
         height: 24px !important;
     }
