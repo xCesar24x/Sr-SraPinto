@@ -444,6 +444,35 @@ button[type="submit"]:active {
     }
 }
 
+/* 🧠 ANIMACIONES DE NEUROMARKETING */
+@keyframes pulse-glow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(233, 19, 80, 0.7);
+    }
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 15px rgba(233, 19, 80, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(233, 19, 80, 0);
+    }
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 2s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes bounce-slow {
+    0%, 100% { transform: translateY(-10%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+    50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+}
+
+.animate-bounce-slow {
+    animation: bounce-slow 3s infinite;
+}
+
 .character-icon {
     font-size: 2rem;
     margin-bottom: 0.5rem;

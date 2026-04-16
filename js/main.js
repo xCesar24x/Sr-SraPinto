@@ -282,6 +282,16 @@ const AnimationEngine = {
             duration: 3,
             ease: 'sine.inOut'
         });
+
+        // 🧠 NEUROMARKETING: Efecto latido (heartbeat) sutil en el botón CTA principal
+        // Atrae el ojo periférico del usuario
+        gsap.to('.cta-pulse', {
+            scale: 1.03,
+            repeat: -1,
+            yoyo: true,
+            duration: 1.5,
+            ease: 'power1.inOut'
+        });
     },
     
     /**
@@ -421,7 +431,3 @@ const AppInitializer = {
 // PUNTO DE ENTRADA
 // ========================================
 AppInitializer.initialize();
-        const moveY = (e.clientY - window.innerHeight/2) * 0.01;
-        gsap.to(".bg-pattern", { x: moveX, y: moveY, duration: 2 });
-    });
-});
