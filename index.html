@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sr. & Sra. Pinto | El Sabor de ser Tico</title>
+    
+    <!-- SEO Senior -->
+    <meta name="description" content="¡El puritico sabor de ser tico! Encontrá todos nuestros enlaces aquí.">
+    <meta property="og:image" content="assets/images/logo2.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="flex flex-col items-center min-h-screen p-6">
+
+    <div class="bg-pattern"></div>
+
+    <!-- HEADER / LOGO -->
+    <header class="w-full max-w-sm mt-8 mb-4 text-center">
+        <img src="assets/images/logo2.png" id="main-logo" alt="Sr & Sra Pinto" class="w-full h-auto drop-shadow-lg">
+        <img src="assets/images/sloggan.png" id="slogan" alt="Sabor Tico" class="w-48 mx-auto mt-4 opacity-0">
+    </header>
+
+    <!-- LINKS CONTAINER -->
+    <main class="w-full max-w-sm space-y-8 mt-10 z-10">
+        
+        <!-- LINK 1: FACEBOOK (Con la Empanada) -->
+        <a href="https://www.facebook.com/people/Sr-y-Sra-Pinto/61577654404250/" class="link-card flex items-center p-4 w-full group">
+            <div class="w-12 h-12 flex-shrink-0 mr-4">
+                <img src="assets/images/empanada.png" class="character-mini group-hover:rotate-12 transition-transform">
+            </div>
+            <span class="text-xl uppercase tracking-tight">¡Seguinos en Facebook!</span>
+        </a>
+
+        <!-- LINK 2: INSTAGRAM (Con el Huevo Frito) -->
+        <a href="https://www.instagram.com/srysrapinto1" class="link-card flex items-center p-4 w-full group">
+            <div class="w-12 h-12 flex-shrink-0 mr-4">
+                <img src="assets/images/huevofrito.png" class="character-mini group-hover:scale-110 transition-transform">
+            </div>
+            <span class="text-xl uppercase tracking-tight">Antojate en Instagram</span>
+        </a>
+
+        <!-- LINK 3: WHATSAPP (Con el Aguacate) -->
+        <a href="#" class="link-card flex items-center p-4 w-full group border-[#25D366]!">
+            <div class="w-12 h-12 flex-shrink-0 mr-4">
+                <img src="assets/images/avocado.png" class="character-mini group-hover:-translate-y-2 transition-transform">
+            </div>
+            <span class="text-xl uppercase tracking-tight">Hacé tu pedido aquí</span>
+        </a>
+
+    </main>
+
+    <!-- PERSONAJE FLOTANTE GRANDE -->
+    <div class="mt-16 relative">
+        <img src="assets/images/avocado.png" id="big-character" class="w-32 h-auto cursor-pointer">
+        <div id="speech-bubble" class="absolute -top-12 -right-16 bg-white border-2 border-[var(--burgundy)] p-2 rounded-xl text-xs font-bold opacity-0 shadow-sm">
+            ¡Pura Vida Mae! 🇨🇷
+        </div>
+    </div>
+
+    <footer class="mt-auto py-8 text-[var(--burgundy)] text-[10px] uppercase tracking-widest opacity-40">
+        Sr. & Sra. Pinto © 2024 - Software by Senior Hub
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
