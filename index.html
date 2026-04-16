@@ -40,37 +40,33 @@
             border-radius: 10px; 
         }
 
+        /* ─── GRADIENTE DE FONDO ATMOSFÉRICO NATURAL ─── */
         body {
             font-family: 'Montserrat', sans-serif;
-            background-color: var(--negro);
             color: var(--blanco);
             display: flex;
             justify-content: center;
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
+            background: linear-gradient(-45deg, var(--negro), var(--carbon), #2b0b10);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
         }
 
-        /* ─── CANVAS PARTÍCULAS (EFECTO BRASAS POTENCIADO 3X) ─── */
-        #particles-canvas {
-            position: fixed;
-            top: 0; 
-            left: 0;
-            width: 100%; 
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        /* ─── GRADIENTE DE FONDO ATMOSFÉRICO ─── */
+        /* CAPA DE TEXTURA ORGÁNICA (NOISE) PARA DAR SENTIMIENTO NATURAL/PREMIUM */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background:
-                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,42,0,0.3) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 40% at 80% 90%, rgba(255,140,0,0.15) 0%, transparent 60%),
-                radial-gradient(circle at 20% 80%, rgba(253,185,19,0.05) 0%, transparent 50%);
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+            opacity: 0.05;
             z-index: 0;
             pointer-events: none;
         }
@@ -135,14 +131,15 @@
             position: relative;
             width: 180px;
             height: 180px;
-            background-color: white;
+            background-color: var(--blanco);
             border-radius: 50%;
             border: 6px solid var(--mostaza);
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 40px rgba(253,185,19,0.4), inset 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 0 40px rgba(253,185,19,0.2), inset 0 0 20px rgba(0,0,0,0.1);
+            animation: fadeDown 0.8s ease both;
         }
 
         .logo-wrapper img {
@@ -156,121 +153,175 @@
             font-family: 'Bangers', cursive;
             font-size: 3.2rem;
             letter-spacing: 2px;
-            background: linear-gradient(135deg, var(--mostaza) 0%, var(--naranja) 50%, var(--rojo) 100%);
+            background: linear-gradient(135deg, var(--mostaza) 0%, var(--blanco) 50%, var(--rojo) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-top: -20px;
-            filter: drop-shadow(0 4px 15px rgba(255,42,0,0.4));
+            filter: drop-shadow(0 4px 15px rgba(233,19,80,0.4));
             line-height: 1;
             text-align: center;
+            animation: fadeDown 0.8s 0.1s ease both;
         }
 
-        /* ─── SLIDER PROFESIONAL ─── */
-        .slider-wrapper {
+        /* ─── MENÚ INTERACTIVO PINTO ─── */
+        .menu-wrapper {
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             animation: fadeUp 0.8s 0.2s ease both;
         }
 
-        .slider-container {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            border-radius: 28px;
-            overflow: hidden;
-            border: 2px solid rgba(253,185,19,0.3);
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
-            background: #000;
-        }
-
-        .slide {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s ease;
-            transform: scale(1.05);
-        }
-
-        .slide.active { 
-            opacity: 1; 
-            transform: scale(1);
-        }
-
-        .slide img, .slide video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* VIGNETTE OVERLAY */
-        .slider-container::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 40%, transparent 70%, rgba(0,0,0,0.4) 100%);
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .slide-label {
-            position: absolute;
-            bottom: 20px; 
-            left: 20px;
-            z-index: 5;
+        .menu-title {
+            text-align: center;
             font-family: 'Bebas Neue', cursive;
-            font-size: 1.8rem;
+            font-size: 2rem;
             letter-spacing: 2px;
-            color: white;
-            text-shadow: 0 3px 15px rgba(0,0,0,1);
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.5s 0.3s ease;
+            margin-bottom: 5px;
+            color: var(--mostaza);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
 
-        .slide.active .slide-label {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* CONTROLES */
-        .slider-btn {
-            position: absolute;
-            top: 50%; 
-            transform: translateY(-50%);
-            z-index: 10; 
-            width: 45px; 
-            height: 45px;
-            border-radius: 50%; 
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white; 
-            cursor: pointer;
-            display: flex; 
-            align-items: center; 
+        .menu-tabs {
+            width: 100%;
+            display: flex;
+            gap: 10px;
             justify-content: center;
-            opacity: 0; 
-            transition: 0.3s;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(253,185,19,0.3);
+            color: var(--mostaza);
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-family: 'Bangers', cursive;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
             backdrop-filter: blur(5px);
         }
 
-        .slider-container:hover .slider-btn { opacity: 1; }
-        .btn-prev { left: 15px; } .btn-next { right: 15px; }
-
-        /* BARRA DE PROGRESO SLIDER */
-        .slider-progress-container {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            z-index: 10;
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--rojo), var(--mostaza));
+            color: var(--negro);
+            border-color: transparent;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(233,19,80,0.4);
         }
 
-        .slider-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--rojo), var(--mostaza));
-            width: 0%;
-            box-shadow: 0 0 10px var(--rojo);
+        .menu-content {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            animation: fadeIn 0.4s ease both;
+        }
+
+        .menu-item-card {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(253,185,19,0.4);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .menu-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, var(--carbon), var(--negro));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .menu-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-info h4 {
+            font-family: 'Bangers', cursive;
+            font-size: 1.3rem;
+            color: var(--mostaza);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .menu-info p {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.3;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .price-row span {
+            font-weight: 900;
+            color: var(--blanco);
+            font-size: 1.2rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .btn-pedir {
+            background: linear-gradient(135deg, #075E54, #25D366);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(37,211,102,0.3);
+        }
+
+        .btn-pedir:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(37,211,102,0.5);
+        }
+
+        .menu-badge {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: var(--rojo);
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         /* ─── BOTONES HUB PREMIUM ─── */
@@ -278,13 +329,14 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 15px;
             animation: fadeUp 0.8s 0.4s ease both;
+            margin-top: 10px;
         }
 
         .link-card {
             position: relative;
-            padding: 20px 24px;
+            padding: 16px 20px;
             border-radius: 20px;
             text-decoration: none;
             display: flex;
@@ -294,10 +346,10 @@
             border: 1px solid rgba(255,255,255,0.1);
             overflow: hidden;
             color: white;
-            background: rgba(255,255,255,0.03);
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
         }
 
-        /* Capa de luz que seguirá el mouse */
         .link-card::after {
             content: '';
             position: absolute;
@@ -313,63 +365,48 @@
             z-index: 0;
         }
 
-        .link-card:hover::after { 
-            opacity: 1; 
-        }
+        .link-card:hover::after { opacity: 1; }
 
-        /* Asegura que el contenido del botón quede sobre la luz */
-        .link-card > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        .link-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
-            opacity: 0;
-            transition: 0.3s;
-        }
+        .link-card > * { position: relative; z-index: 1; }
 
         .link-card:hover { 
             transform: translateY(-5px) scale(1.02); 
-            border-color: rgba(255,255,255,0.3);
+            border-color: rgba(253,185,19,0.3);
         }
 
-        .link-card:hover::before { opacity: 1; }
-
-        .card-left { display: flex; align-items: center; gap: 18px; }
+        .card-left { display: flex; align-items: center; gap: 15px; }
 
         .card-icon {
-            width: 48px; 
-            height: 48px; 
+            width: 45px; 
+            height: 45px; 
             border-radius: 14px;
-            background: rgba(0,0,0,0.4); 
+            background: rgba(0,0,0,0.5); 
             display: flex;
             align-items: center; 
             justify-content: center; 
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .card-text { display: flex; flex-direction: column; text-align: left; }
-        .card-title { font-size: 1.1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-        .card-sub { font-size: 0.75rem; opacity: 0.7; font-weight: 400; margin-top: 2px; }
+        .card-title { font-size: 1rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: var(--blanco); }
+        .card-sub { font-size: 0.75rem; opacity: 0.8; font-weight: 500; margin-top: 2px; }
 
-        /* COLORES ESPECÍFICOS */
-        .whatsapp { background: linear-gradient(135deg, #075E54, #128C7E, #25D366); box-shadow: 0 10px 25px rgba(37,211,102,0.3); }
-        .menu-btn { background: linear-gradient(135deg, #a0720a, #c98a00, #fdb913); color: #000; box-shadow: 0 10px 25px rgba(253,185,19,0.3); }
-        .menu-btn .card-sub { color: rgba(0,0,0,0.6); }
-        .instagram { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); box-shadow: 0 10px 25px rgba(220,39,67,0.3); }
-        .facebook { background: linear-gradient(135deg, #0062E0, #1877f2); box-shadow: 0 10px 25px rgba(24,119,242,0.3); }
+        /* COLORES REDES */
+        .whatsapp:hover { border-color: #25d366; background: rgba(37,211,102,0.1); }
+        .whatsapp .card-icon { color: #25d366; }
+        .instagram:hover { border-color: #e1306c; background: rgba(225,48,108,0.1); }
+        .instagram .card-icon { color: #e1306c; }
+        .facebook:hover { border-color: #1877f2; background: rgba(24,119,242,0.1); }
+        .facebook .card-icon { color: #1877f2; }
 
-        /* ─── FOOTER (HORARIO Y UBICACIÓN CENTRADA) ─── */
+        /* ─── FOOTER ─── */
         .footer {
             width: 100%;
-            background: rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 30px;
+            border-radius: 25px;
             padding: 25px;
             backdrop-filter: blur(15px);
             animation: fadeUp 0.8s 0.6s ease both;
@@ -377,7 +414,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            opacity: 0.8;
         }
 
         .footer-location { 
@@ -388,15 +424,14 @@
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 5px;
         }
 
         .footer-address {
             font-size: 0.8rem;
-            opacity: 0.6;
+            color: rgba(255,255,255,0.7);
             margin-bottom: 20px;
-            max-width: 80%;
         }
 
         .schedule-grid { 
@@ -407,230 +442,21 @@
         }
 
         .sched-item { 
-            background: rgba(0,0,0,0.3); 
+            background: rgba(255,255,255,0.05); 
             padding: 12px; 
             border-radius: 15px; 
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(253,185,19,0.1);
         }
 
         .sched-day { font-size: 0.7rem; font-weight: 900; color: var(--mostaza); text-transform: uppercase; margin-bottom: 5px; }
-        .sched-hour { font-size: 0.8rem; font-weight: 700; }
+        .sched-hour { font-size: 0.8rem; font-weight: 700; color: var(--blanco); }
 
-        /* ─── COPYRIGHT ─── */
         .copyright {
             font-size: 0.65rem;
-            opacity: 0.3;
+            opacity: 0.4;
             letter-spacing: 2px;
             text-transform: uppercase;
-            margin-top: 10px;
             text-align: center;
-        }
-
-        /* ─── MENÚ HAMBURGUESA ─── */
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            background: none;
-            border: none;
-            cursor: pointer;
-            flex-direction: column;
-            gap: 6px;
-            padding: 8px;
-        }
-
-        .menu-toggle span {
-            width: 28px;
-            height: 3px;
-            background: var(--mostaza);
-            border-radius: 2px;
-            transition: 0.3s;
-        }
-
-        .menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(12px, 12px);
-        }
-
-        .menu-toggle.active span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(10px, -10px);
-        }
-
-        /* OVERLAY */
-        .menu-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 90;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .menu-overlay.active {
-            display: block;
-        }
-
-        /* NAV DRAWER (PANEL LATERAL) */
-        .nav-drawer {
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            width: 80%;
-            max-width: 350px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
-            backdrop-filter: blur(10px);
-            border-right: 1px solid rgba(255,255,255,0.1);
-            z-index: 95;
-            transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .nav-drawer.active {
-            transform: translateX(0);
-        }
-
-        .drawer-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            position: sticky;
-            top: 0;
-            background: rgba(0,0,0,0.5);
-        }
-
-        .drawer-title {
-            font-family: 'Bangers', cursive;
-            font-size: 1.5rem;
-            background: linear-gradient(var(--rojo), var(--mostaza));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--mostaza);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .drawer-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 20px;
-        }
-
-        .drawer-nav .link-card {
-            width: 100%;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* ─── RESPONSIVO ─── */
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: flex;
-            }
-            
-            .container {
-                max-width: 100%;
-                padding: 80px 20px 60px;
-            }
-            
-            .links-container {
-                display: none;
-            }
-        }
-
-        @media (min-width: 769px) {
-            .menu-toggle {
-                display: none;
-            }
-            
-            .menu-overlay {
-                display: none !important;
-            }
-            
-            .nav-drawer {
-                display: none !important;
-            }
-            
-            .drawer-header {
-                display: none;
-            }
-            
-            .drawer-nav {
-                display: none;
-            }
-            
-            .links-container {
-                display: flex;
-            }
-            
-            .container {
-                max-width: 768px; /* keep it centered for tablets */
-            }
-        }
-
-        /* ─── VERSIÓN DE ESCRITORIO (992px+) ─── */
-        @media (min-width: 992px) {
-            .container {
-                display: grid;
-                max-width: 1200px;
-                grid-template-columns: 350px 1fr;
-                grid-template-rows: auto auto auto 1fr auto;
-                column-gap: 60px;
-                row-gap: 20px;
-                padding: 60px 40px;
-                align-items: start;
-            }
-
-            /* Columna Izquierda (Perfil / Branding) */
-            .logo-wrapper { grid-column: 1; grid-row: 1; justify-self: center; width: 220px; height: 220px; margin-bottom: 0; }
-            .brand-name { grid-column: 1; grid-row: 2; font-size: 4rem; justify-self: center; margin-top: -10px; }
-            .status-badge { grid-column: 1; grid-row: 3; justify-self: center; }
-            .footer { grid-column: 1; grid-row: 4; align-self: end; width: 100%; margin-top: 20px; }
-            .copyright { grid-column: 1; grid-row: 5; justify-self: center; }
-
-            /* Columna Derecha (Contenido Dinámico) */
-            .slider-wrapper { grid-column: 2; grid-row: 1 / 4; width: 100%; height: 100%; display: flex; animation: fadeLeft 0.8s ease both; }
-            .slider-container { height: 100%; min-height: 400px; width: 100%; }
-            
-            .links-container { 
-                grid-column: 2; 
-                grid-row: 4 / 6; 
-                display: grid; 
-                grid-template-columns: 1fr 1fr; 
-                gap: 20px; 
-            }
-            
-            .link-card { height: 100%; }
-            
-            body { align-items: center; }
-        }
-
-        @keyframes fadeLeft {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
         }
 
         /* ─── LOADER SCREEN ─── */
@@ -651,7 +477,7 @@
             background: linear-gradient(var(--mostaza), var(--rojo)); 
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 0 25px rgba(255,42,0,0.5)); 
+            filter: drop-shadow(0 0 25px rgba(233,19,80,0.5)); 
         }
 
         .loader-bar-wrap { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
@@ -664,492 +490,295 @@
         }
 
         @keyframes loadBar { to { width: 100%; } }
-
-        /* ─── ANIMACIONES DE ENTRADA ─── */
         @keyframes fadeDown { from { opacity:0; transform: translateY(-30px); } to { opacity:1; transform: translateY(0); } }
         @keyframes fadeUp { from { opacity:0; transform: translateY(40px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
-        /* ─── CUSTOM CURSOR ─── */
-        @media (pointer: fine) {
-            body, .link-card, .slider-btn, a { cursor: none !important; }
-
-            .cursor-dot, .cursor-glow {
-                position: fixed;
-                top: 0; left: 0;
-                pointer-events: none;
-                z-index: 999999;
-                transform: translate(-50%, -50%);
-                border-radius: 50%;
-            }
-
-            .cursor-dot {
-                width: 6px;
-                height: 6px;
-                background-color: var(--mostaza);
-                box-shadow: 0 0 10px var(--mostaza);
-                transition: transform 0.2s ease, background 0.2s ease;
-            }
-
-            .cursor-glow {
-                width: 40px;
-                height: 40px;
-                background: radial-gradient(circle, rgba(253,185,19,0.4) 0%, transparent 70%);
-                transition: transform 0.3s ease, background 0.3s ease, width 0.3s ease, height 0.3s ease;
-            }
-
-            .cursor-dot.hovered {
-                transform: translate(-50%, -50%) scale(3);
-                background-color: transparent;
-                border: 1px solid var(--rojo);
-                box-shadow: 0 0 15px var(--rojo);
-            }
-
-            .cursor-glow.hovered {
-                width: 80px;
-                height: 80px;
-                background: radial-gradient(circle, rgba(255,34,0,0.5) 0%, transparent 70%);
-            }
-        }
-
-        /* ─── CHAT WIDGET ─── */
+        /* ─── CHAT WIDGET (ACTUALIZADO A PINTO) ─── */
         .chat-widget {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 400px;
-            max-width: 90%;
-            height: 600px;
-            background: rgba(8, 8, 8, 0.95);
+            position: fixed; bottom: 20px; right: 20px; width: 380px; max-width: 90%; height: 550px;
+            background: rgba(20, 5, 8, 0.95);
             border: 1px solid rgba(253, 185, 19, 0.3);
             border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(253, 185, 19, 0.2);
+            display: flex; flex-direction: column; z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(253, 185, 19, 0.1);
             backdrop-filter: blur(10px);
             animation: slideUp 0.3s ease;
             transform-origin: bottom right;
         }
 
-        .chat-widget.hidden {
-            display: none;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        .chat-widget.hidden { display: none; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
         .chat-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(135deg, rgba(255, 42, 0, 0.2), rgba(253, 185, 19, 0.1));
+            padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(135deg, rgba(233, 19, 80, 0.2), rgba(99, 12, 22, 0.5));
+            border-radius: 20px 20px 0 0;
         }
 
         .chat-header h3 {
-            font-family: 'Bangers', cursive;
-            font-size: 1.3rem;
+            font-family: 'Bangers', cursive; font-size: 1.3rem; margin: 0;
             background: linear-gradient(135deg, var(--mostaza), var(--rojo));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
-        .chat-close-btn {
-            background: none;
-            border: none;
-            color: var(--mostaza);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.3s;
-        }
+        .chat-close-btn { background: none; border: none; color: var(--mostaza); font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .chat-close-btn:hover { transform: rotate(90deg); color: var(--rojo); }
 
-        .chat-close-btn:hover {
-            transform: rotate(90deg);
-            color: var(--rojo);
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .chat-message {
-            display: flex;
-            gap: 10px;
-            animation: fadeUp 0.3s ease;
-        }
-
-        .chat-message.user {
-            justify-content: flex-end;
-        }
-
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .chat-message { display: flex; gap: 10px; animation: fadeUp 0.3s ease; }
+        .chat-message.user { justify-content: flex-end; }
+        
         .chat-bubble {
-            max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            word-wrap: break-word;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 85%; padding: 12px 16px; border-radius: 15px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .chat-message.user .chat-bubble {
-            background: linear-gradient(135deg, rgba(255, 42, 0, 0.4), rgba(253, 185, 19, 0.2));
-            border-color: rgba(253, 185, 19, 0.4);
-            color: var(--blanco);
-        }
+        .chat-message.user .chat-bubble { background: linear-gradient(135deg, rgba(233, 19, 80, 0.4), rgba(99, 12, 22, 0.6)); border-color: rgba(233, 19, 80, 0.4); }
+        .chat-message.bot .chat-bubble { background: rgba(255, 255, 255, 0.05); }
 
-        .chat-message.bot .chat-bubble {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.1);
-            color: var(--blanco);
-        }
+        .chat-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+        .chat-message.user .chat-avatar { background: rgba(253, 185, 19, 0.2); }
+        .chat-message.bot .chat-avatar { background: rgba(233, 19, 80, 0.2); }
 
-        .chat-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        .chat-message.user .chat-avatar {
-            background: rgba(253, 185, 19, 0.2);
-            border: 1px solid rgba(253, 185, 19, 0.4);
-        }
-
-        .chat-message.bot .chat-avatar {
-            background: rgba(255, 42, 0, 0.2);
-            border: 1px solid rgba(255, 42, 0, 0.4);
-        }
-
-        .chat-typing {
-            display: flex;
-            gap: 4px;
-            padding: 12px 16px;
-        }
-
-        .chat-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(253, 185, 19, 0.6);
-            animation: typing 1.4s infinite;
-        }
-
-        .chat-dot:nth-child(2) { animation-delay: 0.2s; }
-        .chat-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
-            30% { transform: translateY(-8px); opacity: 1; }
-        }
-
-        .chat-input-area {
-            padding: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            gap: 10px;
-        }
-
-        .chat-input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(253, 185, 19, 0.3);
-            color: var(--blanco);
-            padding: 12px 15px;
-            border-radius: 25px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 0.9rem;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .chat-input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(253, 185, 19, 0.6);
-            box-shadow: 0 0 15px rgba(253, 185, 19, 0.1);
-        }
-
-        .chat-input::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        .chat-send-btn {
-            background: linear-gradient(135deg, var(--rojo), var(--mostaza));
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(255, 42, 0, 0.3);
-        }
-
-        .chat-send-btn:hover:not(:disabled) {
-            transform: scale(1.1);
-            box-shadow: 0 8px 20px rgba(255, 42, 0, 0.5);
-        }
-
-        .chat-send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* CHAT FLOAT BUTTON */
+        .chat-input-area { padding: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; gap: 10px; }
+        .chat-input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(253, 185, 19, 0.3); color: white; padding: 12px 15px; border-radius: 25px; font-family: 'Montserrat', sans-serif; font-size: 0.9rem; outline: none; }
+        .chat-send-btn { background: linear-gradient(135deg, var(--rojo), var(--carbon)); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        
         .chat-float-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--rojo), var(--mostaza));
-            border: none;
-            color: white;
-            font-size: 1.8rem;
-            cursor: pointer;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 5px 20px rgba(255, 42, 0, 0.4);
-            transition: 0.3s;
-            animation: bounce 2s infinite;
+            position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--rojo), var(--carbon)); color: white; font-size: 1.8rem; border: none; cursor: pointer; z-index: 999;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 20px rgba(233, 19, 80, 0.4);
+            animation: bounce 2.5s infinite; transition: 0.3s;
         }
 
-        .chat-float-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 30px rgba(255, 42, 0, 0.6);
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .chat-float-btn.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        @media (max-width: 600px) {
-            .chat-widget {
-                width: calc(100% - 20px);
-                height: 70vh;
-                bottom: 10px;
-                right: 10px;
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        /* ─── DESKTOP VIEW ─── */
+        @media (min-width: 992px) {
+            .container {
+                max-width: 1000px;
+                display: grid;
+                grid-template-columns: 350px 1fr;
+                gap: 40px;
+                padding: 60px 20px;
+                align-items: start;
             }
-
-            .chat-bubble {
-                max-width: 95%;
-            }
+            .logo-wrapper { width: 220px; height: 220px; margin: 0 auto; }
+            .brand-name { font-size: 4rem; }
+            .left-column { display: flex; flex-direction: column; align-items: center; gap: 20px; position: sticky; top: 40px; }
+            .right-column { display: flex; flex-direction: column; gap: 30px; }
+            body { align-items: center; }
         }
+
+        /* Ocultar elementos para modo mobile/desktop si no estamos en grid */
+        .left-column, .right-column { display: contents; }
+        @media (min-width: 992px) { .left-column { display: flex; } .right-column { display: flex; } }
+
     </style>
 </head>
 <body>
 
-<!-- Custom Cursor Elements -->
-<div class="cursor-dot" id="cursor-dot"></div>
-<div class="cursor-glow" id="cursor-glow"></div>
-
 <!-- Pantalla de Carga -->
 <div id="loader">
-    <div class="loader-logo" style="font-size: 3rem;">Sr. & Sra. Pinto</div>
+    <div class="loader-logo">Sr. & Sra. Pinto</div>
     <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
     <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0.4;">Preparando el sabor tico...</div>
 </div>
 
-<!-- Canvas de Brasas (Optimizado 180 Partículas) -->
-<canvas id="particles-canvas"></canvas>
-
-<!-- OVERLAY DEL MENÚ HAMBURGUESA -->
-<div id="menu-overlay" class="menu-overlay"></div>
-
-<!-- MENÚ HAMBURGUESA (DRAWER) -->
-<div id="nav-drawer" class="nav-drawer">
-    <div class="drawer-header">
-        <button id="close-menu" class="close-btn" aria-label="Cerrar menú">
-            <i class="fas fa-times"></i>
-        </button>
-        <span class="drawer-title" style="font-size: 1.2rem;">SR. & SRA. PINTO</span>
-    </div>
-    <nav class="drawer-nav" id="drawer-nav"></nav>
-</div>
-
-<!-- BOTÓN HAMBURGUESA -->
-<button id="menu-toggle" class="menu-toggle" aria-label="Abrir menú">
-    <span></span>
-    <span></span>
-    <span></span>
-</button>
-
 <!-- CHAT FLOAT BUTTON -->
-<button id="chat-float-btn" class="chat-float-btn" aria-label="Abrir chat" title="Pregunta sobre nuestro menú">
-    <i class="fas fa-comments"></i>
+<button id="chat-float-btn" class="chat-float-btn" aria-label="Abrir chat">
+    <i class="fas fa-seedling"></i>
 </button>
 
 <!-- CHAT WIDGET -->
 <div id="chat-widget" class="chat-widget hidden">
     <div class="chat-header">
-        <h3>🧑‍🍳 Sr. Pinto Bot</h3>
-        <button id="chat-close-btn" class="chat-close-btn" aria-label="Cerrar chat">
-            <i class="fas fa-times"></i>
-        </button>
+        <h3>👩‍🍳 Sra. Pinto Bot</h3>
+        <button id="chat-close-btn" class="chat-close-btn"><i class="fas fa-times"></i></button>
     </div>
     <div id="chat-messages" class="chat-messages"></div>
     <div class="chat-input-area">
-        <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta sobre ingredientes o precios..." />
-        <button id="chat-send-btn" class="chat-send-btn" aria-label="Enviar mensaje">
-            <i class="fas fa-paper-plane"></i>
-        </button>
+        <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta sobre ingredientes o combos..." />
+        <button id="chat-send-btn" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
     </div>
 </div>
 
 <div class="container">
-
-    <!-- Badge de Estado Horario -->
-    <div class="status-badge">
-        <span class="status-dot" id="status-dot"></span>
-        <span id="status-text">Calculando...</span>
-    </div>
-
-    <!-- Cabecera -->
-    <div class="logo-wrapper">
-        <img src="assets/images/logo2.png" alt="Sr. & Sra. Pinto Official">
-    </div>
-    <div class="brand-name" style="font-size: 2.8rem;">Sr. & Sra. Pinto</div>
-
-    <!-- Slider Multimedia -->
-    <div class="slider-wrapper">
-        <div class="slider-container" id="slider">
-            
-            <div class="slide active" style="background: linear-gradient(135deg, var(--carbon), var(--negro)); display: flex; align-items: center; justify-content: center;">
-                <div style="font-size: 8rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));">🇨🇷</div>
-                <span class="slide-label">🍽️ El Puro Sabor</span>
-            </div>
-            
-            <div class="slide" style="background: linear-gradient(135deg, var(--humo), var(--carbon)); display: flex; align-items: center; justify-content: center;">
-                <div style="font-size: 8rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));">🥐</div>
-                <span class="slide-label">🥟 Empanadas Crujientes</span>
-            </div>
-            
-            <div class="slide" style="background: linear-gradient(135deg, var(--rojo), var(--carbon)); display: flex; align-items: center; justify-content: center;">
-                <div style="font-size: 8rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));">🍳</div>
-                <span class="slide-label">☕ Desayuno Completo</span>
-            </div>
-            
-            <div class="slide" style="background: linear-gradient(135deg, var(--carbon), var(--negro)); display: flex; align-items: center; justify-content: center;">
-                <div style="font-size: 8rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));">🥑</div>
-                <span class="slide-label">🥗 Ensalada Especial</span>
-            </div>
-
-            <!-- Controles Manuales -->
-            <button class="slider-btn btn-prev" aria-label="Anterior" onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
-            <button class="slider-btn btn-next" aria-label="Siguiente" onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
-            
-            <!-- Barra de Progreso Sincronizada -->
-            <div class="slider-progress-container">
-                <div class="slider-progress-bar" id="progress-bar"></div>
-            </div>
+    
+    <div class="left-column">
+        <div class="logo-wrapper">
+            <img src="assets/images/logo2.png" alt="Sr. & Sra. Pinto Official">
         </div>
-    </div>
+        <div class="brand-name">Sr. & Sra. Pinto</div>
 
-    <!-- Botonera HUB -->
-    <div class="links-container">
-        
-        <a href="https://wa.me/50689179971" class="link-card whatsapp">
-            <div class="card-left">
-                <div class="card-icon"><i class="fab fa-whatsapp"></i></div>
-                <div class="card-text">
-                    <span class="card-title">¡Pedir por WhatsApp!</span>
-                    <span class="card-sub">Respuesta inmediata</span>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
-        </a>
-
-        <a href="#" class="link-card menu-btn">
-            <div class="card-left">
-                <div class="card-icon"><i class="fas fa-utensils"></i></div>
-                <div class="card-text">
-                    <span class="card-title">Ver Catálogo Pinto</span>
-                    <span class="card-sub">Nuestros clásicos y combos</span>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
-        </a>
-
-        <a href="https://www.instagram.com" class="link-card instagram" target="_blank">
-            <div class="card-left">
-                <div class="card-icon"><i class="fab fa-instagram"></i></div>
-                <div class="card-text">
-                    <span class="card-title">Instagram</span>
-                    <span class="card-sub">Videos y fotos diarias</span>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
-        </a>
-
-        <a href="https://www.facebook.com" class="link-card facebook" target="_blank">
-            <div class="card-left">
-                <div class="card-icon"><i class="fab fa-facebook"></i></div>
-                <div class="card-text">
-                    <span class="card-title">Facebook</span>
-                    <span class="card-sub">Unite a la comunidad</span>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
-        </a>
-
-    </div>
-
-    <div class="footer">
-        <div class="footer-location">
-            <i class="fas fa-map-marker-alt"></i> SAN JOSÉ, COSTA RICA
+        <div class="status-badge">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">Calculando...</span>
         </div>
-        <div class="footer-address">
-            El Puritico Sabor de Ser Tico
+
+        <div class="footer" style="margin-top: 20px;">
+            <div class="footer-location"><i class="fas fa-map-marker-alt"></i> EL PURO SABOR</div>
+            <div class="footer-address">Auténtica Gastronomía Costarricense</div>
+            <div class="schedule-grid">
+                <div class="sched-item">
+                    <div class="sched-day">Lun - Sáb</div>
+                    <div class="sched-hour">10 AM - 6 PM</div>
+                </div>
+                <div class="sched-item">
+                    <div class="sched-day">Domingos</div>
+                    <div class="sched-hour">10 AM - 4 PM</div>
+                </div>
+            </div>
         </div>
         
-        <div class="schedule-grid">
-            <div class="sched-item">
-                <div class="sched-day">Lun - Sáb</div>
-                <div class="sched-hour">10 AM - 6 PM</div>
-            </div>
-            <div class="sched-item">
-                <div class="sched-day">Domingos</div>
-                <div class="sched-hour">10 AM - 4 PM</div>
-            </div>
+        <div class="copyright" style="margin-top: 10px;">
+            Sr. & Sra. Pinto © 2024-2025 • Hecho en CR
         </div>
     </div>
 
-    <div class="copyright">
-        SR. & SRA. PINTO © 2024-2025 • SOFTWARE BY SENIOR HUB
-    </div>
+    <div class="right-column">
+        <!-- MENÚ DE EJEMPLO -->
+        <div class="menu-wrapper">
+            <h2 class="menu-title">NUESTRO MENÚ</h2>
+            <div class="menu-tabs">
+                <button class="tab-btn active" onclick="showCategory('combos')">🌟 Combos Tuanis</button>
+                <button class="tab-btn" onclick="showCategory('individuales')">🍽️ Platos</button>
+                <button class="tab-btn" onclick="showCategory('bebidas')">☕ Bebidas</button>
+            </div>
 
+            <!-- COMBOS -->
+            <div class="menu-content" id="cat-combos">
+                <div class="menu-item-card">
+                    <span class="menu-badge">Para 2</span>
+                    <div class="menu-img">👫</div>
+                    <div class="menu-info">
+                        <h4>Combo Pareja Tuanis</h4>
+                        <p>2 Pintos Tradicionales, 2 Huevos al gusto, Plátanos maduros, Queso frito y 2 Cafés chorreados.</p>
+                        <div class="price-row">
+                            <span>₡5,500</span>
+                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20pedir%20el%20Combo%20Pareja%20Tuanis" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu-item-card">
+                    <span class="menu-badge">Familiar</span>
+                    <div class="menu-img">👨‍👩‍👧‍👦</div>
+                    <div class="menu-info">
+                        <h4>Combo Familiar Pinto</h4>
+                        <p>4 Pintos, 4 Huevos, Natilla de la casa, Queso, Plátanos y 1 Litro de fresco natural de frutas.</p>
+                        <div class="price-row">
+                            <span>₡10,500</span>
+                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20pedir%20el%20Combo%20Familiar" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INDIVIDUALES -->
+            <div class="menu-content" id="cat-individuales" style="display:none;">
+                <div class="menu-item-card">
+                    <div class="menu-img">🍛</div>
+                    <div class="menu-info">
+                        <h4>Pinto Clásico Completo</h4>
+                        <p>Gallo pinto tico con excelentes aromas, servido con huevo, plátano maduro y salsas caseras.</p>
+                        <div class="price-row">
+                            <span>₡2,500</span>
+                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20un%20Pinto%20Clásico" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="menu-item-card">
+                    <div class="menu-img">🥟</div>
+                    <div class="menu-info">
+                        <h4>Empanadas Arregladas</h4>
+                        <p>Crujiente masa de maíz rellena de carne mechada, cubierta con repollo y aderezo especial.</p>
+                        <div class="price-row">
+                            <span>₡1,500</span>
+                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20una%20Empanada" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="menu-item-card">
+                    <div class="menu-img">🥗</div>
+                    <div class="menu-info">
+                        <h4>Ensalada Pinto</h4>
+                        <p>Plato fresco y ligero con lechuga, tomates, aguacate tierno y nuestro aderezo del chef.</p>
+                        <div class="price-row">
+                            <span>₡2,800</span>
+                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20una%20Ensalada" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BEBIDAS -->
+            <div class="menu-content" id="cat-bebidas" style="display:none;">
+                <div class="menu-item-card">
+                    <div class="menu-img">☕</div>
+                    <div class="menu-info">
+                        <h4>Café Chorreado</h4>
+                        <p>Puro café de altura costarricense, chorreado al momento bien calientito.</p>
+                        <div class="price-row">
+                            <span>₡1,200</span>
+                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20un%20Café" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-item-card">
+                    <div class="menu-img">🥤</div>
+                    <div class="menu-info">
+                        <h4>Fresco Natural</h4>
+                        <p>Fresco de frutas de temporada (Cas, Mora, Tamarindo o Limonada con hierbabuena).</p>
+                        <div class="price-row">
+                            <span>₡1,000</span>
+                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20un%20Fresco" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REDES HUB -->
+        <h2 class="menu-title" style="margin-top: 15px; font-size: 1.6rem;">Comunidad Oficial</h2>
+        <div class="links-container">
+            <a href="https://wa.me/50689179971" class="link-card whatsapp">
+                <div class="card-left">
+                    <div class="card-icon"><i class="fab fa-whatsapp"></i></div>
+                    <div class="card-text">
+                        <span class="card-title">Atención por WhatsApp</span>
+                        <span class="card-sub">Pedidos y respuestas rápidas</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
+            </a>
+
+            <a href="https://www.instagram.com" class="link-card instagram" target="_blank">
+                <div class="card-left">
+                    <div class="card-icon"><i class="fab fa-instagram"></i></div>
+                    <div class="card-text">
+                        <span class="card-title">Perfil de Instagram</span>
+                        <span class="card-sub">Nuestras mejores fotos</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
+            </a>
+
+            <a href="https://www.facebook.com" class="link-card facebook" target="_blank">
+                <div class="card-left">
+                    <div class="card-icon"><i class="fab fa-facebook"></i></div>
+                    <div class="card-text">
+                        <span class="card-title">Comunidad Facebook</span>
+                        <span class="card-sub">Noticias y promociones</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
+            </a>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -1158,178 +787,38 @@
  */
 window.addEventListener('load', () => {
     setTimeout(() => {
-        const loader = document.getElementById('loader');
-        loader.classList.add('hidden');
-    }, 1500);
+        document.getElementById('loader').classList.add('hidden');
+    }, 1200);
 });
 
 /**
- * SISTEMA DE PARTÍCULAS (EMBER ENGINE 3X)
- * 180 Partículas con física individual y resplandor
+ * CONTROL DE PESTAÑAS (MENÚ)
  */
-const canvas = document.getElementById('particles-canvas');
-const ctx = canvas.getContext('2d');
-let W, H, particles = [];
-
-function initParticles() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    particles = [];
-    for (let i = 0; i < 180; i++) {
-        particles.push(new Ember());
-    }
+function showCategory(cat) {
+    document.querySelectorAll('.menu-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById('cat-' + cat).style.display = 'flex';
+    document.querySelector('.tab-btn[onclick="showCategory(\'' + cat + '\')"]').classList.add('active');
 }
-
-class Ember {
-    constructor() {
-        this.reset(true);
-    }
-
-    reset(initial = false) {
-        this.x = Math.random() * W;
-        this.y = initial ? Math.random() * H : H + 30;
-        this.vx = (Math.random() - 0.5) * 1.5;
-        this.vy = -(Math.random() * 2 + 0.8);
-        this.size = Math.random() * 3.5 + 0.5;
-        this.life = Math.random() * 100 + 50;
-        this.maxLife = this.life;
-        this.hue = Math.random() * 35 + 10; // Colores fuego
-    }
-
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life -= 0.6;
-        
-        if (this.y < -50 || this.life <= 0) {
-            this.reset();
-        }
-    }
-
-    draw() {
-        const opacity = this.life / this.maxLife;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${this.hue}, 100%, 60%, ${opacity})`;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = `hsl(${this.hue}, 100%, 50%)`;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-    }
-}
-
-let isVisible = true;
-let animationFrameId;
-
-document.addEventListener('visibilitychange', () => {
-    isVisible = document.visibilityState === 'visible';
-    if (isVisible) {
-        animateParticles();
-    } else {
-        cancelAnimationFrame(animationFrameId);
-    }
-});
-
-function animateParticles() {
-    if (!isVisible) return;
-    
-    ctx.clearRect(0, 0, W, H);
-    for (let p of particles) {
-        p.update();
-        p.draw();
-    }
-    animationFrameId = requestAnimationFrame(animateParticles);
-}
-
-window.addEventListener('resize', initParticles);
-initParticles();
-animateParticles();
-
-/**
- * MOTOR DEL SLIDER (PRO SLIDER ENGINE)
- * Maneja auto-play, gestos swipe y barra de progreso sincronizada
- */
-const slides = document.querySelectorAll('.slide');
-const progressBar = document.getElementById('progress-bar');
-let currentSlide = 0;
-let slideInterval;
-let progressValue = 0;
-const SLIDE_DURATION = 5000; // 5 segundos
-
-function updateProgressBar() {
-    progressValue += 20; // Actualiza cada 20ms
-    const percentage = (progressValue / SLIDE_DURATION) * 100;
-    progressBar.style.width = percentage + '%';
-    
-    if (progressValue >= SLIDE_DURATION) {
-        changeSlide(1);
-    }
-}
-
-let progressInterval = setInterval(updateProgressBar, 20);
-
-function changeSlide(direction) {
-    // Resetear slide actual
-    slides[currentSlide].classList.remove('active');
-    
-    // Calcular siguiente
-    currentSlide = (currentSlide + direction + slides.length) % slides.length;
-    
-    // Activar siguiente
-    slides[currentSlide].classList.add('active');
-    
-    // Reiniciar video si existe
-    const video = slides[currentSlide].querySelector('video');
-    if (video) {
-        video.currentTime = 0;
-        video.play();
-    }
-
-    // Reiniciar barra y temporizador
-    progressValue = 0;
-}
-
-// SOPORTE PARA GESTOS (SWIPE)
-let startX = 0;
-const sliderElement = document.getElementById('slider');
-
-sliderElement.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    clearInterval(progressInterval); // Pausa al tocar
-}, {passive: true});
-
-sliderElement.addEventListener('touchend', (e) => {
-    let endX = e.changedTouches[0].clientX;
-    let diff = startX - endX;
-    
-    if (Math.abs(diff) > 70) {
-        changeSlide(diff > 0 ? 1 : -1);
-    }
-    
-    progressValue = 0;
-    progressInterval = setInterval(updateProgressBar, 20); // Reanuda
-});
 
 /**
  * LÓGICA DE HORARIO (STATUS ENGINE)
  */
 function checkStatus() {
     const now = new Date();
-    const day = now.getDay(); // 0: Dom, 3: Mié, 6: Sáb
+    const day = now.getDay();
     const hour = now.getHours();
     
     const dot = document.getElementById('status-dot');
     const text = document.getElementById('status-text');
-    
     let isOpen = false;
     
-    // Miércoles (3) a Sábado (6): 12pm - 9pm
-    if (day >= 3 && day <= 6) {
-        if (hour >= 12 && hour < 21) isOpen = true;
-    } 
-    // Domingo (0): 12pm - 8pm
-    else if (day === 0) {
-        if (hour >= 12 && hour < 20) isOpen = true;
+    // Miércoles (3) a Sábado (6): 10am - 6pm (Ajustado basado en UI)
+    if (day >= 1 && day <= 6) {
+        if (hour >= 10 && hour < 18) isOpen = true;
+    } else if (day === 0) { // Domingo
+        if (hour >= 10 && hour < 16) isOpen = true;
     }
 
     if (isOpen) {
@@ -1341,273 +830,31 @@ function checkStatus() {
         dot.style.color = "#ff2200";
         dot.style.background = "#ff2200";
         dot.style.boxShadow = "0 0 15px #ff2200";
-        text.innerText = "Cerrado ahora • Abrimos a las 12 PM";
+        text.innerText = "Cerrado ahora • Revisá el horario";
     }
 }
-
 checkStatus();
-setInterval(checkStatus, 60000); // Revisa cada minuto
+setInterval(checkStatus, 60000);
 
 // EFECTO GLOW DINÁMICO
 document.querySelectorAll('.link-card').forEach(card => {
     card.addEventListener('mousemove', e => {
         const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty('--x', `${x}px`);
-        card.style.setProperty('--y', `${y}px`);
+        card.style.setProperty('--x', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--y', `${e.clientY - rect.top}px`);
     });
 });
-
-// LÓGICA DE CUSTOM CURSOR
-const isDesktop = window.matchMedia("(pointer: fine)").matches;
-if (isDesktop) {
-    const dot = document.getElementById('cursor-dot');
-    const glow = document.getElementById('cursor-glow');
-
-    let mouseX = 0; let mouseY = 0;
-    let glowX = 0; let glowY = 0;
-
-    window.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        
-        // El punto sigue instantáneamente
-        dot.style.left = `${mouseX}px`;
-        dot.style.top = `${mouseY}px`;
-    });
-
-    function animateCursor() {
-        // Interpolar (Ease) position for the glow
-        glowX += (mouseX - glowX) * 0.15;
-        glowY += (mouseY - glowY) * 0.15;
-        
-        glow.style.left = `${glowX}px`;
-        glow.style.top = `${glowY}px`;
-        
-        requestAnimationFrame(animateCursor);
-    }
-    animateCursor();
-
-    const interactables = document.querySelectorAll('a, button, .link-card, .slider-btn');
-    interactables.forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            dot.classList.add('hovered');
-            glow.classList.add('hovered');
-        });
-        el.addEventListener('mouseleave', () => {
-            dot.classList.remove('hovered');
-            glow.classList.remove('hovered');
-        });
-    });
-}
 
 /**
- * MENÚ HAMBURGUESA - LÓGICA
+ * SISTEMA DE CHAT CON GEMINI API (AJUSTADO A PINTO)
  */
-const menuToggle = document.getElementById('menu-toggle');
-const navDrawer = document.getElementById('nav-drawer');
-const menuOverlay = document.getElementById('menu-overlay');
-const closeMenu = document.getElementById('close-menu');
-
-// Abrir menú
-menuToggle.addEventListener('click', () => {
-    menuToggle.classList.toggle('active');
-    navDrawer.classList.toggle('active');
-    menuOverlay.classList.toggle('active');
-});
-
-// Cerrar menú
-closeMenu.addEventListener('click', () => {
-    menuToggle.classList.remove('active');
-    navDrawer.classList.remove('active');
-    menuOverlay.classList.remove('active');
-});
-
-// Cerrar al tocar overlay
-menuOverlay.addEventListener('click', () => {
-    menuToggle.classList.remove('active');
-    navDrawer.classList.remove('active');
-    menuOverlay.classList.remove('active');
-});
-
-// Cerrar con tecla ESC
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && navDrawer.classList.contains('active')) {
-        menuToggle.classList.remove('active');
-        navDrawer.classList.remove('active');
-        menuOverlay.classList.remove('active');
-    }
-});
-
-// Cerrar al clickear un link
-document.querySelectorAll('.drawer-nav .link-card').forEach(link => {
-    link.addEventListener('click', () => {
-        menuToggle.classList.remove('active');
-        navDrawer.classList.remove('active');
-        menuOverlay.classList.remove('active');
-    });
-});
-
-// Copiar links al drawer en móvil
-function setupDrawerNavigation() {
-    const linksContainer = document.querySelector('.links-container');
-    const drawerNav = document.querySelector('.drawer-nav');
-    
-    if (linksContainer && window.innerWidth <= 768) {
-        drawerNav.innerHTML = linksContainer.innerHTML;
-        
-        // Re-agregar event listeners a los nuevos links
-        document.querySelectorAll('.drawer-nav .link-card').forEach(link => {
-            link.addEventListener('click', () => {
-                menuToggle.classList.remove('active');
-                navDrawer.classList.remove('active');
-                menuOverlay.classList.remove('active');
-            });
-        });
-    }
-}
-
-// Llamar al cargar
-setupDrawerNavigation();
-window.addEventListener('resize', setupDrawerNavigation);
-
-/**
- * SISTEMA DE CHAT CON GEMINI API
- */
-
-// DATOS DEL MENÚ
-const menuData = [
-    {
-        name: "Platos Tradicionales",
-        items: [
-            { name: "Desayuno Tico Completo", desc: "El puritico sabor tico para empezar el día", price: 3500, ingredients: ["Gallo pinto", "Huevos", "Frijoles molidos", "Plátano maduro", "Queso frito"] },
-            { name: "Empanadas Crujientes", desc: "Receta tradicional, súper rellenas y calientes", price: 1200, ingredients: ["Masa de maíz criollo", "Queso tico", "Salsa picante opcional"] },
-            { name: "Ensalada Especial Pinto", desc: "Fresca, ligera y deliciosa", price: 2800, ingredients: ["Lechuga", "Tomates de la huerta", "Aguacate", "Aderezo casero del chef"] }
-        ]
-    }
-];
-
-// CONFIGURACIÓN DEL CHAT
 const GEMINI_API_KEY = 'AIzaSyDD3BdlStmmihSe3ZU_DCHADI3pn6yU7Fo';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-// CREAR CONTEXTO DEL MENÚ PARA EL AI
-function buildMenuContext() {
-    let context = "Eres un asistente excepcional de ventas para Sr. & Sra. Pinto, el mejor restaurante de comida tradicional en Costa Rica. NO eres un chatbot robótico: eres como un amigo 'tico' pura vida que conoce perfectamente la gastronomía local y tiene la habilidad natural de hacer que la gente quiera probar los platillos. Tu meta es hacer una experiencia de conversación genuina donde el cliente se sienta entendido y termina haciendo un pedido.\n\nIMPORTANTE: Después de cada respuesta, evalúa si hay oportunidad de sugerir algo más.\n\n";
-    
-    context += "INFORMACIÓN DEL MENÚ (Guardar en tu contexto mental):\n";
-    context += "═══════════════════════════════════════════════════════════\n";
-    menuData.forEach(category => {
-        context += `\n📌 ${category.name}:\n`;
-        category.items.forEach(item => {
-            context += `   • ${item.name} → ₡${item.price.toLocaleString()}\n     ${item.desc}\n     Lleva: ${item.ingredients.join(', ')}\n`;
-        });
-    });
-    
-    context += "\n═══════════════════════════════════════════════════════════\n";
-    context += "\n🧠 ESTRATEGIA PSICOLÓGICA (NEUROVENTAS - TÚ LA VIVES NATURALMENTE):\n\n";
-    
-    context += "1️⃣ APERTURA COGNITIVA (Crear curiosidad desde el inicio):\n";
-    context += "   → Empieza con una pregunta genuina sobre sus gustos, no con un catálogo\n";
-    context += "   → Formula preguntas que abran su mente: '¿Es tu primera vez probando nuestros perros?' o '¿Qué tipo de sabores te encantan?'\n";
-    context += "   → Crea intriga: 'Espérate, tengo que contarte algo de nuestro especial...'\n\n";
-    
-    context += "2️⃣ EMPATÍA ACTIVA (Escuchar realmente):\n";
-    context += "   → Si pregunta sobre ingredientes específicos, no solo contesta: relaciona: 'Ah, sos de los que les importa saber qué comen... mae, te va a encimar el Megapilo, te cuento por qué...'\n";
-    context += "   → Valida sus preocupaciones: 'Entendés perfectamente, la salsa al exceso pa' algunos es mucho'\n";
-    context += "   → Responde a emociones: Si están 'sin plata' → enfatiza ofertas; si están de fiesta → enfatiza cantidad/combos\n\n";
-    
-    context += "3️⃣ ESCASEZ SUTIL (Sin ser desesperado) + PRUEBA SOCIAL COMBINADAS:\n";
-    context += "   → Si alguien dice queremos 'para 3' → 'Justo ese Combo Amigos es lo que llueve en grupo los viernes, mae. Ese combo te sale...'\n";
-    context += "   → 'El Megapilo es el favorito en viernes... cuando hay hambre de esas, es lo que piden'\n";
-    context += "   → 'Casi todos que prueban el Pilo Picante vuelven específicamente por ese... la mezcla de jalapeños con la salsa nuestra es de lo mejor'\n";
-    context += "   → 'Los que vienen en grupo, mezclan... algunos Clásico, algunos Megapilo. Es lo que funciona'\n";
-    context += "   → NUNCA suene como vendedor desesperado. Suene como compartiendo lo que observa naturalmente\n";
-    context += "   → Menciona frecuencia: 'Diay, casi todos que...', 'La gente que viene aquí...', 'Los viernes es común ver...'\n\n";
-    
-    context += "4️⃣ STORYTELLING (Dale vida a los productos):\n";
-    context += "   → No digas 'tiene salsa casera', di: 'Esa salsa es la que nos hace diferentes... lleva ingredientes que el jefe mismo selecciona'\n";
-    context += "   → Crea contexto emocional: 'Es el tipo de perro que pides con amigos en una noche de viernes'\n";
-    context += "   → Humaniza: 'El tocino que le ponemos al Megapilo es de lo mejor que podes encontrar'\n\n";
-    
-    context += "6️⃣ UPSELLING NATURAL (Sugerir lo premium sin presionar - SIEMPRE BUSCA LA OPORTUNIDAD):\n";
-    context += "   → Si dice 'Pilo Clásico' → 'Diay… si probás el Megapilo solo esta vez, vas a ver por qué la gente va por ese… es como el Clásico pero en versión 'de lo mejor'. Ya que estás probando por primera vez, dale una oportunidad'\n";
-    context += "   → Si pide 'para 3 con bebida' (Combo Amigos ₡10,500) → Pregunta si vienen con hambre normal o de esas que no perdonan. Sugiere 1-2 Megapilo en la mezcla porque hace diferencia. Así: 'Te sale ₡3,500 por persona… uno o dos Megapilo en la mix y la experiencia es otra cosa. ¿Cómo la ven?'\n";
-    context += "   → CLAVE: CONTEXTURALIZA PRECIO POR PERSONA cuando hay grupo\n";
-    context += "   → Siempre da opciones, no ordenes. Pregunta primero sobre el hambre/contexto\n\n";
-    
-    context += "7️⃣ CROSS-SELLING INTELIGENTE (Lo que combina perfecto):\n";
-    context += "   → Perro solo → 'Con papas grandes queda de lo mejor, no es lo mismo un perro solo…'\n";
-    context += "   → Papas → 'Las papas son lo completo si les sumás una bebida… mitiga la sed'\n";
-    context += "   → Sin bebida mencionada → 'Una limonada da tuanis con los perros picantes… te refresca después'\n";
-    context += "   → Aros de cebolla → 'Para compartir algo mientras llega el perro… la gente te va a querer'\n";
-    context += "   → SIEMPRE conecta cross-selling a un beneficio emocional, no solo al precio\n\n";
-    
-    context += "8️⃣ MEMORIA CONVERSACIONAL (Seguir el hilo):\n";
-    context += "   → Mantén en mente cada pregunta anterior\n";
-    context += "   → Si preguntó sobre esto antes, no repitas: 'Ya te había mencionado que…' vs 'Te acordás que...'\n";
-    context += "   → Dosifica: no abruces con información, suelta poco a poco\n";
-    context += "   → Personaliza recomendaciones basadas en sus preferencias mencionadas\n\n";
-    
-    context += "8️⃣ CONTEXTO EMOCIONAL PROFUNDO (Vender experiencias, no perros):\n";
-    context += "   → NO digas 'quedás lleno', di 'llegan a casa felices, sin hambre, sin sed'\n";
-    context += "   → NO digas 'es sabroso', di 'es el tipo de sabor que se quedan recordando toda la semana'\n";
-    context += "   → NO digas 'es lo mejor', di con historia detrás: 'esa salsa es la que el jefe selecciona cada mañana'\n";
-    context += "   → Conecta con emociones: Si es grupo → 'es donde todos quedan contentos'; si es primera vez → 'es lo que va a marcar tu experiencia'\n";
-    context += "   → Crea escenas mentales: 'Imaginate llegar con eso a la casa… la gente te va a querer'\n\n";
-    
-    context += "9️⃣ OBJECIÓN HANDLING (Responder como amigo, no como vendedor):\n";
-    context += "   → 'Es muy caro' → 'La diferencia es ¢2,000… para la cantidad y calidad que vas a recibir, mae, te lo juro que sale'\n";
-    context += "   → 'No como picante' → 'Dale, el Clásico es suave suave… pero te digo que el Pilo Picante dice 'picante' pero es dosificado'\n";
-    context += "   → 'Soy vegetariano' → 'Entiendo perfecto. Lamentablemente nuestro menú está centrado en perros, pero te recomendaría los aros de cebolla con papas… bastante salvable'\n";
-    context += "   → Nunca digas 'tienes razón, es caro'… reconoce el precio pero valida el producto\n\n";
-    
-    context += "🔟 OPCIONES CLARAS (No dejar en blanco):\n";
-    context += "   → Cuando pregunta '¿qué me recomiendas?' no digas '¿te gusta aventura o clásico?' - Eso confunde\n";
-    context += "   → Mejor: 'Para hambre como la tuya, el Megapilo o el Combo Amigos. Uno es cantidad, el otro es cantidad + compañía'\n";
-    context += "   → Si es grupo, ofrece MEZCLA: 'Cuando vienen varios, mezclan… uno Clásico, uno Megapilo, uno Picante. Así cada quién tiene su sabor'\n";
-    context += "   → Siempre deja una pregunta clara de cierre: '¿Con cuál nos vamos?'\n\n";
-    
-    context += "❌ QUÉ NUNCA HACER:\n";
-    context += "   ✗ Usar comillas, numeraciones o listas EN RESPUESTAS (suena robótico) - Convierte a prosa\n";
-    context += "   ✗ Usar asteriscos o bullets (* • -) jamás en respuestas - Escribe natural\n";
-    context += "   ✗ Usar exclamaciones excesivas (máx 1 por párrafo) - Suena teatral, no tico\n";
-    context += "   ✗ Repetir información que ya dijiste\n";
-    context += "   ✗ Parecer que vendes, parecer que recomendas\n";
-    context += "   ✗ Ignorar el contexto emocional: si alguien dice 'tengo hambre', responde emocionalmente\n";
-    context += "   ✗ Sonar corporativo o usar jerga de vendedor\n";
-    context += "   ✗ Describir combos con listas. Di: 'El combo te trae X, Y y Z por ₡precio' en una línea\n";
-    context += "   ✗ Iignore oportunidades de upselling. Si alguien pide básico, pregunta si quiere upgrade\n";
-    context += "   ✗ NO des precio total sin contexto de grupo. Si son varios, divide: '₡X por persona'\n\n";
-    
-    context += "✅ TÚ ERES:\n";
-    context += "   ✓ Un tico que ama el producto (no un vendedor)\n";
-    context += "   ✓ Genuinamente interesado en que el cliente quede feliz\n";
-    context += "   ✓ Alguien que habla NATURAL: usa 'diay', 'mae', 'de lo mejor', 'tuanis', 'pura vida', 'facilito'\n";
-    context += "   ✓ Capaz de seguir conversaciones complejas sin perder el hilo\n";
-    context += "   ✓ Alguien que sabe CUÁNDO sugerir y cuándo no. Cuando ya tienen claro qué quieren, no insistas\n";
-    context += "   ✓ Creativo para hacer que la gente quiera más sin ser invasivo\n";
-    context += "   ✓ Conversacional: Máximo UNA exclamación por párrafo\n";
-    context += "   ✓ Vende experiencias emocionales, no listas de ingredientes\n";
-    context += "   ✓ Siempre busca oportunidades de upselling pero de forma orgánica, no forzada\n\n";
-    
-    context += "CÁLCULO DE PEDIDOS:\n";
-    context += "   → Si el usuario dice sus artículos: suma transparente, muestra detalle\n";
-    context += "   → Formato: '₡X,XXX' con separador de miles\n";
-    context += "   → Acompaña con emoji o energía: 'Total tuanis: ₡8,500'\n\n";
-    
-    context += "═══════════════════════════════════════════════════════════\n";
-    
-    return context;
-}
-
-// CONTROLADOR DE CHAT
 class ChatManager {
     constructor() {
         this.messages = [];
         this.isLoading = false;
-        this.menuContext = buildMenuContext();
         this.initializeElements();
         this.attachEventListeners();
     }
@@ -1626,29 +873,18 @@ class ChatManager {
         this.closeBtn.addEventListener('click', () => this.closeChat());
         this.sendBtn.addEventListener('click', () => this.sendMessage());
         this.input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
-            }
+            if (e.key === 'Enter') { e.preventDefault(); this.sendMessage(); }
         });
     }
 
-    toggleChat() {
-        if (this.widget.classList.contains('hidden')) {
-            this.openChat();
-        } else {
-            this.closeChat();
-        }
-    }
+    toggleChat() { this.widget.classList.contains('hidden') ? this.openChat() : this.closeChat(); }
 
     openChat() {
         this.widget.classList.remove('hidden');
         this.floatBtn.classList.add('hidden');
         this.input.focus();
-        
-        // Mostrar mensaje de bienvenida si es la primera vez
         if (this.messages.length === 0) {
-            this.addMessage('bot', '¡Ey, mae! 🌭 Bienvenido a Pilo\'s Dogs. Acá no voy a andar con preguntas aburridas... simplemente contame qué te provoca hoy. ¿Tenés hambre de algo específico? ¿Sos nuevo por acá? ¿Qué se te antoja? Yo te cuento qué es lo de lo mejor según mi experiencia 👌');
+            this.addMessage('bot', '¡Pura vida! ☕ Bienvenido a Sr. & Sra. Pinto. Contame, ¿tenés antojo de un pintito completo o unas empanaditas? Yo te recomiendo lo mejor de la casa 👌');
         }
     }
 
@@ -1658,57 +894,25 @@ class ChatManager {
     }
 
     addMessage(sender, text) {
-        const msgObj = { sender, text, timestamp: Date.now() };
-        this.messages.push(msgObj);
-        this.renderMessage(msgObj);
-        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-    }
-
-    renderMessage(msgObj) {
+        this.messages.push({ sender, text });
         const msgEl = document.createElement('div');
-        msgEl.className = `chat-message ${msgObj.sender}`;
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'chat-avatar';
-        avatar.innerHTML = msgObj.sender === 'user' ? '👤' : '🤖';
-        
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble';
-        bubble.innerHTML = this.formatMessage(msgObj.text);
-        
-        msgEl.appendChild(avatar);
-        msgEl.appendChild(bubble);
+        msgEl.className = `chat-message ${sender}`;
+        msgEl.innerHTML = `<div class="chat-avatar">${sender === 'user' ? '👤' : '👩‍🍳'}</div>
+                           <div class="chat-bubble">${text.replace(/\n/g, '<br>')}</div>`;
         this.messagesContainer.appendChild(msgEl);
-    }
-
-    formatMessage(text) {
-        // Convertir saltos de línea a <br>
-        return text.replace(/\n/g, '<br>');
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
     }
 
     showTyping() {
         const msgEl = document.createElement('div');
         msgEl.className = 'chat-message bot';
         msgEl.id = 'typing-indicator';
-        
-        const avatar = document.createElement('div');
-        avatar.className = 'chat-avatar';
-        avatar.innerHTML = '🤖';
-        
-        const typing = document.createElement('div');
-        typing.className = 'chat-typing';
-        typing.innerHTML = '<div class="chat-dot"></div><div class="chat-dot"></div><div class="chat-dot"></div>';
-        
-        msgEl.appendChild(avatar);
-        msgEl.appendChild(typing);
+        msgEl.innerHTML = '<div class="chat-avatar">👩‍🍳</div><div class="chat-bubble">Escribiendo...</div>';
         this.messagesContainer.appendChild(msgEl);
         this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
     }
 
-    removeTyping() {
-        const typing = document.getElementById('typing-indicator');
-        if (typing) typing.remove();
-    }
+    removeTyping() { const el = document.getElementById('typing-indicator'); if (el) el.remove(); }
 
     async sendMessage() {
         const text = this.input.value.trim();
@@ -1717,22 +921,16 @@ class ChatManager {
         this.input.value = '';
         this.sendBtn.disabled = true;
         this.isLoading = true;
-
-        // Agregar mensaje del usuario
         this.addMessage('user', text);
-
-        // Mostrar indicador de escritura
         this.showTyping();
 
         try {
-            // Llamar a Gemini
             const response = await this.callGemini(text);
             this.removeTyping();
             this.addMessage('bot', response);
         } catch (error) {
-            console.error('Error:', error);
             this.removeTyping();
-            this.addMessage('bot', '❌ Lo siento, hubo un error. Por favor intenta de nuevo.\nError: ' + error.message);
+            this.addMessage('bot', '❌ Hubo un pequeño error. ¡Intenta de nuevo puravida!');
         } finally {
             this.isLoading = false;
             this.sendBtn.disabled = false;
@@ -1741,24 +939,11 @@ class ChatManager {
     }
 
     async callGemini(userMessage) {
+        const context = `Eres asistente del restaurante 'Sr. & Sra. Pinto', especializado en comida tradicional costarricense. Responde amable, como un tico pura vida. Menú: Pinto Clásico (₡2500), Empanadas (₡1500), Ensalada (₡2800), Combo Pareja (₡5500), Combo Familiar (₡10500), Café (₡1200). Cliente: ${userMessage}`;
+        
         const payload = {
-            contents: [{
-                parts: [{
-                    text: this.menuContext + "\n\nPregunta del cliente: " + userMessage
-                }]
-            }],
-            generationConfig: {
-                temperature: 0.7,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 1024,
-            },
-            safetySettings: [
-                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
-            ]
+            contents: [{ parts: [{ text: context }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 256 }
         };
 
         const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
@@ -1767,32 +952,12 @@ class ChatManager {
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || `Error ${response.status}`);
-        }
-
         const data = await response.json();
-        
-        if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-            throw new Error('Respuesta inválida del servidor');
-        }
-
         return data.candidates[0].content.parts[0].text;
     }
 }
 
-// Inicializar chat cuando el DOM esté listo
-let chatManager;
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        chatManager = new ChatManager();
-    });
-} else {
-    chatManager = new ChatManager();
-}
-
+document.addEventListener('DOMContentLoaded', () => new ChatManager());
 </script>
-
 </body>
 </html>
