@@ -188,14 +188,14 @@ const CartManager = {
         message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
         
         if (this.selectedPaymentMethod === 'SINPE Móvil') {
-            message += `📌 _Realizar SINPE al 8917-9971 y enviar comprobante._\n\n`;
+            message += `📌 _Realizar SINPE al 8802-5793 y enviar comprobante._\n\n`;
         }
 
         message += `_Por favor confirmar disponibilidad 🙏_`;
 
         const encodedMessage = encodeURIComponent(message);
         // Usamos la API de envío directo para garantizar que el texto dinámico se procese correctamente
-        const whatsappUrl = `https://api.whatsapp.com/send?phone=50689179971&text=${encodedMessage}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=50688025793&text=${encodedMessage}`;
         
         // Neuro-selling: Feedback visual antes de redirigir
         const checkoutBtn = document.getElementById('btn-checkout');
