@@ -172,26 +172,30 @@ const CartManager = {
     enviarPedidoWhatsApp() {
         if (this.items.length === 0) return;
 
-        let message = `*☕ PEDIDO SR. & SRA. PINTO*\n`;
-        if (this.customerName) {
-            message += `👤 *CLIENTE:* ${this.customerName}\n`;
-        }
-        message += `--------------------------\n`;
+        let itemsList = '';
         this.items.forEach(item => {
-            message += `✅ ${item.quantity}x ${item.nombre} - ₡${(item.precio * item.quantity).toLocaleString()}\n`;
+            itemsList += `* ✅ ${item.quantity}x ${item.nombre} — ₡${(item.precio * item.quantity).toLocaleString()}\n`;
         });
-        message += `--------------------------\n`;
-        message += `*PAGO CON:* ${this.selectedPaymentMethod}\n`;
-        message += `*TOTAL A PAGAR: ₡${this.getTotal().toLocaleString()}*\n\n`;
+
+        let message = `☕ *NUEVO PEDIDO — Sr. & Sra. Pinto*\n\n`;
+        
+        if (this.customerName) {
+            message += `👤 *Cliente:* ${this.customerName}\n\n`;
+        }
+
+        message += `📝 *Detalle del pedido:*\n${itemsList}\n`;
+        message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
+        message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
         
         if (this.selectedPaymentMethod === 'SINPE Móvil') {
             message += `📌 _Realizar SINPE al 8917-9971 y enviar comprobante._\n\n`;
         }
 
-        message += `_Enviado desde la Web App Obrera_`;
+        message += `_Por favor confirmar disponibilidad 🙏_`;
 
         const encodedMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://api.whatsapp.com/message/5WRPOGGAHCIPI1?autoload=1&app_absent=0&text=${encodedMessage}`;
+        // Usamos la API de envío directo para garantizar que el texto dinámico se procese correctamente
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=50689179971&text=${encodedMessage}`;
         
         // Neuro-selling: Feedback visual antes de redirigir
         const checkoutBtn = document.getElementById('btn-checkout');
@@ -203,12 +207,43 @@ const CartManager = {
         setTimeout(() => {
             console.log('🔗 Abriendo WhatsApp:', whatsappUrl);
             window.open(whatsappUrl, '_blank');
+            
             if (checkoutBtn) {
                 checkoutBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Finalizar Pedido';
                 checkoutBtn.style.background = '';
             }
+
+            // Mostrar Modal de Éxito
+            const successModal = document.getElementById('success-overlay');
+            if (successModal) {
+                successModal.classList.add('active');
+            }
+            
+            // Cerrar el Drawer del carrito
+            UIController.toggleCart();
         }, 800);
-    }
+    },
+
+    resetAndClose() {
+        // Limpiar items
+        this.items = [];
+        this.save();
+        this.updateCartUI();
+        
+        // Limpiar nombre y campos
+        this.customerName = '';
+        const nameInput = document.getElementById('order-name');
+        if (nameInput) nameInput.value = '';
+
+        // Cerrar modal
+        const successModal = document.getElementById('success-overlay');
+        if (successModal) {
+            successModal.classList.remove('active');
+        }
+
+        // Feedback visual
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
 };
 
 // ========================================

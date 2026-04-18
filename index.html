@@ -687,6 +687,55 @@
         }
         .name-input:focus { border-color: var(--mostaza); background: rgba(255,255,255,0.08); }
 
+        /* ─── MODAL DE ÉXITO ─── */
+        .success-overlay {
+            position: fixed; inset: 0; background: rgba(59, 5, 11, 0.95);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; pointer-events: none; transition: 0.4s;
+            backdrop-filter: blur(10px);
+        }
+        .success-overlay.active { opacity: 1; pointer-events: auto; }
+        .success-modal {
+            background: var(--negro); border: 2px solid var(--mostaza);
+            border-radius: 25px; padding: 40px 30px; width: 90%; max-width: 400px;
+            text-align: center; transform: scale(0.8); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .success-overlay.active .success-modal { transform: scale(1); }
+        .success-icon {
+            width: 80px; height: 80px; background: #25d366; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 25px; font-size: 2.5rem; color: white;
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.3);
+            animation: success-pop 0.6s 0.3s both;
+        }
+        @keyframes success-pop {
+            0% { transform: scale(0); rotate: -45deg; }
+            70% { transform: scale(1.2); rotate: 10deg; }
+            100% { transform: scale(1); rotate: 0deg; }
+        }
+        .success-title {
+            color: var(--mostaza); font-family: 'Bebas Neue', cursive;
+            font-size: 2.4rem; letter-spacing: 2px; margin-bottom: 15px;
+            line-height: 1;
+        }
+        .success-text {
+            color: rgba(255,255,255,0.8); font-size: 0.95rem; margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .success-methods {
+            background: rgba(255,255,255,0.05); border-radius: 15px; padding: 15px;
+            margin-bottom: 30px; border: 1px dashed rgba(255,255,255,0.1);
+        }
+        .success-btn {
+            width: 100%; padding: 16px; border-radius: 15px; border: none;
+            background: transparent; color: white; border: 2px solid rgba(255,255,255,0.2);
+            font-family: 'Bebas Neue', cursive; font-size: 1.2rem;
+            text-transform: uppercase; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .success-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--mostaza); transform: translateY(-3px); }
+
     </style>
 
 </head>
@@ -871,7 +920,7 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="js/main.js?v=1.2"></script>
+<script src="js/main.js?v=1.3"></script>
 
 <script>
 /**
@@ -1050,6 +1099,40 @@ class ChatManager {
 }
 
 document.addEventListener('DOMContentLoaded', () => new ChatManager());
+</script>
+    <!-- MODAL DE ÉXITO -->
+    <div id="success-overlay" class="success-overlay">
+        <div class="success-modal">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="success-title">¡PEDIDO ENVIADO!</h2>
+            <div class="success-text">
+                Tu pedido fue enviado al local por WhatsApp.<br>
+                Espera la confirmación de disponibilidad.<br>
+                Una vez confirmado, te avisamos para que vengas a pagar.
+            </div>
+            <div class="success-methods">
+                <span style="font-size: 0.7rem; color: var(--mostaza); display: block; margin-bottom: 8px; text-transform: uppercase; opacity: 0.6;">MÉTODOS DE PAGO</span>
+                <div style="display: flex; justify-content: center; gap: 10px; font-size: 0.8rem;">
+                    <span>💵 Efectivo</span>
+                    <span>💳 Sinpe Móvil</span>
+                    <span>💳 Tarjeta</span>
+                </div>
+            </div>
+            <button class="success-btn" onclick="CartManager.resetAndClose()">
+                <i class="fas fa-redo"></i> HACER OTRO PEDIDO
+            </button>
+        </div>
+    </div>
+
+<script>
+    // Inyectar clase para ocultar modal inicialmente
+    document.getElementById('success-overlay').addEventListener('click', (e) => {
+        if(e.target === document.getElementById('success-overlay')) {
+            // CartManager.resetAndClose();
+        }
+    });
 </script>
 </body>
 </html>
