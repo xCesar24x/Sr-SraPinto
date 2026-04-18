@@ -662,6 +662,22 @@
             100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
         }
 
+        /* ─── PASARELA DE PAGO (CHIPS) ─── */
+        .payment-section { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
+        .payment-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: rgba(255,255,255,0.5); letter-spacing: 1px; margin-bottom: 10px; }
+        .payment-options { display: flex; gap: 8px; flex-wrap: wrap; }
+        .pay-chip {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px;
+            border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.6);
+        }
+        .pay-chip i { font-size: 1rem; }
+        .pay-chip.active {
+            background: rgba(253, 185, 19, 0.1); border-color: var(--mostaza); color: var(--mostaza);
+            box-shadow: 0 0 15px rgba(253, 185, 19, 0.2);
+        }
+        .pay-chip:hover:not(.active) { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+
     </style>
 
 </head>
@@ -744,6 +760,7 @@
         <!-- REDES HUB -->
         <h2 class="menu-title" style="margin-top: 15px; font-size: 1.6rem;">Comunidad Oficial</h2>
         <div class="links-container">
+            <!-- WHATSAPP ORIGINAL -->
             <a href="https://wa.me/50689179971" class="link-card whatsapp">
                 <div class="card-left">
                     <div class="card-icon"><i class="fab fa-whatsapp"></i></div>
@@ -755,6 +772,7 @@
                 <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
             </a>
 
+            <!-- INSTAGRAM ORIGINAL -->
             <a href="https://www.instagram.com" class="link-card instagram" target="_blank">
                 <div class="card-left">
                     <div class="card-icon"><i class="fab fa-instagram"></i></div>
@@ -766,6 +784,7 @@
                 <i class="fas fa-chevron-right" style="opacity: 0.4;"></i>
             </a>
 
+            <!-- FACEBOOK ORIGINAL -->
             <a href="https://www.facebook.com" class="link-card facebook" target="_blank">
                 <div class="card-left">
                     <div class="card-icon"><i class="fab fa-facebook"></i></div>
@@ -798,7 +817,22 @@
     </div>
 
     <div class="cart-footer">
-        <div class="total-row">
+        <div class="payment-section">
+            <h4 class="payment-title">Método de Pago:</h4>
+            <div id="payment-options" class="payment-options">
+                <div class="pay-chip active" onclick="CartManager.setPaymentMethod('Efectivo')">
+                    <i class="fas fa-money-bill-wave"></i> Efectivo
+                </div>
+                <div class="pay-chip" onclick="CartManager.setPaymentMethod('Tarjeta')">
+                    <i class="fas fa-credit-card"></i> Tarjeta
+                </div>
+                <div class="pay-chip" onclick="CartManager.setPaymentMethod('SINPE Móvil')">
+                    <i class="fas fa-mobile-alt"></i> SINPE
+                </div>
+            </div>
+        </div>
+
+        <div class="total-row" style="margin-top: 20px;">
             <span>Total:</span>
             <span id="cart-total">₡0</span>
         </div>

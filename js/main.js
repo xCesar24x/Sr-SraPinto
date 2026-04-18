@@ -25,6 +25,7 @@ const StateManager = {
 // ========================================
 const CartManager = {
     items: [],
+    selectedPaymentMethod: 'Efectivo',
     
     init() {
         const savedCart = localStorage.getItem('srysrapinto_cart');
@@ -124,10 +125,30 @@ const CartManager = {
             }
         }
 
+        // Actualizar visual de chips de pago
+        document.querySelectorAll('.pay-chip').forEach(chip => {
+            const method = chip.textContent.trim().split(' ').pop();
+            // Mapeo simple para manejar el texto del chip
+            if (this.selectedPaymentMethod.includes(method)) {
+                chip.classList.add('active');
+            } else {
+                chip.classList.remove('active');
+            }
+        });
+
         // Toggle visibility of checkout button
         const checkoutBtn = document.getElementById('btn-checkout');
         if (checkoutBtn) {
             checkoutBtn.style.display = this.items.length > 0 ? 'flex' : 'none';
+        }
+    },
+
+    setPaymentMethod(method) {
+        this.selectedPaymentMethod = method;
+        this.updateCartUI();
+        
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
         }
     },
 
@@ -153,7 +174,13 @@ const CartManager = {
             message += `✅ ${item.quantity}x ${item.nombre} - ₡${(item.precio * item.quantity).toLocaleString()}\n`;
         });
         message += `--------------------------\n`;
+        message += `*PAGO CON:* ${this.selectedPaymentMethod}\n`;
         message += `*TOTAL A PAGAR: ₡${this.getTotal().toLocaleString()}*\n\n`;
+        
+        if (this.selectedPaymentMethod === 'SINPE Móvil') {
+            message += `📌 _Realizar SINPE al 8917-9971 y enviar comprobante._\n\n`;
+        }
+
         message += `_Enviado desde la Web App Obrera_`;
 
         const encodedMessage = encodeURIComponent(message);
@@ -322,7 +349,7 @@ const UIController = {
      */
     switchCategory(categoryName) {
         // Remover clase active de todos los botones
-        document.querySelectorAll('.menu-btn').forEach(btn => {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         
@@ -361,7 +388,7 @@ const UIController = {
      * Setup de event listeners para el menú
      */
     setupMenuListeners() {
-        document.querySelectorAll('.menu-btn').forEach(btn => {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const category = e.currentTarget.dataset.category;
                 this.switchCategory(category);
@@ -569,7 +596,7 @@ const AnimationEngine = {
         }, '-=0.4')
         
         // Botones del menú entran con stagger
-        .from('.menu-btn', {
+        .from('.tab-btn', {
             duration: 0.6,
             opacity: 0,
             y: 20,
@@ -592,7 +619,7 @@ const AnimationEngine = {
     playSectionTransition(sectionElement) {
         if (sectionElement) {
             const children = sectionElement.querySelectorAll(
-                '.catalog-card, .social-link-card, .product-card, .contact-card'
+                '.menu-item-card, .link-card'
             );
             
             gsap.from(children, {
@@ -610,7 +637,7 @@ const AnimationEngine = {
      */
     setupFloatingElements() {
         // Botones del menú con hover float
-        gsap.utils.toArray('.menu-btn').forEach((btn) => {
+        gsap.utils.toArray('.tab-btn').forEach((btn) => {
             gsap.to(btn, {
                 y: 0,
                 repeat: -1,
@@ -631,7 +658,7 @@ const AnimationEngine = {
         });
         
         // Emojis en tarjetas de productos flotando
-        gsap.to('.image-placeholder', {
+        gsap.to('.menu-img', {
             y: -8,
             repeat: -1,
             yoyo: true,
@@ -659,7 +686,7 @@ const AnimationEngine = {
                 const moveX = (e.clientX - window.innerWidth / 2) * 0.002;
                 const moveY = (e.clientY - window.innerHeight / 2) * 0.002;
                 
-                gsap.to('.catalog-card', {
+                gsap.to('.menu-item-card', {
                     x: moveX * 10,
                     y: moveY * 10,
                     duration: 0.5,
@@ -693,7 +720,7 @@ const ResponsiveHandler = {
                     AnimationEngine.setupParallax();
                 } else {
                     // Limpiar parallax en mobile
-                    gsap.killTweensOf('.catalog-card');
+                    gsap.killTweensOf('.menu-item-card');
                 }
                 
                 lastWidth = currentWidth;
