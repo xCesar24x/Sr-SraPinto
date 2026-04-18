@@ -26,6 +26,7 @@ const StateManager = {
 const CartManager = {
     items: [],
     selectedPaymentMethod: 'Efectivo',
+    customerName: '',
     
     init() {
         const savedCart = localStorage.getItem('srysrapinto_cart');
@@ -127,9 +128,8 @@ const CartManager = {
 
         // Actualizar visual de chips de pago
         document.querySelectorAll('.pay-chip').forEach(chip => {
-            const method = chip.textContent.trim().split(' ').pop();
-            // Mapeo simple para manejar el texto del chip
-            if (this.selectedPaymentMethod.includes(method)) {
+            const method = chip.dataset.method;
+            if (this.selectedPaymentMethod === method) {
                 chip.classList.add('active');
             } else {
                 chip.classList.remove('active');
@@ -152,6 +152,10 @@ const CartManager = {
         }
     },
 
+    updateName(name) {
+        this.customerName = name;
+    },
+
     notifyAdd(productName) {
         const toast = document.createElement('div');
         toast.className = 'cart-toast';
@@ -169,6 +173,9 @@ const CartManager = {
         if (this.items.length === 0) return;
 
         let message = `*☕ PEDIDO SR. & SRA. PINTO*\n`;
+        if (this.customerName) {
+            message += `👤 *CLIENTE:* ${this.customerName}\n`;
+        }
         message += `--------------------------\n`;
         this.items.forEach(item => {
             message += `✅ ${item.quantity}x ${item.nombre} - ₡${(item.precio * item.quantity).toLocaleString()}\n`;

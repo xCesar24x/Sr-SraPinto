@@ -678,6 +678,15 @@
         }
         .pay-chip:hover:not(.active) { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
 
+        /* ─── CAMPO DE NOMBRE ─── */
+        .order-name-section { margin-top: 15px; }
+        .name-input {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 12px 15px; border-radius: 12px; font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem; outline: none; transition: 0.3s;
+        }
+        .name-input:focus { border-color: var(--mostaza); background: rgba(255,255,255,0.08); }
+
     </style>
 
 </head>
@@ -829,16 +838,22 @@
     </div>
 
     <div class="cart-footer">
+        <!-- NOMBRE DEL CLIENTE -->
+        <div class="order-name-section">
+            <h4 class="payment-title">¿A nombre de quién?</h4>
+            <input type="text" id="order-name" class="name-input" placeholder="Tu nombre aquí..." oninput="CartManager.updateName(this.value)">
+        </div>
+
         <div class="payment-section">
             <h4 class="payment-title">Método de Pago:</h4>
             <div id="payment-options" class="payment-options">
-                <div class="pay-chip active" onclick="CartManager.setPaymentMethod('Efectivo')">
+                <div class="pay-chip active" data-method="Efectivo" onclick="CartManager.setPaymentMethod('Efectivo')">
                     <i class="fas fa-money-bill-wave"></i> Efectivo
                 </div>
-                <div class="pay-chip" onclick="CartManager.setPaymentMethod('Tarjeta')">
+                <div class="pay-chip" data-method="Tarjeta" onclick="CartManager.setPaymentMethod('Tarjeta')">
                     <i class="fas fa-credit-card"></i> Tarjeta
                 </div>
-                <div class="pay-chip" onclick="CartManager.setPaymentMethod('SINPE Móvil')">
+                <div class="pay-chip" data-method="SINPE Móvil" data-method-alias="SINPE" onclick="CartManager.setPaymentMethod('SINPE Móvil')">
                     <i class="fas fa-mobile-alt"></i> SINPE
                 </div>
             </div>
