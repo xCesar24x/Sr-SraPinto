@@ -191,7 +191,7 @@ const CartManager = {
         message += `_Enviado desde la Web App Obrera_`;
 
         const encodedMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://wa.me/50689179971?text=${encodedMessage}`;
+        const whatsappUrl = `https://api.whatsapp.com/message/5WRPOGGAHCIPI1?text=${encodedMessage}`;
         
         // Neuro-selling: Feedback visual antes de redirigir
         const checkoutBtn = document.getElementById('btn-checkout');
