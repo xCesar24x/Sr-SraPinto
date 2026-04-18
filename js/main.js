@@ -201,6 +201,7 @@ const CartManager = {
         }
 
         setTimeout(() => {
+            console.log('🔗 Abriendo WhatsApp:', whatsappUrl);
             window.open(whatsappUrl, '_blank');
             if (checkoutBtn) {
                 checkoutBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Finalizar Pedido';
