@@ -575,7 +575,95 @@
         .left-column, .right-column { display: contents; }
         @media (min-width: 992px) { .left-column { display: flex; } .right-column { display: flex; } }
 
+        /* ─── CARRITO PREMIUM ─── */
+        .cart-fab {
+            position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--mostaza), var(--blanco)); color: var(--negro); 
+            font-size: 1.5rem; border: none; cursor: pointer; z-index: 998;
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); transition: 0.3s;
+        }
+        .cart-fab:hover { transform: scale(1.1); }
+        .cart-count {
+            position: absolute; top: -5px; right: -5px; background: var(--rojo); color: white;
+            font-size: 0.75rem; width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: 900;
+            border: 2px solid var(--blanco);
+        }
+
+        .cart-drawer {
+            position: fixed; top: 0; right: 0; width: 400px; max-width: 100%; height: 100%;
+            background: rgba(20, 5, 8, 0.98); border-left: 1px solid rgba(253, 185, 19, 0.2);
+            z-index: 2000; box-shadow: -10px 0 40px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; transition: 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+            backdrop-filter: blur(15px);
+        }
+        .cart-drawer.hidden { transform: translateX(100%); }
+
+        .cart-header {
+            padding: 30px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .cart-header h2 { font-family: 'Bebas Neue', cursive; font-size: 2rem; color: var(--mostaza); margin: 0; }
+
+        .cart-items { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .cart-item {
+            background: rgba(255,255,255,0.03); border-radius: 15px; padding: 15px;
+            display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .cart-item-info { display: flex; justify-content: space-between; align-items: center; }
+        .cart-item-name { font-weight: 700; font-size: 0.95rem; color: var(--blanco); }
+        .cart-item-price { font-weight: 900; color: var(--mostaza); }
+        
+        .cart-item-controls { display: flex; align-items: center; gap: 12px; margin-top: 5px; }
+        .cart-item-controls button {
+            background: rgba(255,255,255,0.1); border: none; color: white;
+            width: 28px; height: 28px; border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .cart-item-controls button:hover { background: var(--rojo); }
+        .cart-item-controls .delete-btn { margin-left: auto; color: rgba(255,255,255,0.3); }
+        .cart-item-controls .delete-btn:hover { color: var(--rojo); background: transparent; }
+
+        .cart-footer { padding: 30px 20px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.1); }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.25rem; font-weight: 900; }
+
+        .btn-checkout {
+            width: 100%; background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white; border: none; padding: 18px; border-radius: 15px;
+            font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1rem;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(37, 211, 102, 0.3); transition: 0.3s;
+        }
+        .btn-checkout:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5); }
+
+        .cart-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+            background: var(--mostaza); color: var(--negro); padding: 12px 25px;
+            border-radius: 30px; font-weight: 800; font-size: 0.9rem; z-index: 3000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .cart-toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ─── NEURO-SALES BADGES ─── */
+        .menu-badge.badge-popular { background: linear-gradient(135deg, #f1c40f, #f39c12); color: var(--negro); }
+        .menu-badge.badge-chef { background: linear-gradient(135deg, var(--rojo), var(--carbon)); color: white; }
+        .menu-badge.badge-value { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .menu-badge.badge-limited { background: linear-gradient(135deg, #e67e22, #d35400); color: white; }
+
+        .highlight-item { border-color: rgba(241, 196, 15, 0.4) !important; box-shadow: 0 10px 30px rgba(241, 196, 15, 0.1) !important; }
+        .highlight-item:hover { border-color: rgba(241, 196, 15, 0.8) !important; }
+
+        .price-tag { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 1.3rem; color: var(--mostaza); }
+        .cta-pulse { animation: pulse-soft 2s infinite; }
+        @keyframes pulse-soft {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
     </style>
+
 </head>
 <body>
 
@@ -638,7 +726,7 @@
     </div>
 
     <div class="right-column">
-        <!-- MENÚ DE EJEMPLO -->
+        <!-- MENÚ INTERACTIVO PINTO -->
         <div class="menu-wrapper">
             <h2 class="menu-title">NUESTRO MENÚ</h2>
             <div class="menu-tabs">
@@ -647,100 +735,11 @@
                 <button class="tab-btn" onclick="showCategory('bebidas')">☕ Bebidas</button>
             </div>
 
-            <!-- COMBOS -->
-            <div class="menu-content" id="cat-combos">
-                <div class="menu-item-card">
-                    <span class="menu-badge">Para 2</span>
-                    <div class="menu-img">👫</div>
-                    <div class="menu-info">
-                        <h4>Combo Pareja Tuanis</h4>
-                        <p>2 Pintos Tradicionales, 2 Huevos al gusto, Plátanos maduros, Queso frito y 2 Cafés chorreados.</p>
-                        <div class="price-row">
-                            <span>₡5,500</span>
-                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20pedir%20el%20Combo%20Pareja%20Tuanis" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="menu-item-card">
-                    <span class="menu-badge">Familiar</span>
-                    <div class="menu-img">👨‍👩‍👧‍👦</div>
-                    <div class="menu-info">
-                        <h4>Combo Familiar Pinto</h4>
-                        <p>4 Pintos, 4 Huevos, Natilla de la casa, Queso, Plátanos y 1 Litro de fresco natural de frutas.</p>
-                        <div class="price-row">
-                            <span>₡10,500</span>
-                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20pedir%20el%20Combo%20Familiar" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- INDIVIDUALES -->
-            <div class="menu-content" id="cat-individuales" style="display:none;">
-                <div class="menu-item-card">
-                    <div class="menu-img">🍛</div>
-                    <div class="menu-info">
-                        <h4>Pinto Clásico Completo</h4>
-                        <p>Gallo pinto tico con excelentes aromas, servido con huevo, plátano maduro y salsas caseras.</p>
-                        <div class="price-row">
-                            <span>₡2,500</span>
-                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20un%20Pinto%20Clásico" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="menu-item-card">
-                    <div class="menu-img">🥟</div>
-                    <div class="menu-info">
-                        <h4>Empanadas Arregladas</h4>
-                        <p>Crujiente masa de maíz rellena de carne mechada, cubierta con repollo y aderezo especial.</p>
-                        <div class="price-row">
-                            <span>₡1,500</span>
-                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20una%20Empanada" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="menu-item-card">
-                    <div class="menu-img">🥗</div>
-                    <div class="menu-info">
-                        <h4>Ensalada Pinto</h4>
-                        <p>Plato fresco y ligero con lechuga, tomates, aguacate tierno y nuestro aderezo del chef.</p>
-                        <div class="price-row">
-                            <span>₡2,800</span>
-                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20una%20Ensalada" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BEBIDAS -->
-            <div class="menu-content" id="cat-bebidas" style="display:none;">
-                <div class="menu-item-card">
-                    <div class="menu-img">☕</div>
-                    <div class="menu-info">
-                        <h4>Café Chorreado</h4>
-                        <p>Puro café de altura costarricense, chorreado al momento bien calientito.</p>
-                        <div class="price-row">
-                            <span>₡1,200</span>
-                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20un%20Café" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="menu-item-card">
-                    <div class="menu-img">🥤</div>
-                    <div class="menu-info">
-                        <h4>Fresco Natural</h4>
-                        <p>Fresco de frutas de temporada (Cas, Mora, Tamarindo o Limonada con hierbabuena).</p>
-                        <div class="price-row">
-                            <span>₡1,000</span>
-                            <a href="https://wa.me/50689179971?text=Hola,%20quiero%20un%20Fresco" class="btn-pedir"><i class="fab fa-whatsapp"></i> Pedir</a>
-                        </div>
-                    </div>
-                </div>
+            <div id="menu-dynamic-content" class="menu-content">
+                <!-- Se carga vía JavaScript (MenuController) -->
             </div>
         </div>
+
 
         <!-- REDES HUB -->
         <h2 class="menu-title" style="margin-top: 15px; font-size: 1.6rem;">Comunidad Oficial</h2>
@@ -781,6 +780,35 @@
     </div>
 </div>
 
+<!-- BOTÓN FLOTANTE CARRITO -->
+<button id="cart-fab" class="cart-fab">
+    <i class="fas fa-shopping-basket"></i>
+    <span id="cart-count" class="cart-count">0</span>
+</button>
+
+<!-- DRAWER DEL CARRITO -->
+<div id="cart-drawer" class="cart-drawer hidden">
+    <div class="cart-header">
+        <h2>Mi Pedido</h2>
+        <button id="cart-close-btn" class="chat-close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div id="cart-items-container" class="cart-items">
+        <!-- Se llena dinámicamente -->
+    </div>
+
+    <div class="cart-footer">
+        <div class="total-row">
+            <span>Total:</span>
+            <span id="cart-total">₡0</span>
+        </div>
+        <button id="btn-checkout" class="btn-checkout" onclick="CartManager.enviarPedidoWhatsApp()">
+            <i class="fab fa-whatsapp"></i> Finalizar Pedido
+        </button>
+    </div>
+</div>
+
+
 <script>
 /**
  * SISTEMA DE CARGA (LOADER)
@@ -795,12 +823,12 @@ window.addEventListener('load', () => {
  * CONTROL DE PESTAÑAS (MENÚ)
  */
 function showCategory(cat) {
-    document.querySelectorAll('.menu-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.tab-btn[onclick="showCategory('${cat}')"]`).classList.add('active');
     
-    document.getElementById('cat-' + cat).style.display = 'flex';
-    document.querySelector('.tab-btn[onclick="showCategory(\'' + cat + '\')"]').classList.add('active');
+    MenuController.renderCategory(cat);
 }
+
 
 /**
  * LÓGICA DE HORARIO (STATUS ENGINE)

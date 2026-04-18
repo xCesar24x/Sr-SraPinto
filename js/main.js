@@ -8,7 +8,7 @@
 // MÓDULO: State Management
 // ========================================
 const StateManager = {
-    currentCategory: 'destacados',
+    currentCategory: 'combos',
     
     setCategory(category) {
         this.currentCategory = category;
@@ -19,6 +19,299 @@ const StateManager = {
         return this.currentCategory;
     }
 };
+
+// ========================================
+// MÓDULO: Cart Manager (Motor del Carrito)
+// ========================================
+const CartManager = {
+    items: [],
+    
+    init() {
+        const savedCart = localStorage.getItem('srysrapinto_cart');
+        if (savedCart) {
+            try {
+                this.items = JSON.parse(savedCart);
+            } catch (e) {
+                this.items = [];
+            }
+        }
+        this.updateCartUI();
+    },
+    
+    save() {
+        localStorage.setItem('srysrapinto_cart', JSON.stringify(this.items));
+    },
+    
+    addItem(productId) {
+        const product = MenuController.getProductById(productId);
+        if (!product) return;
+        
+        const existingItem = this.items.find(item => item.id === productId);
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            this.items.push({
+                ...product,
+                quantity: 1
+            });
+        }
+        
+        this.save();
+        this.updateCartUI();
+        this.notifyAdd(product.nombre);
+    },
+    
+    removeItem(productId) {
+        const index = this.items.findIndex(item => item.id === productId);
+        if (index > -1) {
+            if (this.items[index].quantity > 1) {
+                this.items[index].quantity -= 1;
+            } else {
+                this.items.splice(index, 1);
+            }
+        }
+        this.save();
+        this.updateCartUI();
+    },
+
+    deleteItem(productId) {
+        this.items = this.items.filter(item => item.id !== productId);
+        this.save();
+        this.updateCartUI();
+    },
+    
+    getTotal() {
+        return this.items.reduce((sum, item) => sum + (item.precio * item.quantity), 0);
+    },
+    
+    getCount() {
+        return this.items.reduce((sum, item) => sum + item.quantity, 0);
+    },
+    
+    updateCartUI() {
+        const countBadge = document.getElementById('cart-count');
+        const drawerCount = document.getElementById('drawer-count');
+        const totalDisplay = document.getElementById('cart-total');
+        const cartContent = document.getElementById('cart-items-container');
+        
+        if (countBadge) countBadge.textContent = this.getCount();
+        if (drawerCount) drawerCount.textContent = this.getCount();
+        if (totalDisplay) totalDisplay.textContent = `₡${this.getTotal().toLocaleString()}`;
+        
+        if (cartContent) {
+            if (this.items.length === 0) {
+                cartContent.innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px; opacity: 0.5;">
+                        <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                        <p>Tu carrito está vacío.<br>¡Antojate de algo!</p>
+                    </div>
+                `;
+            } else {
+                cartContent.innerHTML = this.items.map(item => `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <span class="cart-item-name">${item.nombre}</span>
+                            <span class="cart-item-price">₡${(item.precio * item.quantity).toLocaleString()}</span>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button onclick="CartManager.removeItem('${item.id}')"><i class="fas fa-minus"></i></button>
+                            <span>${item.quantity}</span>
+                            <button onclick="CartManager.addItem('${item.id}')"><i class="fas fa-plus"></i></button>
+                            <button class="delete-btn" onclick="CartManager.deleteItem('${item.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Toggle visibility of checkout button
+        const checkoutBtn = document.getElementById('btn-checkout');
+        if (checkoutBtn) {
+            checkoutBtn.style.display = this.items.length > 0 ? 'flex' : 'none';
+        }
+    },
+
+    notifyAdd(productName) {
+        const toast = document.createElement('div');
+        toast.className = 'cart-toast';
+        toast.innerHTML = `<i class="fas fa-check-circle"></i> ${productName} añadido`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 100);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        }, 2000);
+    },
+
+    enviarPedidoWhatsApp() {
+        if (this.items.length === 0) return;
+
+        let message = `*☕ PEDIDO SR. & SRA. PINTO*\n`;
+        message += `--------------------------\n`;
+        this.items.forEach(item => {
+            message += `✅ ${item.quantity}x ${item.nombre} - ₡${(item.precio * item.quantity).toLocaleString()}\n`;
+        });
+        message += `--------------------------\n`;
+        message += `*TOTAL A PAGAR: ₡${this.getTotal().toLocaleString()}*\n\n`;
+        message += `_Enviado desde la Web App Obrera_`;
+
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/50689179971?text=${encodedMessage}`;
+        
+        // Neuro-selling: Feedback visual antes de redirigir
+        const checkoutBtn = document.getElementById('btn-checkout');
+        if (checkoutBtn) {
+            checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando tu pedido...';
+            checkoutBtn.style.background = 'var(--negro)';
+        }
+
+        setTimeout(() => {
+            window.open(whatsappUrl, '_blank');
+            if (checkoutBtn) {
+                checkoutBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Finalizar Pedido';
+                checkoutBtn.style.background = '';
+            }
+        }, 800);
+    }
+};
+
+// ========================================
+// MÓDULO: Menu Controller (Renderizado)
+// ========================================
+const MenuController = {
+    MENU_DATA: [
+        {
+            id: 'c-obrera',
+            categoria: 'combos',
+            nombre: 'Gallo Pinto Especial Obrera',
+            desc: 'La joya de la casa: Pinto ancestral con secreto del chef, huevo en torta sedoso, chorizo artesanal crujiente, queso palmito y maduro caramelizado.',
+            precio: 6800,
+            img: '🏆',
+            badge: 'Recomendado del Chef',
+            badgeClass: 'badge-chef'
+        },
+        {
+            id: 'c-pareja',
+            categoria: 'combos',
+            nombre: 'Banquete Pareja Tuanis',
+            desc: 'Explosión de sabor para compartir: 2 Pintos tradicionales, huevos al gusto con aroma de campo, maduros glaseados, queso frito y 2 cafés chorreados de altura.',
+            precio: 5500,
+            img: '👫',
+            badge: '¡El más pedido!',
+            badgeClass: 'badge-popular'
+        },
+        {
+            id: 'c-familiar',
+            categoria: 'combos',
+            nombre: 'Combo Familiar Pinto',
+            desc: 'Para el clan tico: 4 Pintos, 4 Huevos, Natilla cremosa de la zona de los santos, Queso, Plátanos y 1 Litro de fresco natural de temporada.',
+            precio: 10500,
+            img: '👨‍👩‍👧‍👦',
+            badge: 'Mejor Valor',
+            badgeClass: 'badge-value'
+        },
+        {
+            id: 'p-ancestral',
+            categoria: 'individuales',
+            nombre: 'Desayuno Ancestral',
+            desc: 'Recuperando raíces: Pinto chorreado con mantequilla de rancho, tortilla aliñada de maíz pujagua y café negro intenso.',
+            precio: 3200,
+            img: '🏺',
+            badge: 'Ancestral',
+            badgeClass: 'badge-limited'
+        },
+        {
+            id: 'p-clasico',
+            categoria: 'individuales',
+            nombre: 'Pinto Clásico Completo',
+            desc: 'El alma de Costa Rica: Gallo pinto perfectamente balanceado, servido con huevo tierno, plátano maduro y el toque justo de salsas caseras.',
+            precio: 2500,
+            img: '🍛'
+        },
+        {
+            id: 'p-empanada',
+            categoria: 'individuales',
+            nombre: 'Empanadas Arregladas',
+            desc: 'Mordisco crujiente: Masa de maíz tierno rellena de carne mechada especiada, coronada con repollo fresco y aderezo especial de la Sra. Pinto.',
+            precio: 1500,
+            img: '🥟',
+            badge: 'Snack Premium'
+        },
+        {
+            id: 'p-ensalada',
+            categoria: 'individuales',
+            nombre: 'Ensalada Pinto',
+            desc: 'Frescura vibrante: Mezcla verde crujiente, tomates de huerta, aguacate mantequilla y vinagreta cítrica refrescante.',
+            precio: 2800,
+            img: '🥗'
+        },
+        {
+            id: 'b-cafe',
+            categoria: 'bebidas',
+            nombre: 'Café Chorreado Imperial',
+            desc: 'Aroma que enamora: Puro grano de altura 100% arábica, chorreado artesanalmente ante sus ojos para conservar cada aceite esencial.',
+            precio: 1200,
+            img: '☕',
+            badge: 'Aroma Intenso'
+        },
+        {
+            id: 'b-fresco',
+            categoria: 'bebidas',
+            nombre: 'Fresco Natural de Cas',
+            desc: 'Pura vitamina: Cas recién recolectado, endulzado sutilmente con tapa de dulce natural y hielo granizado.',
+            precio: 1000,
+            img: '🥤'
+        },
+        {
+            id: 'b-aguadulce',
+            categoria: 'bebidas',
+            nombre: 'Agua Dulce con Queso',
+            desc: 'Tradición líquida: Infusión de caña de azúcar servida bien caliente con dados de queso tierno fundiéndose en el fondo.',
+            precio: 1400,
+            img: '🍶',
+            badge: 'Tradicional'
+        }
+    ],
+
+    getProductById(id) {
+        return this.MENU_DATA.find(p => p.id === id);
+    },
+
+    renderCategory(category) {
+        const container = document.getElementById('menu-dynamic-content');
+        if (!container) return;
+
+        const filtered = this.MENU_DATA.filter(p => p.categoria === category);
+        
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(10px)';
+        
+        setTimeout(() => {
+            container.innerHTML = filtered.map(product => `
+                <div class="menu-item-card ${product.badgeClass ? 'highlight-item' : ''}">
+                    ${product.badge ? `<span class="menu-badge ${product.badgeClass || ''}">${product.badge}</span>` : ''}
+                    <div class="menu-img">${product.img}</div>
+                    <div class="menu-info">
+                        <h4>${product.nombre}</h4>
+                        <p>${product.desc}</p>
+                        <div class="price-row">
+                            <div class="price-wrap">
+                                <span class="price-tag">₡${product.precio.toLocaleString()}</span>
+                            </div>
+                            <button onclick="CartManager.addItem('${product.id}')" class="btn-pedir cta-pulse">
+                                <i class="fas fa-plus"></i> ¡Lo quiero!
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            gsap.to(container, { opacity: 1, y: 0, duration: 0.4 });
+        }, 200);
+    }
+};
+
 
 // ========================================
 // MÓDULO: UI Controller
@@ -467,6 +760,28 @@ const AppInitializer = {
         UIController.setupMenuListeners();
         UIController.setupCharacterInteraction();
         UIController.setupFormHandling();
+        
+        // 1.5 Setup Cart & Menu
+        CartManager.init();
+        MenuController.renderCategory('combos'); 
+
+        // Setup Drawer
+        const cartToggle = document.getElementById('cart-fab');
+        const cartClose = document.getElementById('cart-close-btn');
+        const cartDrawer = document.getElementById('cart-drawer');
+
+        if (cartToggle && cartDrawer) {
+            cartToggle.addEventListener('click', () => {
+                cartDrawer.classList.remove('hidden');
+            });
+        }
+
+        if (cartClose && cartDrawer) {
+            cartClose.addEventListener('click', () => {
+                cartDrawer.classList.add('hidden');
+            });
+        }
+
         
         // 2. Animaciones
         AnimationEngine.playIntroAnimation();
