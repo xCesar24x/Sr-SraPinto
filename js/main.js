@@ -348,267 +348,127 @@ const MenuController = {
         return this.MENU_DATA.find(p => p.id === id);
     },
 
-    renderCategory(category) {
+    CATEGORIAS: [
+        { id: 'combos', nombre: 'Combos Tuanis', icon: '🥘' },
+        { id: 'individuales', nombre: 'Platos', icon: '🍽️' },
+        { id: 'bebidas', nombre: 'Bebidas', icon: '☕' }
+    ],
+
+    init() {
+        this.renderSidebar();
+        this.renderCategory('combos');
+    },
+
+    renderSidebar() {
+        const sidebar = document.getElementById('sidebar-categories');
+        if (!sidebar) return;
+
+        sidebar.innerHTML = this.CATEGORIAS.map(cat => `
+            <button class="sidebar-btn ${cat.id === StateManager.currentCategory ? 'active' : ''}" onclick="MenuController.renderCategory('${cat.id}')" data-cat="${cat.id}">
+                <span>${cat.icon}</span> ${cat.nombre}
+            </button>
+        `).join('');
+    },
+
+    renderCategory(categoryId) {
+        StateManager.setCategory(categoryId);
         const container = document.getElementById('menu-dynamic-content');
+        const titleEl = document.getElementById('current-category-title');
+        const countEl = document.getElementById('current-category-count');
         if (!container) return;
 
-        const filtered = this.MENU_DATA.filter(p => p.categoria === category);
+        // Update sidebar active state
+        document.querySelectorAll('.sidebar-btn').forEach(btn => {
+            if (btn.dataset.cat === categoryId) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+
+        const categoryInfo = this.CATEGORIAS.find(c => c.id === categoryId);
+        if (titleEl) titleEl.innerHTML = `${categoryInfo.icon} ${categoryInfo.nombre}`;
+
+        const filtered = this.MENU_DATA.filter(p => p.categoria === categoryId);
+        if (countEl) countEl.innerText = `${filtered.length} opciones`;
         
         container.style.opacity = '0';
         container.style.transform = 'translateY(10px)';
         
         setTimeout(() => {
             container.innerHTML = filtered.map(product => `
-                <div class="menu-item-card ${product.badgeClass ? 'highlight-item' : ''}">
-                    ${product.badge ? `<span class="menu-badge ${product.badgeClass || ''}">${product.badge}</span>` : ''}
-                    <div class="menu-img">${product.img}</div>
-                    <div class="menu-info">
-                        <h4>${product.nombre}</h4>
-                        <p>${product.desc}</p>
-                        <div class="price-row">
-                            <div class="price-wrap">
-                                <span class="price-tag">₡${product.precio.toLocaleString()}</span>
-                            </div>
-                            <button onclick="CartManager.addItem('${product.id}')" class="btn-pedir cta-pulse">
-                                <i class="fas fa-plus"></i> ¡Lo quiero!
-                            </button>
+                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''}">
+                    <div class="mch-img">${product.img}</div>
+                    <div class="mch-info">
+                        <div class="mch-title">${product.nombre} ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''}</div>
+                        <div class="mch-desc">${product.desc}</div>
+                        <div class="mch-price-row">
+                            <span class="mch-price">₡${product.precio.toLocaleString()}</span>
                         </div>
                     </div>
+                    <button class="mch-add-btn" onclick="CartManager.addItem('${product.id}')">
+                        <i class="fas fa-plus"></i>
+                    </button>
                 </div>
             `).join('');
             
             gsap.to(container, { opacity: 1, y: 0, duration: 0.4 });
-        }, 200);
+        }, 150);
     }
 };
 
 
 // ========================================
-// MÓDULO: UI Controller
+// MÓDULO: UI Controller (Views & Cart)
 // ========================================
 const UIController = {
-    /**
-     * Cambiar categoría activa de elementos visuales
-     */
-    switchCategory(categoryName) {
-        // Remover clase active de todos los botones
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
+    showMenu() {
+        const hub = document.getElementById('view-hub');
+        const menu = document.getElementById('view-menu');
+        if(!hub || !menu) return;
         
-        // Remover clase active de todas las secciones
-        document.querySelectorAll('.category-section').forEach(section => {
-            section.classList.remove('active');
-        });
+        hub.classList.remove('active');
+        hub.classList.add('hidden');
         
-        // Agregar clase active al botón seleccionado
-        const activeBtn = document.querySelector(`[data-category="${categoryName}"]`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-            gsap.to(activeBtn, { scale: 1.05, duration: 0.2 });
-        }
+        menu.classList.remove('hidden');
+        menu.classList.add('active');
         
-        // Agregar clase active a la sección correspondiente
-        const activeSection = document.querySelector(`[data-category="${categoryName}"]`).parentElement;
-        const targetSection = document.querySelector(`.category-section[data-category="${categoryName}"]`);
-        if (targetSection) {
-            targetSection.classList.add('active');
-        }
+        window.scrollTo(0,0);
         
-        // Update state
-        StateManager.setCategory(categoryName);
-        
-        // Scroll suave hacia arriba en mobile
-        if (window.innerWidth < 768) {
-            gsap.to(window, { 
-                scrollTo: { y: '.category-section.active' }, 
-                duration: 0.5 
-            });
-        }
+        if (navigator.vibrate) navigator.vibrate(50);
     },
     
-    /**
-     * Setup de event listeners para el menú
-     */
-    setupMenuListeners() {
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const category = e.currentTarget.dataset.category;
-                this.switchCategory(category);
-                
-                // Feedback háptico si disponible
-                if (navigator.vibrate) {
-                    navigator.vibrate(100);
-                }
-            });
-        });
+    showHub() {
+        const hub = document.getElementById('view-hub');
+        const menu = document.getElementById('view-menu');
+        if(!hub || !menu) return;
+        
+        menu.classList.remove('active');
+        menu.classList.add('hidden');
+        
+        hub.classList.remove('hidden');
+        hub.classList.add('active');
+        
+        if (navigator.vibrate) navigator.vibrate(50);
     },
     
-    /**
-     * Setup del personaje flotante interactivo
-     */
-    setupCharacterInteraction() {
-        const characterBtn = document.getElementById('character-toggle');
-        const speechBubble = document.getElementById('speech-bubble');
-        const messages = [
-            '¡Pura Vida! 🇨🇷',
-            '¡Hacé tu pedido! 🥐',
-            '¡Qué buen sabor! 😋',
-            'Tico fino 🎉',
-            '¡Síguenos! 📱'
-        ];
-        
-        if (characterBtn && speechBubble) {
-            characterBtn.addEventListener('click', () => {
-                // Animación del botón
-                gsap.to(characterBtn, {
-                    scale: 1.3,
-                    duration: 0.1,
-                    yoyo: true,
-                    repeat: 1
-                });
-                
-                // Mensaje aleatorio
-                const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-                speechBubble.textContent = randomMessage;
-                
-                // Mostrar burbuja
-                gsap.to(speechBubble, {
-                    opacity: 1,
-                    y: -10,
-                    duration: 0.3
-                });
-                
-                // Ocultar después de 2.5 segundos
-                setTimeout(() => {
-                    gsap.to(speechBubble, {
-                        opacity: 0,
-                        y: 0,
-                        duration: 0.3
-                    });
-                }, 2500);
-                
-                // Feedback háptico
-                if (navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]);
-                }
-            });
-        }
-    },
-    
-    /**
-     * Setup del formulario de contacto con validación robusta
-     */
-    setupFormHandling() {
-        const contactForm = document.getElementById('contactForm');
-        if (!contactForm) return;
-        
-        // Validador de email
-        const validateEmail = (email) => {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        };
-        
-        // Limpiar errores en tiempo real
-        contactForm.querySelectorAll('input, textarea').forEach(field => {
-            field.addEventListener('input', function() {
-                const errorSpan = this.parentElement.querySelector('.error-message');
-                if (errorSpan) {
-                    errorSpan.classList.add('hidden');
-                    this.classList.remove('border-red-600');
-                }
-            });
-        });
-        
-        // Submit del formulario
-        contactForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const nombre = contactForm.querySelector('#nombre');
-            const email = contactForm.querySelector('#email');
-            const mensaje = contactForm.querySelector('#mensaje');
-            let isValid = true;
-            
-            // Limpiar errores previos
-            contactForm.querySelectorAll('.error-message').forEach(err => {
-                err.classList.add('hidden');
-            });
-            
-            // Validar nombre
-            if (!nombre.value.trim() || nombre.value.trim().length < 2) {
-                nombre.parentElement.querySelector('.error-message').classList.remove('hidden');
-                nombre.classList.add('border-red-600');
-                isValid = false;
-            }
-            
-            // Validar email
-            if (!email.value.trim() || !validateEmail(email.value.trim())) {
-                email.parentElement.querySelector('.error-message').classList.remove('hidden');
-                email.classList.add('border-red-600');
-                isValid = false;
-            }
-            
-            // Validar mensaje
-            if (!mensaje.value.trim() || mensaje.value.trim().length < 5) {
-                mensaje.parentElement.querySelector('.error-message').classList.remove('hidden');
-                mensaje.classList.add('border-red-600');
-                isValid = false;
-            }
-            
-            if (isValid) {
-                // Animación de envío
-                const submitBtn = contactForm.querySelector('button[type="submit"]');
-                const successMsg = document.getElementById('successMessage');
-                const originalText = submitBtn.textContent;
-                
-                // Deshabilitar botón y mostrar estado
-                submitBtn.disabled = true;
-                gsap.to(submitBtn, {
-                    scale: 0.95,
-                    duration: 0.2
-                });
-                
-                submitBtn.innerHTML = '<span class="inline-block animate-spin">⏳</span> Enviando...';
-                
-                // Simular envío (en producción, aquí iría un fetch a un servidor)
-                setTimeout(() => {
-                    submitBtn.textContent = '✅ ¡Enviado exitosamente!';
-                    gsap.to(submitBtn, {
-                        scale: 1,
-                        backgroundColor: '#25D366',
-                        duration: 0.3
-                    });
-                    
-                    // Mostrar mensaje de éxito
-                    gsap.to(successMsg, {
-                        opacity: 1,
-                        duration: 0.4,
-                        onStart: () => {
-                            successMsg.classList.remove('hidden');
-                        }
-                    });
-                    
-                    // Resetear formulario después de 2.5s
-                    setTimeout(() => {
-                        contactForm.reset();
-                        submitBtn.textContent = originalText;
-                        submitBtn.disabled = false;
-                        gsap.to([submitBtn, successMsg], {
-                            opacity: 0,
-                            duration: 0.3,
-                            onComplete: () => {
-                                successMsg.classList.add('hidden');
-                                gsap.set(submitBtn, { 
-                                    backgroundColor: '',
-                                    opacity: 1
-                                });
-                            }
-                        });
-                    }, 2500);
-                }, 1200);
-            }
-        });
+    toggleCart() {
+        const drawer = document.getElementById('cart-drawer');
+        if(drawer) drawer.classList.toggle('hidden');
     }
 };
+
+// Toggle cart from FAB
+document.addEventListener('DOMContentLoaded', () => {
+    const cartFab = document.getElementById('cart-fab');
+    if (cartFab) {
+        cartFab.addEventListener('click', () => UIController.toggleCart());
+    }
+    const cartCloseBtn = document.getElementById('cart-close-btn');
+    if (cartCloseBtn) {
+        cartCloseBtn.addEventListener('click', () => UIController.toggleCart());
+    }
+    
+    // Initialize Menu
+    MenuController.init();
+});
 
 // ========================================
 // MÓDULO: Animations Engine
