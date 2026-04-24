@@ -257,7 +257,7 @@ const MenuController = {
             nombre: 'Gallo Pinto Especial Obrera',
             desc: 'La joya de la casa: Pinto ancestral con secreto del chef, huevo en torta sedoso, chorizo artesanal crujiente, queso palmito y maduro caramelizado.',
             precio: 6800,
-            img: '🏆',
+            img: '<img src="Imagenes catalogo/arreglada.jpeg" alt="Gallo Pinto">',
             badge: 'Recomendado del Chef',
             badgeClass: 'badge-chef'
         },
@@ -267,7 +267,7 @@ const MenuController = {
             nombre: 'Banquete Pareja Tuanis',
             desc: 'Explosión de sabor para compartir: 2 Pintos tradicionales, huevos al gusto con aroma de campo, maduros glaseados, queso frito y 2 cafés chorreados de altura.',
             precio: 5500,
-            img: '👫',
+            img: '<img src="Imagenes catalogo/WhatsApp Image 2026-04-15 at 9.56.39 PM.jpeg" alt="Banquete Pareja">',
             badge: '¡El más pedido!',
             badgeClass: 'badge-popular'
         },
@@ -277,7 +277,7 @@ const MenuController = {
             nombre: 'Combo Familiar Pinto',
             desc: 'Para el clan tico: 4 Pintos, 4 Huevos, Natilla cremosa de la zona de los santos, Queso, Plátanos y 1 Litro de fresco natural de temporada.',
             precio: 10500,
-            img: '👨‍👩‍👧‍👦',
+            img: '<img src="Imagenes catalogo/Burguer.jpeg" alt="Combo Familiar">',
             badge: 'Mejor Valor',
             badgeClass: 'badge-value'
         },
@@ -287,7 +287,7 @@ const MenuController = {
             nombre: 'Desayuno Ancestral',
             desc: 'Recuperando raíces: Pinto chorreado con mantequilla de rancho, tortilla aliñada de maíz pujagua y café negro intenso.',
             precio: 3200,
-            img: '🏺',
+            img: '<img src="Imagenes catalogo/quesadilla.jpeg" alt="Desayuno Ancestral">',
             badge: 'Ancestral',
             badgeClass: 'badge-limited'
         },
@@ -297,7 +297,7 @@ const MenuController = {
             nombre: 'Pinto Clásico Completo',
             desc: 'El alma de Costa Rica: Gallo pinto perfectamente balanceado, servido con huevo tierno, plátano maduro y el toque justo de salsas caseras.',
             precio: 2500,
-            img: '🍛'
+            img: '<img src="Imagenes catalogo/papas.jpeg" alt="Pinto Clásico">'
         },
         {
             id: 'p-empanada',
@@ -305,7 +305,7 @@ const MenuController = {
             nombre: 'Empanadas Arregladas',
             desc: 'Mordisco crujiente: Masa de maíz tierno rellena de carne mechada especiada, coronada con repollo fresco y aderezo especial de la Sra. Pinto.',
             precio: 1500,
-            img: '🥟',
+            img: '<img src="Imagenes catalogo/Empanadas.jpeg" alt="Empanadas">',
             badge: 'Snack Premium'
         },
         {
@@ -314,7 +314,7 @@ const MenuController = {
             nombre: 'Ensalada Pinto',
             desc: 'Frescura vibrante: Mezcla verde crujiente, tomates de huerta, aguacate mantequilla y vinagreta cítrica refrescante.',
             precio: 2800,
-            img: '🥗'
+            img: '<img src="Imagenes catalogo/WhatsApp Image 2026-04-16 at 11.24.53 AM.jpeg" alt="Ensalada">'
         },
         {
             id: 'b-cafe',
@@ -322,7 +322,7 @@ const MenuController = {
             nombre: 'Café Chorreado Imperial',
             desc: 'Aroma que enamora: Puro grano de altura 100% arábica, chorreado artesanalmente ante sus ojos para conservar cada aceite esencial.',
             precio: 1200,
-            img: '☕',
+            img: '<img src="assets/images/logo2.png" alt="Café" style="object-fit: contain;">',
             badge: 'Aroma Intenso'
         },
         {
@@ -331,7 +331,7 @@ const MenuController = {
             nombre: 'Fresco Natural de Cas',
             desc: 'Pura vitamina: Cas recién recolectado, endulzado sutilmente con tapa de dulce natural y hielo granizado.',
             precio: 1000,
-            img: '🥤'
+            img: '<img src="assets/images/logo2.png" alt="Fresco" style="object-fit: contain;">'
         },
         {
             id: 'b-aguadulce',
@@ -339,7 +339,7 @@ const MenuController = {
             nombre: 'Agua Dulce con Queso',
             desc: 'Tradición líquida: Infusión de caña de azúcar servida bien caliente con dados de queso tierno fundiéndose en el fondo.',
             precio: 1400,
-            img: '🍶',
+            img: '<img src="assets/images/logo2.png" alt="Agua Dulce" style="object-fit: contain;">',
             badge: 'Tradicional'
         }
     ],
