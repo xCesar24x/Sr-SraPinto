@@ -8,7 +8,7 @@
 // MÓDULO: State Management
 // ========================================
 const StateManager = {
-    currentCategory: 'combos',
+    currentCategory: 'desayunos',
     
     setCategory(category) {
         this.currentCategory = category;
@@ -263,95 +263,88 @@ const CartManager = {
 const MenuController = {
     MENU_DATA: [
         {
-            id: 'c-obrera',
-            categoria: 'combos',
-            nombre: 'Gallo Pinto Especial Obrera',
-            desc: 'La joya de la casa: Pinto ancestral con secreto del chef, huevo en torta sedoso, chorizo artesanal crujiente, queso palmito y maduro caramelizado.',
-            precio: 6800,
-            img: '<img src="images-catalogo/arreglada.jpeg" alt="Gallo Pinto">',
-            badge: 'Recomendado del Chef',
+            id: 'p-senor-pinto',
+            categoria: 'desayunos',
+            nombre: 'Señor Pinto',
+            desc: 'Delicioso gallo pinto con queso, plátano, huevo y natilla',
+            precio: 3500,
+            img: '<img src="images-catalogo/arreglada.jpeg" alt="Señor Pinto">',
+            badge: 'Recomendado',
             badgeClass: 'badge-chef'
         },
         {
-            id: 'c-pareja',
-            categoria: 'combos',
-            nombre: 'Banquete Pareja Tuanis',
-            desc: 'Explosión de sabor para compartir: 2 Pintos tradicionales, huevos al gusto con aroma de campo, maduros glaseados, queso frito y 2 cafés chorreados de altura.',
-            precio: 5500,
-            img: '<img src="images-catalogo/pareja.jpeg" alt="Banquete Pareja">',
+            id: 'c-senor-pinto-cafe',
+            categoria: 'desayunos',
+            nombre: 'Combo: Señor Pinto + Café',
+            desc: 'Lleválo en combo: Señor Pinto + Café',
+            precio: 4000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">☕🍳</div>'
+        },
+        {
+            id: 'p-burrote',
+            categoria: 'desayunos',
+            nombre: 'Burrote de Pinto',
+            desc: 'Delicioso gallo pinto con queso, huevo y natilla',
+            precio: 3000,
+            img: '<img src="images-catalogo/burguer.jpeg" alt="Burrote de Pinto">'
+        },
+        {
+            id: 'c-burrote-cafe',
+            categoria: 'desayunos',
+            nombre: 'Combo: Burrito de Pinto + Café',
+            desc: 'Lleválo en combo: Burrito de Pinto + Café',
+            precio: 3500,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌯☕</div>'
+        },
+        {
+            id: 'p-empanada-pinto',
+            categoria: 'desayunos',
+            nombre: 'Empanada de Pinto',
+            desc: 'Deliciosa empanada de pinto.',
+            precio: 2000,
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Pinto">'
+        },
+        {
+            id: 'p-sra-empanada',
+            categoria: 'desayunos',
+            nombre: 'Sra. Empanada Arreglada',
+            desc: 'Empanada de Pinto acompañada de papas fritas, repollo y nuestra salsa especial de la casa',
+            precio: 3000,
+            img: '<img src="images-catalogo/papas.jpeg" alt="Sra. Empanada">',
             badge: '¡El más pedido!',
             badgeClass: 'badge-popular'
         },
         {
-            id: 'c-familiar',
-            categoria: 'combos',
-            nombre: 'Combo Familiar Pinto',
-            desc: 'Para el clan tico: 4 Pintos, 4 Huevos, Natilla cremosa de la zona de los santos, Queso, Plátanos y 1 Litro de fresco natural de temporada.',
-            precio: 10500,
-            img: '<img src="images-catalogo/burguer.jpeg" alt="Combo Familiar">',
-            badge: 'Mejor Valor',
-            badgeClass: 'badge-value'
-        },
-        {
-            id: 'p-ancestral',
-            categoria: 'individuales',
-            nombre: 'Desayuno Ancestral',
-            desc: 'Recuperando raíces: Pinto chorreado con mantequilla de rancho, tortilla aliñada de maíz pujagua y café negro intenso.',
-            precio: 3200,
-            img: '<img src="images-catalogo/quesadilla.jpeg" alt="Desayuno Ancestral">',
-            badge: 'Ancestral',
-            badgeClass: 'badge-limited'
-        },
-        {
-            id: 'p-clasico',
-            categoria: 'individuales',
-            nombre: 'Pinto Clásico Completo',
-            desc: 'El alma de Costa Rica: Gallo pinto perfectamente balanceado, servido con huevo tierno, plátano maduro y el toque justo de salsas caseras.',
-            precio: 2500,
-            img: '<img src="images-catalogo/papas.jpeg" alt="Pinto Clásico">'
-        },
-        {
-            id: 'p-empanada',
-            categoria: 'individuales',
-            nombre: 'Empanadas Arregladas',
-            desc: 'Mordisco crujiente: Masa de maíz tierno rellena de carne mechada especiada, coronada con repollo fresco y aderezo especial de la Sra. Pinto.',
-            precio: 1500,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanadas">',
-            badge: 'Snack Premium'
-        },
-        {
-            id: 'p-ensalada',
-            categoria: 'individuales',
-            nombre: 'Ensalada Pinto',
-            desc: 'Frescura vibrante: Mezcla verde crujiente, tomates de huerta, aguacate mantequilla y vinagreta cítrica refrescante.',
-            precio: 2800,
-            img: '<img src="images-catalogo/ensalada.jpeg" alt="Ensalada">'
-        },
-        {
-            id: 'b-cafe',
+            id: 'b-cafe-premium',
             categoria: 'bebidas',
-            nombre: 'Café Chorreado Imperial',
-            desc: 'Aroma que enamora: Puro grano de altura 100% arábica, chorreado artesanalmente ante sus ojos para conservar cada aceite esencial.',
-            precio: 1200,
-            img: '<img src="assets/images/logo2.png" alt="Café" style="object-fit: contain;">',
-            badge: 'Aroma Intenso'
-        },
-        {
-            id: 'b-fresco',
-            categoria: 'bebidas',
-            nombre: 'Fresco Natural de Cas',
-            desc: 'Pura vitamina: Cas recién recolectado, endulzado sutilmente con tapa de dulce natural y hielo granizado.',
+            nombre: 'Café Premium Grande (12 onzas)',
+            desc: 'Café de calidad premium',
             precio: 1000,
-            img: '<img src="assets/images/logo2.png" alt="Fresco" style="object-fit: contain;">'
+            img: '<img src="assets/images/logo2.png" alt="Café" style="object-fit: contain;">'
         },
         {
-            id: 'b-aguadulce',
+            id: 'b-agua',
             categoria: 'bebidas',
-            nombre: 'Agua Dulce con Queso',
-            desc: 'Tradición líquida: Infusión de caña de azúcar servida bien caliente con dados de queso tierno fundiéndose en el fondo.',
-            precio: 1400,
-            img: '<img src="assets/images/logo2.png" alt="Agua Dulce" style="object-fit: contain;">',
-            badge: 'Tradicional'
+            nombre: 'Agua',
+            desc: 'Agua embotellada',
+            precio: 1000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">💧</div>'
+        },
+        {
+            id: 'b-gaseosas',
+            categoria: 'bebidas',
+            nombre: 'Gaseosas',
+            desc: 'Refrescantes gaseosas',
+            precio: 1200,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🥤</div>'
+        },
+        {
+            id: 'b-hidratante',
+            categoria: 'bebidas',
+            nombre: 'Bebida hidratante',
+            desc: 'Para recuperar energías',
+            precio: 1300,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧃</div>'
         }
     ],
 
@@ -360,14 +353,13 @@ const MenuController = {
     },
 
     CATEGORIAS: [
-        { id: 'combos', nombre: 'Combos Tuanis', icon: '🥘' },
-        { id: 'individuales', nombre: 'Platos', icon: '🍽️' },
-        { id: 'bebidas', nombre: 'Bebidas', icon: '☕' }
+        { id: 'desayunos', nombre: 'Desayunos y Snaks', icon: '🍳' },
+        { id: 'bebidas', nombre: 'Bebidas', icon: '🥤' }
     ],
 
     init() {
         this.renderSidebar();
-        this.renderCategory('combos');
+        this.renderCategory('desayunos');
     },
 
     renderSidebar() {
@@ -707,7 +699,7 @@ const AppInitializer = {
         
         // 1.5 Setup Cart & Menu
         CartManager.init();
-        MenuController.renderCategory('combos'); 
+        MenuController.renderCategory('desayunos'); 
 
         // Setup Drawer
         const cartToggle = document.getElementById('cart-fab');
