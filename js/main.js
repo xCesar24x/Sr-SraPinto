@@ -263,10 +263,10 @@ const CartManager = {
 const MenuController = {
     MENU_DATA: [
 
-        // ── MENÚ 1: Desayunos y Snaks ──
+        // ── PINTOS: Desayunos con gallo pinto ──
         {
             id: 'p-senor-pinto',
-            categoria: 'menu1',
+            categoria: 'pintos',
             nombre: 'Señor Pinto',
             desc: 'Delicioso gallo pinto con queso, plátano, huevo y natilla.',
             precio: 3500,
@@ -276,7 +276,7 @@ const MenuController = {
         },
         {
             id: 'c-senor-pinto-cafe',
-            categoria: 'menu1',
+            categoria: 'pintos',
             nombre: 'Combo: Señor Pinto + Café',
             desc: 'Lleválo en combo: Señor Pinto + Café Premium Grande.',
             precio: 4000,
@@ -286,7 +286,7 @@ const MenuController = {
         },
         {
             id: 'p-burrote',
-            categoria: 'menu1',
+            categoria: 'pintos',
             nombre: 'Burrote de Pinto',
             desc: 'Delicioso gallo pinto con queso, huevo y natilla.',
             precio: 3000,
@@ -294,7 +294,7 @@ const MenuController = {
         },
         {
             id: 'c-burrote-cafe',
-            categoria: 'menu1',
+            categoria: 'pintos',
             nombre: 'Combo: Burrote de Pinto + Café',
             desc: 'Lleválo en combo: Burrote de Pinto + Café Premium Grande.',
             precio: 3500,
@@ -304,7 +304,7 @@ const MenuController = {
         },
         {
             id: 'p-empanada-pinto',
-            categoria: 'menu1',
+            categoria: 'pintos',
             nombre: 'Empanada de Pinto',
             desc: 'Deliciosa empanada rellena de gallo pinto.',
             precio: 2000,
@@ -312,7 +312,7 @@ const MenuController = {
         },
         {
             id: 'p-sra-empanada-m1',
-            categoria: 'menu1',
+            categoria: 'pintos',
             nombre: 'Sra. Empanada Arreglada',
             desc: 'Empanada de Pinto acompañada de papas fritas, repollo y nuestra salsa especial de la casa.',
             precio: 3000,
@@ -321,10 +321,10 @@ const MenuController = {
             badgeClass: 'badge-popular'
         },
 
-        // ── MENÚ 2: Desayunos y Snaks ──
+        // ── SNACKS: Empanadas, Patacones y más ──
         {
             id: 'p-empanada-mozzarella',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Empanada de Queso Mozzarella',
             desc: 'Empanada artesanal rellena de queso mozzarella derretido.',
             precio: 2000,
@@ -332,7 +332,7 @@ const MenuController = {
         },
         {
             id: 'p-empanada-birria',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Empanada de Birria - Carne Res',
             desc: 'Empanada artesanal rellena de jugosa carne de birria de res.',
             precio: 2000,
@@ -340,7 +340,7 @@ const MenuController = {
         },
         {
             id: 'p-sra-empanada-m2',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Sra. Empanada Arreglada',
             desc: '(Queso o Carne) — Acompañada de papas fritas, repollo y nuestra salsa especial de la casa.',
             precio: 3000,
@@ -350,7 +350,7 @@ const MenuController = {
         },
         {
             id: 'p-sr-patacon',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Sr. Patacón',
             desc: 'Con carne de birria y queso mozzarella.',
             precio: 3000,
@@ -360,7 +360,7 @@ const MenuController = {
         },
         {
             id: 'p-sra-quesadilla',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Sra. Quesadilla',
             desc: 'Con carne de birria y queso mozzarella.',
             precio: 3000,
@@ -368,7 +368,7 @@ const MenuController = {
         },
         {
             id: 'p-sra-hamburguesa',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Sra. Hamburguesa con Papas',
             desc: 'Jugosa hamburguesa acompañada de papas fritas.',
             precio: 4000,
@@ -378,7 +378,7 @@ const MenuController = {
         },
         {
             id: 'p-sr-cono-salchipapas',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Sr. Cono de SalchiPapas',
             desc: 'Cono generoso de salchipapas, perfecto para compartir.',
             precio: 2500,
@@ -386,7 +386,7 @@ const MenuController = {
         },
         {
             id: 'p-aros-cebolla',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Aros de Cebolla',
             desc: 'Crujientes aros de cebolla dorados al momento.',
             precio: 2000,
@@ -394,7 +394,7 @@ const MenuController = {
         },
         {
             id: 'p-palitos-queso',
-            categoria: 'menu2',
+            categoria: 'snacks',
             nombre: 'Palitos de Queso Mozzarella',
             desc: 'Palitos de mozzarella crujientes por fuera y derretidos por dentro.',
             precio: 2000,
@@ -441,14 +441,14 @@ const MenuController = {
     },
 
     CATEGORIAS: [
-        { id: 'menu1',   nombre: 'Menú 1',  icon: '🍳', subtitle: '¡Lo escribimos mal, pero los hacemos bien! ;)' },
-        { id: 'menu2',   nombre: 'Menú 2',  icon: '🌮', subtitle: '¡Lo escribimos mal, pero los hacemos bien! ;)' },
+        { id: 'pintos',  nombre: 'Pintos',  icon: '🍳', subtitle: 'Gallo pinto hecho con amor, igual de malo pa' la dieta 😉' },
+        { id: 'snacks',  nombre: 'Snacks',  icon: '🥟', subtitle: 'Empanadas, patacones y más antojos irresistibles' },
         { id: 'bebidas', nombre: 'Bebidas', icon: '☕' }
     ],
 
     init() {
         this.renderSidebar();
-        this.renderCategory('menu1');
+        this.renderCategory('pintos');
     },
 
     renderSidebar() {
@@ -794,7 +794,7 @@ const AppInitializer = {
         
         // 1.5 Setup Cart & Menu
         CartManager.init();
-        MenuController.renderCategory('menu1'); 
+        MenuController.renderCategory('pintos'); 
 
         // Setup Drawer
         const cartToggle = document.getElementById('cart-fab');
