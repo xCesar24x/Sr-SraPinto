@@ -262,63 +262,92 @@ const CartManager = {
 // ========================================
 const MenuController = {
     MENU_DATA: [
+        // ── DESAYUNOS Y SNACKS ──
         {
-            id: 'p-senor-pinto',
+            id: 'p-empanada-mozzarella',
             categoria: 'desayunos',
-            nombre: 'Señor Pinto',
-            desc: 'Delicioso gallo pinto con queso, plátano, huevo y natilla',
-            precio: 3500,
-            img: '<img src="images-catalogo/arreglada.jpeg" alt="Señor Pinto">',
-            badge: 'Recomendado',
-            badgeClass: 'badge-chef'
-        },
-        {
-            id: 'c-senor-pinto-cafe',
-            categoria: 'desayunos',
-            nombre: 'Combo: Señor Pinto + Café',
-            desc: 'Lleválo en combo: Señor Pinto + Café',
-            precio: 4000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">☕🍳</div>'
-        },
-        {
-            id: 'p-burrote',
-            categoria: 'desayunos',
-            nombre: 'Burrote de Pinto',
-            desc: 'Delicioso gallo pinto con queso, huevo y natilla',
-            precio: 3000,
-            img: '<img src="images-catalogo/burguer.jpeg" alt="Burrote de Pinto">'
-        },
-        {
-            id: 'c-burrote-cafe',
-            categoria: 'desayunos',
-            nombre: 'Combo: Burrito de Pinto + Café',
-            desc: 'Lleválo en combo: Burrito de Pinto + Café',
-            precio: 3500,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌯☕</div>'
-        },
-        {
-            id: 'p-empanada-pinto',
-            categoria: 'desayunos',
-            nombre: 'Empanada de Pinto',
-            desc: 'Deliciosa empanada de pinto.',
+            nombre: 'Empanada de Queso Mozzarella',
+            desc: 'Empanada artesanal rellena de queso mozzarella derretido.',
             precio: 2000,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Pinto">'
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Queso Mozzarella">'
+        },
+        {
+            id: 'p-empanada-birria',
+            categoria: 'desayunos',
+            nombre: 'Empanada de Birria - Carne Res',
+            desc: 'Empanada artesanal rellena de jugosa carne de birria de res.',
+            precio: 2000,
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Birria">'
         },
         {
             id: 'p-sra-empanada',
             categoria: 'desayunos',
             nombre: 'Sra. Empanada Arreglada',
-            desc: 'Empanada de Pinto acompañada de papas fritas, repollo y nuestra salsa especial de la casa',
+            desc: '(Queso o Carne) — Acompañada de papas fritas, repollo y nuestra salsa especial de la casa.',
             precio: 3000,
-            img: '<img src="images-catalogo/papas.jpeg" alt="Sra. Empanada">',
+            img: '<img src="images-catalogo/papas.jpeg" alt="Sra. Empanada Arreglada">',
             badge: '¡El más pedido!',
             badgeClass: 'badge-popular'
         },
         {
+            id: 'p-sr-patacon',
+            categoria: 'desayunos',
+            nombre: 'Sr. Patacón',
+            desc: 'Con carne de birria y queso mozzarella.',
+            precio: 3000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🫓</div>',
+            badge: 'Especial',
+            badgeClass: 'badge-chef'
+        },
+        {
+            id: 'p-sra-quesadilla',
+            categoria: 'desayunos',
+            nombre: 'Sra. Quesadilla',
+            desc: 'Con carne de birria y queso mozzarella.',
+            precio: 3000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🫔</div>'
+        },
+        {
+            id: 'p-sra-hamburguesa',
+            categoria: 'desayunos',
+            nombre: 'Sra. Hamburguesa con Papas',
+            desc: 'Jugosa hamburguesa acompañada de papas fritas.',
+            precio: 4000,
+            img: '<img src="images-catalogo/burguer.jpeg" alt="Sra. Hamburguesa con Papas">',
+            badge: 'Combo',
+            badgeClass: 'badge-value'
+        },
+        {
+            id: 'p-sr-cono-salchipapas',
+            categoria: 'desayunos',
+            nombre: 'Sr. Cono de SalchiPapas',
+            desc: 'Cono generoso de salchipapas, perfecto para compartir.',
+            precio: 2500,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌭🍟</div>'
+        },
+        {
+            id: 'p-aros-cebolla',
+            categoria: 'desayunos',
+            nombre: 'Aros de Cebolla',
+            desc: 'Crujientes aros de cebolla dorados al momento.',
+            precio: 2000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧅</div>'
+        },
+        {
+            id: 'p-palitos-queso',
+            categoria: 'desayunos',
+            nombre: 'Palitos de Queso Mozzarella',
+            desc: 'Palitos de mozzarella crujientes por fuera y derretidos por dentro.',
+            precio: 2000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧀</div>'
+        },
+
+        // ── BEBIDAS ──
+        {
             id: 'b-cafe-premium',
             categoria: 'bebidas',
             nombre: 'Café Premium Grande (12 onzas)',
-            desc: 'Café de calidad premium',
+            desc: 'Café de calidad premium, recién hecho.',
             precio: 1000,
             img: '<img src="assets/images/logo2.png" alt="Café" style="object-fit: contain;">'
         },
@@ -326,7 +355,7 @@ const MenuController = {
             id: 'b-agua',
             categoria: 'bebidas',
             nombre: 'Agua',
-            desc: 'Agua embotellada',
+            desc: 'Agua embotellada fresca.',
             precio: 1000,
             img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">💧</div>'
         },
@@ -334,15 +363,15 @@ const MenuController = {
             id: 'b-gaseosas',
             categoria: 'bebidas',
             nombre: 'Gaseosas',
-            desc: 'Refrescantes gaseosas',
+            desc: 'Refrescantes gaseosas bien frías.',
             precio: 1200,
             img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🥤</div>'
         },
         {
             id: 'b-hidratante',
             categoria: 'bebidas',
-            nombre: 'Bebida hidratante',
-            desc: 'Para recuperar energías',
+            nombre: 'Bebidas Hidratantes',
+            desc: 'Para recuperar energías y mantenerte hidratado.',
             precio: 1300,
             img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧃</div>'
         }
@@ -353,7 +382,7 @@ const MenuController = {
     },
 
     CATEGORIAS: [
-        { id: 'desayunos', nombre: 'Desayunos y Snaks', icon: '🍳' },
+        { id: 'desayunos', nombre: 'Desayunos y Snacks', icon: '🍳' },
         { id: 'bebidas', nombre: 'Bebidas', icon: '🥤' }
     ],
 
