@@ -8,7 +8,7 @@
 // MÓDULO: State Management
 // ========================================
 const StateManager = {
-    currentCategory: 'desayunos',
+    currentCategory: 'menu1',
     
     setCategory(category) {
         this.currentCategory = category;
@@ -262,10 +262,69 @@ const CartManager = {
 // ========================================
 const MenuController = {
     MENU_DATA: [
-        // ── DESAYUNOS Y SNACKS ──
+
+        // ── MENÚ 1: Desayunos y Snaks ──
+        {
+            id: 'p-senor-pinto',
+            categoria: 'menu1',
+            nombre: 'Señor Pinto',
+            desc: 'Delicioso gallo pinto con queso, plátano, huevo y natilla.',
+            precio: 3500,
+            img: '<img src="images-catalogo/arreglada.jpeg" alt="Señor Pinto">',
+            badge: 'Recomendado',
+            badgeClass: 'badge-chef'
+        },
+        {
+            id: 'c-senor-pinto-cafe',
+            categoria: 'menu1',
+            nombre: 'Combo: Señor Pinto + Café',
+            desc: 'Lleválo en combo: Señor Pinto + Café Premium Grande.',
+            precio: 4000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">☕🍳</div>',
+            badge: 'Combo',
+            badgeClass: 'badge-value'
+        },
+        {
+            id: 'p-burrote',
+            categoria: 'menu1',
+            nombre: 'Burrote de Pinto',
+            desc: 'Delicioso gallo pinto con queso, huevo y natilla.',
+            precio: 3000,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌯</div>'
+        },
+        {
+            id: 'c-burrote-cafe',
+            categoria: 'menu1',
+            nombre: 'Combo: Burrote de Pinto + Café',
+            desc: 'Lleválo en combo: Burrote de Pinto + Café Premium Grande.',
+            precio: 3500,
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌯☕</div>',
+            badge: 'Combo',
+            badgeClass: 'badge-value'
+        },
+        {
+            id: 'p-empanada-pinto',
+            categoria: 'menu1',
+            nombre: 'Empanada de Pinto',
+            desc: 'Deliciosa empanada rellena de gallo pinto.',
+            precio: 2000,
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Pinto">'
+        },
+        {
+            id: 'p-sra-empanada-m1',
+            categoria: 'menu1',
+            nombre: 'Sra. Empanada Arreglada',
+            desc: 'Empanada de Pinto acompañada de papas fritas, repollo y nuestra salsa especial de la casa.',
+            precio: 3000,
+            img: '<img src="images-catalogo/papas.jpeg" alt="Sra. Empanada Arreglada">',
+            badge: '¡El más pedido!',
+            badgeClass: 'badge-popular'
+        },
+
+        // ── MENÚ 2: Desayunos y Snaks ──
         {
             id: 'p-empanada-mozzarella',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Empanada de Queso Mozzarella',
             desc: 'Empanada artesanal rellena de queso mozzarella derretido.',
             precio: 2000,
@@ -273,15 +332,15 @@ const MenuController = {
         },
         {
             id: 'p-empanada-birria',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Empanada de Birria - Carne Res',
             desc: 'Empanada artesanal rellena de jugosa carne de birria de res.',
             precio: 2000,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Birria">'
+            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🥩</div>'
         },
         {
-            id: 'p-sra-empanada',
-            categoria: 'desayunos',
+            id: 'p-sra-empanada-m2',
+            categoria: 'menu2',
             nombre: 'Sra. Empanada Arreglada',
             desc: '(Queso o Carne) — Acompañada de papas fritas, repollo y nuestra salsa especial de la casa.',
             precio: 3000,
@@ -291,7 +350,7 @@ const MenuController = {
         },
         {
             id: 'p-sr-patacon',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Sr. Patacón',
             desc: 'Con carne de birria y queso mozzarella.',
             precio: 3000,
@@ -301,7 +360,7 @@ const MenuController = {
         },
         {
             id: 'p-sra-quesadilla',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Sra. Quesadilla',
             desc: 'Con carne de birria y queso mozzarella.',
             precio: 3000,
@@ -309,17 +368,17 @@ const MenuController = {
         },
         {
             id: 'p-sra-hamburguesa',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Sra. Hamburguesa con Papas',
             desc: 'Jugosa hamburguesa acompañada de papas fritas.',
             precio: 4000,
             img: '<img src="images-catalogo/burguer.jpeg" alt="Sra. Hamburguesa con Papas">',
-            badge: 'Combo',
-            badgeClass: 'badge-value'
+            badge: 'Favorito',
+            badgeClass: 'badge-popular'
         },
         {
             id: 'p-sr-cono-salchipapas',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Sr. Cono de SalchiPapas',
             desc: 'Cono generoso de salchipapas, perfecto para compartir.',
             precio: 2500,
@@ -327,7 +386,7 @@ const MenuController = {
         },
         {
             id: 'p-aros-cebolla',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Aros de Cebolla',
             desc: 'Crujientes aros de cebolla dorados al momento.',
             precio: 2000,
@@ -335,14 +394,14 @@ const MenuController = {
         },
         {
             id: 'p-palitos-queso',
-            categoria: 'desayunos',
+            categoria: 'menu2',
             nombre: 'Palitos de Queso Mozzarella',
             desc: 'Palitos de mozzarella crujientes por fuera y derretidos por dentro.',
             precio: 2000,
             img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧀</div>'
         },
 
-        // ── BEBIDAS ──
+        // ── BEBIDAS (compartidas) ──
         {
             id: 'b-cafe-premium',
             categoria: 'bebidas',
@@ -382,13 +441,14 @@ const MenuController = {
     },
 
     CATEGORIAS: [
-        { id: 'desayunos', nombre: 'Desayunos y Snacks', icon: '🍳' },
-        { id: 'bebidas', nombre: 'Bebidas', icon: '🥤' }
+        { id: 'menu1',   nombre: 'Menú 1',  icon: '🍳', subtitle: '¡Lo escribimos mal, pero los hacemos bien! ;)' },
+        { id: 'menu2',   nombre: 'Menú 2',  icon: '🌮', subtitle: '¡Lo escribimos mal, pero los hacemos bien! ;)' },
+        { id: 'bebidas', nombre: 'Bebidas', icon: '☕' }
     ],
 
     init() {
         this.renderSidebar();
-        this.renderCategory('desayunos');
+        this.renderCategory('menu1');
     },
 
     renderSidebar() {
@@ -416,7 +476,13 @@ const MenuController = {
         });
 
         const categoryInfo = this.CATEGORIAS.find(c => c.id === categoryId);
-        if (titleEl) titleEl.innerHTML = `${categoryInfo.icon} ${categoryInfo.nombre}`;
+        if (titleEl) {
+            titleEl.innerHTML = `${categoryInfo.icon} ${categoryInfo.nombre}${
+                categoryInfo.subtitle
+                    ? ` <span style="font-size:0.75rem; font-weight:500; opacity:0.6; font-family:'Montserrat',sans-serif; letter-spacing:0;">${categoryInfo.subtitle}</span>`
+                    : ''
+            }`;
+        }
 
         const filtered = this.MENU_DATA.filter(p => p.categoria === categoryId);
         if (countEl) countEl.innerText = `${filtered.length} opciones`;
@@ -728,7 +794,7 @@ const AppInitializer = {
         
         // 1.5 Setup Cart & Menu
         CartManager.init();
-        MenuController.renderCategory('desayunos'); 
+        MenuController.renderCategory('menu1'); 
 
         // Setup Drawer
         const cartToggle = document.getElementById('cart-fab');
