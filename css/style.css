@@ -3,10 +3,14 @@
    ============================================ */
 
 :root {
-    --burgundy: #630C16;
+    --burgundy: #3D010C;
+    --negro: #3D010C;
     --pink: #E91350;
+    --rojo: #E91350;
     --cream: #FDF5E6;
+    --mostaza: #FDF5E6;
     --white: #FFFFFF;
+    --blanco: #FFFFFF;
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.1);
     --shadow-md: 8px 8px 0px 0px rgba(99, 12, 22, 0.3);
     --shadow-lg: 12px 12px 0px 0px rgba(233, 19, 80, 0.3);
@@ -83,6 +87,31 @@ body {
     color: var(--white);
     box-shadow: var(--shadow-lg);
     transform: scale(1.05);
+}
+
+@media (max-width: 420px) {
+    .cart-fab {
+        left: 20px;
+        right: auto;
+    }
+    .cart-drawer {
+        top: auto;
+        bottom: 0;
+        height: 90vh;
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%);
+    }
+    .cart-drawer.hidden {
+        transform: translateY(100%);
+    }
+    /* El estado activo cuando NO tiene hidden */
+    .cart-drawer:not(.hidden) {
+        transform: translateY(0);
+    }
+    .menu-layout {
+        padding-bottom: 130px;
+    }
 }
 
 @media (max-width: 768px) {

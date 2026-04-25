@@ -560,6 +560,11 @@
         .chat-input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(253, 185, 19, 0.3); color: white; padding: 12px 15px; border-radius: 25px; font-family: 'Montserrat', sans-serif; font-size: 0.9rem; outline: none; }
         .chat-send-btn { background: linear-gradient(135deg, var(--rojo), var(--carbon)); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
         
+        .chat-quick-replies { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 15px 15px; }
+        .chat-quick-replies.hidden { display: none; }
+        .quick-reply-btn { background: rgba(253, 185, 19, 0.15); border: 1px solid rgba(253, 185, 19, 0.4); color: var(--mostaza); padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.3s; font-family: 'Montserrat', sans-serif; }
+        .quick-reply-btn:hover { transform: scale(1.05); background: rgba(253, 185, 19, 0.25); }
+        
         .chat-float-btn {
             position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%;
             background: linear-gradient(135deg, var(--rojo), var(--carbon)); color: white; font-size: 1.8rem; border: none; cursor: pointer; z-index: 999;
@@ -894,6 +899,11 @@
         <button id="chat-close-btn" class="chat-close-btn"><i class="fas fa-times"></i></button>
     </div>
     <div id="chat-messages" class="chat-messages"></div>
+    <div id="chat-quick-replies" class="chat-quick-replies">
+        <button class="quick-reply-btn" onclick="window.__pintoChatQuick('🍽️ Ver menú')">🍽️ Ver menú</button>
+        <button class="quick-reply-btn" onclick="window.__pintoChatQuick('🛒 Hacer pedido')">🛒 Hacer pedido</button>
+        <button class="quick-reply-btn" onclick="window.__pintoChatQuick('⏰ Horario')">⏰ Horario</button>
+    </div>
     <div class="chat-input-area">
         <input type="text" id="chat-input" class="chat-input" placeholder="Pregunta sobre ingredientes o combos..." />
         <button id="chat-send-btn" class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
@@ -1129,10 +1139,281 @@ document.querySelectorAll('.link-card').forEach(card => {
 });
 
 /**
- * SISTEMA DE CHAT CON GEMINI API (AJUSTADO A PINTO)
+ * SISTEMA DE CHAT LOCAL (SRA. PINTO BOT)
  */
-const GEMINI_API_KEY = 'AIzaSyDD3BdlStmmihSe3ZU_DCHADI3pn6yU7Fo';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+
+const FAQ_DB = [
+    // Saludos
+    { q: "buenas", a: "¡Buenas! ¿En qué le ayudamos hoy? ☕" },
+    { q: "hola como estan", a: "¡Muy bien gracias, pura vida! ¿Le provoca algo rico?" },
+    { q: "buenas noches", a: "¡Buenas noches! Recuerde que cerramos a las 6pm de lunes a sábado 🕕 ¿Le ayudo con algo?" },
+    { q: "hola mae", a: "¡Hola! Aquí a las órdenes 👩‍🍳 ¿Qué se le ofrece?" },
+    { q: "quien me atiende", a: "¡Por acá la Sra. Pinto! 😄 Cuénteme, ¿en qué le ayudo?" },
+    { q: "hola vi su pagina en instagram", a: "¡Qué bien! Bienvenido 🙌 ¿Alguna duda o ya sabe qué va a querer?" },
+    { q: "buenos dias abrieron ya", a: "¡Buenos días! Sí, abrimos de 10am en adelante ☀️ ¿Le hago el pedido?" },
+    { q: "hola me pueden ayudar", a: "¡Claro que sí! Dígame nomás 😊" },
+
+    // Menú
+    { q: "que tienen", a: "Tenemos Pinto Clásico, Empanadas, Ensalada, Combo Pareja y Combo Familiar. ¿Le cuento de alguno en especial?" },
+    { q: "tienen carta", a: "¡Sí! Puede verla completa haciendo clic en 'Ver Menú' acá arriba 👆" },
+    { q: "que me recomiendan", a: "Sin dudarlo el Pinto Clásico — es nuestra firma 🏆 Si va a compartir, el Combo Pareja es lo más pedido." },
+    { q: "solo venden pinto", a: "¡Qué va! Tenemos empanadas, ensalada, combos... El pinto es la estrella pero hay más opciones 😄" },
+    { q: "tienen algo vegetariano", a: "La Ensalada es una opción vegetariana. Para confirmar ingredientes de otros platos, mejor escríbanos al WhatsApp directo 🥗" },
+    { q: "hay algo dulce", a: "Por el momento nuestro menú es salado, pero estamos creciendo 😉 Pendiente a nuestras redes para novedades." },
+    { q: "tienen bebidas", a: "¡Sí! Tenemos café ☕ ₡1.200. ¿Le agrego uno al pedido?" },
+    { q: "que es el pinto exactamente", a: "El gallo pinto es arroz con frijoles salteados — el desayuno más tico que existe 🇨🇷 El nuestro tiene su toque especial." },
+    { q: "tienen algo para ninos", a: "¡Los niños aman las empanadas! 😄 Son chiquitas y fáciles de comer. ¿Le armo un pedido familiar?" },
+    { q: "cambian el menu seguido", a: "De vez en cuando agregamos novedades. Síguenos en Instagram para ser el primero en enterarse 📱" },
+
+    // Precios
+    { q: "cuanto cuesta el pinto", a: "El Pinto Clásico está en ₡2.500 🍳" },
+    { q: "estan caros", a: "¡Para nada! El rango va de ₡1.200 a ₡10.500. Comida rica y precio justo 💯" },
+    { q: "tienen algo barato", a: "El café está en ₡1.200 y las empanadas en ₡1.500 — ideal si quiere algo rápido y económico 😊" },
+    { q: "cuanto sale el combo familiar", a: "El Combo Familiar está en ₡10.500 🙌 Rinde bien para la familia." },
+    { q: "hacen descuentos", a: "Por el momento no manejamos descuentos, pero los combos ya son el mejor precio que tenemos 😄" },
+    { q: "tienen precio de estudiante", a: "No manejamos precio especial de estudiante, pero las empanadas a ₡1.500 son una buena opción cuando anda con el bolsillo justo 😅" },
+    { q: "cuanto sale comer los dos", a: "El Combo Pareja está a ₡5.500 y está pensado exactamente para eso 💑" },
+    { q: "los precios incluyen iva", a: "Sí, los precios que ve son el total a pagar 👍" },
+    { q: "aceptan regateo", a: "Jeje, los precios son fijos mae 😄 Pero el sabor vale cada colón, se lo garantizamos." },
+
+    // Pedidos
+    { q: "como hago un pedido", a: "Fácil: agrega lo que quiere al carrito, elige cómo va a pagar y le llega el pedido al local por WhatsApp. Le avisamos cuando esté listo 🙌" },
+    { q: "puedo pedir por aqui", a: "¡Sí! Desde esta página puede armar su pedido completo y nos llega directo 📲" },
+    { q: "hacen entregas a domicilio", a: "Por el momento no manejamos delivery, el pedido se retira en el local. ¡Pero vale la visita! 😄" },
+    { q: "cuanto tarda el pedido", a: "Depende del día y la hora. Le avisamos por WhatsApp cuando esté listo para que venga a retirar ⏱️" },
+    { q: "puedo pedir para llevar", a: "¡Claro! Todos los pedidos son para llevar o comer aquí si gusta 🥡" },
+    { q: "puedo cancelar un pedido", a: "Si aún no fue confirmado, sí. Escríbanos al WhatsApp de inmediato y lo resolvemos 👍" },
+    { q: "puedo pedir con anticipacion", a: "¡Sí, de hecho es lo ideal! Así le tenemos todo listo cuando llegue 😊" },
+    { q: "puedo hacer pedidos grandes", a: "¡Con toda! Para pedidos grandes comuníquese directo al WhatsApp para coordinar 📞" },
+    { q: "hay minimo de pedido", a: "No hay mínimo, puede pedir desde un café solo si quiere ☕😄" },
+    { q: "me avisan cuando este listo", a: "¡Sí! Le llegará confirmación por WhatsApp 📲" },
+    { q: "puedo pedir varios combos", a: "¡Por supuesto! Agregue la cantidad que necesite desde el carrito 🛒" },
+
+    // Pagos
+    { q: "aceptan sinpe", a: "¡Sí! Aceptamos SINPE Móvil, efectivo y tarjeta 💳" },
+    { q: "tienen datafono", a: "Sí, aceptamos tarjeta de débito y crédito en el local 💳" },
+    { q: "solo efectivo", a: "No, también tarjeta y SINPE Móvil. Los tres funcionan 👍" },
+    { q: "a que numero es el sinpe", a: "Le damos el número al confirmar el pedido por WhatsApp 📲" },
+    { q: "puedo pagar al llegar", a: "Sí, el pago es en el local al retirar el pedido 🙌" },
+    { q: "aceptan transferencia", a: "Manejamos SINPE Móvil que viene siendo transferencia inmediata 😊" },
+    { q: "se puede pagar en dolares", a: "Por el momento solo colones, mae 🇨🇷" },
+    { q: "me dan factura", a: "Para factura electrónica comuníquese directo con nosotros al WhatsApp 📄" },
+
+    // Horario
+    { q: "a que hora abren", a: "Abrimos a las 10am todos los días 🕙" },
+    { q: "hasta que hora atienden", a: "De lunes a sábado hasta las 6pm, domingos hasta las 4pm 🕔" },
+    { q: "abren los domingos", a: "¡Sí! Los domingos de 10am a 4pm 😊" },
+    { q: "abren feriados", a: "Depende del feriado. Para confirmar escríbanos el día anterior por WhatsApp 📲" },
+    { q: "atienden los lunes", a: "¡Sí! De lunes a sábado de 10am a 6pm 👍" },
+    { q: "ya son las 5 30 todavia atienden", a: "¡Sí, todavía! Tiene tiempo, cerramos a las 6pm 😄 Haga su pedido ya." },
+    { q: "abren manana", a: "Si mañana es de lunes a sábado, sí, de 10am a 6pm. Domingo de 10am a 4pm ☀️" },
+    { q: "tienen horario extendido en semana santa", a: "Para horarios especiales en feriados, confirme con nosotros por WhatsApp 📲" },
+
+    // Ubicación
+    { q: "donde estan ubicados", a: "¡Anótese la dirección! Puede verla en la sección de contacto de la página 📍" },
+    { q: "estan en san jose", a: "Para la dirección exacta visita la sección de ubicación en la página o escríbanos 😊" },
+    { q: "hay parqueo", a: "Para detalles del parqueo comuníquese directo con nosotros al WhatsApp 🚗" },
+    { q: "que tan lejos estan del centro", a: "Escríbanos y le ayudamos con indicaciones 📍" },
+    { q: "como llego", a: "Con gusto le damos indicaciones por WhatsApp para que no se pierda 😄" },
+    { q: "tienen local fisico o solo delivery", a: "¡Tenemos local físico! Puede venir a comer aquí o llevarse el pedido 🏠" },
+    { q: "estan en algun centro comercial", a: "Somos local independiente 🇨🇷 Para la dirección exacta, escríbanos al WhatsApp." },
+
+    // Productos específicos
+    { q: "que lleva el pinto clasico", a: "El pinto clásico lleva arroz y frijoles salteados con el toque de la casa 🍳 Para detalles de ingredientes escríbanos." },
+    { q: "las empanadas son fritas o al horno", a: "Para esa pregunta específica le recomiendo confirmar directo por WhatsApp 😊" },
+    { q: "de que son las empanadas", a: "Escríbanos al WhatsApp para que le contemos los rellenos disponibles del día 🫔" },
+    { q: "la ensalada que lleva", a: "Para ingredientes exactos de la ensalada, confirme por WhatsApp así le damos info fresca 🥗" },
+    { q: "el combo pareja que incluye", a: "El Combo Pareja está a ₡5.500 e incluye para dos personas 💑 Para el detalle exacto escríbanos." },
+    { q: "el cafe es de grano", a: "Para detalles del café escríbanos ☕ ¡Prometemos que está rico!" },
+    { q: "todo es hecho al momento", a: "¡Fresquito siempre! Eso sí puede tomar un poco más de tiempo pero vale la pena 😄" },
+    { q: "el pinto es picante", a: "No es picante por defecto 😊 Si quiere ajustar algo, menciónelo en el pedido." },
+    { q: "tienen salsas", a: "Para acompañamientos y salsas pregunte al retirar en el local 🙌" },
+    { q: "las porciones son grandes", a: "¡Bien servido siempre! En Costa Rica no se acostumbra dar poquito 😄" },
+    { q: "puedo personalizar mi pedido", a: "Para personalizar o pedir algo especial escríbanos al WhatsApp y lo coordinamos 📲" },
+
+    // Alergias & Dietas
+    { q: "soy alergico al gluten", a: "Para alergias es importante confirmar directo con nosotros por WhatsApp antes de pedir 🙏" },
+    { q: "tienen opciones sin lactosa", a: "Para restricciones alimentarias específicas escríbanos para confirmar ingredientes 📲" },
+    { q: "son kosher o halal", a: "No podemos confirmarlo. Para ese nivel de detalle comuníquese directo con nosotros 😊" },
+    { q: "soy vegano puedo comer algo", a: "Para confirmar opciones veganas escríbanos al WhatsApp, queremos asegurarnos de darle info correcta 🌱" },
+    { q: "usan aceite de palma", a: "Para información nutricional detallada, comuníquese por WhatsApp con nosotros 📲" },
+    { q: "tengo alergia al mani", a: "Por seguridad, escríbanos antes de pedir para confirmar que no hay riesgo 🙏" },
+    { q: "los frijoles son negros o rojos", a: "¡Buen ojo! Para esa consulta específica escríbanos y le confirmamos cuáles usamos ese día 😄" },
+
+    // Redes & Comunidad
+    { q: "tienen instagram", a: "¡Sí! Nos encuentra como @srysrapinto1 📸 Ahí subimos fotos y novedades." },
+    { q: "tienen facebook", a: "¡Claro! Puede encontrarnos en Facebook 👍 El link está en la página principal." },
+    { q: "puedo etiquetarlos si subo una foto", a: "¡Nos encanta! Etiquétenos, nos hace muy feliz ver que disfrutan la comida 📸🙌" },
+    { q: "tienen tiktok", a: "Estamos en redes sociales, revise los links en la página 😊" },
+    { q: "vi una foto suya y se veia delicioso", a: "¡Muchas gracias! Y sabe igual de rico de lo que se ve, créanos 😄 ¿Le hacemos el pedido?" },
+    { q: "hacen concursos o sorteos", a: "¡A veces sí! Síganos en redes para no perderse nada 🎉" },
+    { q: "puedo dejar una resena", a: "¡Con mucho gusto! Las reseñas nos ayudan un montón 🙏 Puede hacerlo en Facebook o Google." },
+
+    // Eventos & Pedidos especiales
+    { q: "hacen pedidos para eventos", a: "¡Sí! Para eventos y pedidos grandes escríbanos al WhatsApp para coordinar 🎉" },
+    { q: "hacen catering", a: "Para servicios especiales comuníquese directo con nosotros 📲" },
+    { q: "pueden preparar algo para una oficina de 20 personas", a: "¡Claro que sí! Escríbanos con anticipación al WhatsApp y coordinamos todo 🙌" },
+    { q: "venden para revender", a: "Para ese tipo de acuerdo hablen directo con nosotros, no es algo que manejemos por este chat 😊" },
+    { q: "hacen el pinto para navidad", a: "¡El pinto es para todo el año! 🇨🇷 Para fechas especiales, haga su pedido con anticipación." },
+    { q: "tienen paquetes para cumpleanos", a: "No manejamos paquetes especiales por el momento, pero escríbanos y vemos qué se puede hacer 😊" },
+    { q: "puedo llevar mi propio recipiente", a: "Para ese tipo de consulta coordine directo en el local al llegar 😄" },
+
+    // Quejas, problemas & raros
+    { q: "el pedido llego incompleto", a: "¡Disculpe lo sucedido! Escríbanos inmediatamente al WhatsApp con los detalles y lo resolvemos 🙏" },
+    { q: "llevo 30 minutos esperando", a: "¡Disculpe la espera! Para seguimiento de pedidos comuníquese directo al WhatsApp 📲" },
+    { q: "no me gusto la comida", a: "Lamentamos mucho eso 😞 Su opinión es importante. Cuéntenos qué pasó por WhatsApp para mejorar." },
+    { q: "quien es el sr pinto", a: "¡El dueño del mejor pinto del país! 😄 Una marca 100% tica con mucho cariño detrás." },
+    { q: "me pueden dar la receta del pinto", a: "Jeje, eso sí es secreto de la casa 🤫 Pero puede venir a disfrutarlo cuando quiera." },
+    { q: "pueden contratarme", a: "Para consultas de trabajo escríbanos al WhatsApp directamente 😊" },
+    { q: "nada gracias solo estaba viendo", a: "¡No hay problema! Cuando se le antoje algo, aquí estamos 🙌 Pura vida." }
+];
+
+const STOP_WORDS = new Set([
+    'el','la','los','las','un','una','unos','unas','lo',
+    'de','del','a','al','en','con','por','para','sin','sobre',
+    'entre','hasta','desde','hacia','ante','y','e','o','u','ni',
+    'que','si','pero','aunque','porque','como','cuando','donde',
+    'es','son','era','fue','ser','estar','hay','tiene','tienen',
+    'tengo','he','ha','han','me','te','se','le','les','nos',
+    'yo','tu','mi','su','sus','muy','mas','menos','ya','no',
+    'tambien','solo','bien','mal','ahora','hoy','manana',
+    'mae','diay','usted','uste','don','dona',
+    'favor','please','gracias','porfa','porfavor'
+]);
+
+const SYNONYM_MAP = {
+    'cuesta':       'precio',
+    'vale':         'precio',
+    'valor':        'precio',
+    'caro':         'precio',
+    'barato':       'precio',
+    'economico':    'precio',
+    'cuanto':       'precio',
+    'cobran':       'precio',
+    'cobrar':       'precio',
+    'costar':       'precio',
+    'tarifa':       'precio',
+    'hora':         'horario',
+    'abren':        'horario',
+    'cierran':      'horario',
+    'atienden':     'horario',
+    'abierto':      'horario',
+    'cerrado':      'horario',
+    'disponible':   'horario',
+    'dias':         'horario',
+    'dia':          'horario',
+    'orden':        'pedido',
+    'pedir':        'pedido',
+    'ordenar':      'pedido',
+    'comprar':      'pedido',
+    'quiero':       'pedido',
+    'deseo':        'pedido',
+    'necesito':     'pedido',
+    'solicitar':    'pedido',
+    'solicitud':    'pedido',
+    'direccion':    'ubicacion',
+    'lugar':        'ubicacion',
+    'zona':         'ubicacion',
+    'estan':        'ubicacion',
+    'llegar':       'ubicacion',
+    'mapa':         'ubicacion',
+    'distancia':    'ubicacion',
+    'lejos':        'ubicacion',
+    'pagar':        'pago',
+    'sinpe':        'pago',
+    'efectivo':     'pago',
+    'tarjeta':      'pago',
+    'transferencia':'pago',
+    'credito':      'pago',
+    'debito':       'pago',
+    'datafono':     'pago',
+    'dolares':      'pago',
+    'colones':      'pago',
+    'factura':      'pago',
+    'delivery':     'domicilio',
+    'envio':        'domicilio',
+    'entrega':      'domicilio',
+    'llevan':       'domicilio',
+    'traen':        'domicilio',
+    'repartir':     'domicilio',
+    'reparte':      'domicilio',
+    'despacho':     'domicilio',
+    'carta':        'menu',
+    'platos':       'menu',
+    'opciones':     'menu',
+    'comida':       'menu',
+    'venden':       'menu',
+    'ofrecen':      'menu',
+    'gallopinto':   'pinto',
+    'gallo':        'pinto',
+    'arroz':        'pinto',
+    'frijoles':     'pinto',
+    'empanadita':   'empanada',
+    'empanaditas':  'empanada',
+    'pastelito':    'empanada',
+    'pareja':       'combo',
+    'familiar':     'combo',
+    'paquete':      'combo',
+    'compartir':    'combo',
+    'whatsapp':     'contacto',
+    'numero':       'contacto',
+    'telefono':     'contacto',
+    'llamar':       'contacto',
+    'escribir':     'contacto',
+    'comunicarse':  'contacto',
+    'chat':         'contacto',
+    'vegano':       'vegetariano',
+    'vegana':       'vegetariano',
+    'vegetariana':  'vegetariano',
+    'plant':        'vegetariano',
+    'alergico':     'alergia',
+    'alergica':     'alergia',
+    'intolerancia': 'alergia',
+    'gluten':       'alergia',
+    'lactosa':      'alergia',
+    'mani':         'alergia',
+    'instagram':    'redes',
+    'facebook':     'redes',
+    'tiktok':       'redes',
+    'ig':           'redes',
+    'fb':           'redes',
+    'foto':         'redes',
+    'publicacion':  'redes',
+    'tarda':        'espera',
+    'demora':       'espera',
+    'rapido':       'espera',
+    'urgente':      'espera',
+    'recomienda':   'recomendacion',
+    'recomiendas':  'recomendacion',
+    'sugieres':     'recomendacion',
+    'popular':      'recomendacion',
+    'favorito':     'recomendacion',
+    'estrella':     'recomendacion',
+    'mejor':        'recomendacion',
+    'catering':     'evento',
+    'oficina':      'evento',
+    'empresa':      'evento',
+    'cumpleanos':   'evento',
+    'navidad':      'evento',
+    'fiesta':       'evento',
+    'abrieron':     'apertura',
+    'abre':         'apertura'
+};
+
+const CATEGORIAS = [
+    { nombre: 'queja',    re: /\b(incompleto|esperando|no me gusto|problema|mal|queja|reclamo|demora)\b/ },
+    { nombre: 'alergia',  re: /\b(alergico|alergia|vegano|vegetariano|gluten|lactosa|kosher|halal|mani|aceite|contiene)\b/ },
+    { nombre: 'evento',   re: /\b(evento|catering|oficina|empresa|cumpleanos|navidad|pedido grande|revender|personas)\b/ },
+    { nombre: 'redes',    re: /\b(instagram|facebook|tiktok|foto|etiqueta|resena|sorteo|concurso|seguir|redes)\b/ },
+    { nombre: 'pago',     re: /\b(pago|pagar|efectivo|tarjeta|sinpe|transferencia|credito|debito|factura)\b/ },
+    { nombre: 'horario',  re: /\b(horario|hora|abren|cierran|cuando|disponible|atienden|dias|domingo|feriado)\b/ },
+    { nombre: 'ubicacion',re: /\b(donde|direccion|ubicacion|llegar|lugar|zona|mapa|parqueo|local|centro)\b/ },
+    { nombre: 'producto', re: /\b(pinto|empanada|ensalada|cafe|combo|pareja|familiar|clasico|ingrediente|lleva|relleno|porcion|picante)\b/ },
+    { nombre: 'precio',   re: /\b(precio|cuanto|cuesta|vale|valor|caro|barato|economico|colones|iva)\b/ },
+    { nombre: 'pedido',   re: /\b(pedido|pedir|ordenar|orden|comprar|quiero|me da|solicitar|carrito)\b/ },
+    { nombre: 'menu',     re: /\b(menu|carta|que hay|que tienen|que venden|opciones|platos|comida)\b/ },
+    { nombre: 'saludo',   re: /\b(hola|buenas|buenos|buen dia|hey|ey|que tal|como estan|bienvenido)\b/ },
+];
 
 class ChatManager {
     constructor() {
@@ -1140,6 +1421,68 @@ class ChatManager {
         this.isLoading = false;
         this.initializeElements();
         this.attachEventListeners();
+        this._buildSearchIndex();
+    }
+
+    _normalize(text) {
+        return text
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^\w\s]/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    _canonicalizeTokens(text) {
+        const norm = this._normalize(text);
+        const tokens = norm.split(/\s+/);
+        const filtered = tokens.filter(t => !STOP_WORDS.has(t) || t === 'si' || t === 'no');
+        const canonical = filtered.map(t => SYNONYM_MAP[t] ?? t);
+        return canonical.join(' ');
+    }
+
+    _ngrams(str, n = 3) {
+        const result = new Set();
+        const palabras = str.split(/\s+/).filter(w => w.length > 0);
+        for (const palabra of palabras) {
+            const token = '_' + palabra + '_';
+            for (let i = 0; i <= token.length - n; i++) {
+                result.add(token.slice(i, i + n));
+            }
+        }
+        return result;
+    }
+
+    _jaccard(setA, setB) {
+        if (setA.size === 0 && setB.size === 0) return 1.0;
+        if (setA.size === 0 || setB.size === 0) return 0.0;
+        let intersectionCount = 0;
+        const [menor, mayor] = setA.size <= setB.size ? [setA, setB] : [setB, setA];
+        for (const trigrama of menor) {
+            if (mayor.has(trigrama)) intersectionCount++;
+        }
+        const unionCount = setA.size + setB.size - intersectionCount;
+        return intersectionCount / unionCount;
+    }
+
+    _inferirCategoria(textoNorm) {
+        for (const cat of CATEGORIAS) {
+            if (cat.re.test(textoNorm)) return cat.nombre;
+        }
+        return 'general';
+    }
+
+    _buildSearchIndex() {
+        this._faqMeta = FAQ_DB.map((item) => {
+            const qCanonical = this._canonicalizeTokens(item.q);
+            return {
+                item,
+                qCanonical,
+                qNgrams: this._ngrams(qCanonical),
+                category: this._inferirCategoria(this._normalize(item.q))
+            };
+        });
     }
 
     initializeElements() {
@@ -1201,6 +1544,9 @@ class ChatManager {
         const text = this.input.value.trim();
         if (!text || this.isLoading) return;
 
+        const quickReplies = document.getElementById('chat-quick-replies');
+        if (quickReplies) quickReplies.classList.add('hidden');
+
         this.input.value = '';
         this.sendBtn.disabled = true;
         this.isLoading = true;
@@ -1208,7 +1554,10 @@ class ChatManager {
         this.showTyping();
 
         try {
-            const response = await this.callGemini(text);
+            const delay = Math.floor(Math.random() * 600) + 600;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            
+            const response = this.respondLocal(text);
             this.removeTyping();
             this.addMessage('bot', response);
         } catch (error) {
@@ -1221,26 +1570,115 @@ class ChatManager {
         }
     }
 
-    async callGemini(userMessage) {
-        const context = `Eres asistente del restaurante 'Sr. & Sra. Pinto', especializado en comida tradicional costarricense. Responde amable, como un tico pura vida. Menú: Pinto Clásico (₡2500), Empanadas (₡1500), Ensalada (₡2800), Combo Pareja (₡5500), Combo Familiar (₡10500), Café (₡1200). Cliente: ${userMessage}`;
+    respondLocal(userMessage) {
+        const textNorm = this._normalize(userMessage);
+        if (/^(hola|buenas|hey|pura\s?vida)\b/.test(textNorm)) {
+            const res = [
+                "¡Buenas! Bienvenido a Sr. & Sra. Pinto ☕ ¿En qué le ayudamos hoy?",
+                "¡Hola! Por acá la Sra. Pinto 👩‍🍳 ¿Le provoca algo rico hoy?",
+                "¡Pura vida! ¿Qué se le ofrece?"
+            ];
+            return res[Math.floor(Math.random() * res.length)];
+        }
+
+        const queryCanonical = this._canonicalizeTokens(userMessage);
+        const queryCategory = this._inferirCategoria(textNorm);
+
+        if (queryCanonical.length === 0) {
+            return this._fallbackPorCategoria(queryCategory, textNorm);
+        }
+
+        const queryNgrams = this._ngrams(queryCanonical);
+        let scored = [];
+
+        for (const meta of this._faqMeta) {
+            const base = this._jaccard(queryNgrams, meta.qNgrams);
+            const catMult = (queryCategory !== 'general' && queryCategory === meta.category) ? 1.3 : 1.0;
+            const qLen = queryCanonical.replace(/\s/g,'').length;
+            const fLen = meta.qCanonical.replace(/\s/g,'').length;
+            const lenBonus = Math.abs(qLen - fLen) < 3 ? 0.05 : 0;
+            const finalScore = (base * catMult) + lenBonus;
+            scored.push({ item: meta.item, score: finalScore });
+        }
         
-        const payload = {
-            contents: [{ parts: [{ text: context }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 256 }
-        };
+        scored.sort((a, b) => b.score - a.score);
 
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        const THRESHOLD_ABS = 0.25;
+        const THRESHOLD_RATIO = 1.35;
+        const top1 = scored[0];
+        const top2 = scored[1] || { score: 0 };
+        const absOk = top1.score >= THRESHOLD_ABS;
+        const ratioOk = top2.score < 0.15 || top1.score >= THRESHOLD_RATIO * top2.score;
 
-        const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
+        if (absOk && ratioOk) {
+            return top1.item.a;
+        }
+
+        return this._fallbackPorCategoria(queryCategory, textNorm);
+    }
+
+    _fallbackPorCategoria(categoria, textoNorm) {
+        if (/\b(gracias|gracia|adios|hasta luego|chao|bye)\b/.test(textoNorm)) {
+            const res = [
+                "¡Con mucho gusto! Que le caiga bien 😄 Vuelva pronto.",
+                "¡Pura vida! Un gusto atenderle 🙌"
+            ];
+            return res[Math.floor(Math.random() * res.length)];
+        }
+        if (/\b(whatsapp|numero|llamar|telefono|contacto|escribir)\b/.test(textoNorm)) {
+            return "Puede escribirnos directo al 8802-5793. Pero recuerde que también puede pedir súper fácil desde el botón del carrito aquí en la misma página 😉";
+        }
+        if (/\b(combo|pareja|familiar)\b/.test(textoNorm) && categoria === 'pedido') {
+             return "Para compartir el más pedido es el Combo Pareja ₡5.500 — da bien y es un buen precio. Si son más, el Familiar ₡10.500 es imbatible 🙌";
+        }
+
+        switch (categoria) {
+            case 'saludo':
+                const res = [
+                    "¡Buenas! Bienvenido a Sr. & Sra. Pinto ☕ ¿En qué le ayudamos hoy?",
+                    "¡Hola! Por acá la Sra. Pinto 👩‍🍳 ¿Le provoca algo rico hoy?",
+                    "¡Pura vida! ¿Qué se le ofrece?"
+                ];
+                return res[Math.floor(Math.random() * res.length)];
+            case 'menu':
+                return "Contamos con deliciosos Combos como el Pareja (₡5500) y el Familiar (₡10500). También Platos individuales como el Pinto Clásico (₡2500), Empanadas (₡1500) y más. Además ofrecemos riquísimo Café chorreado y bebidas naturales. ¿Le llama la atención algo en especial? 😊";
+            case 'precio':
+                return "Los precios van desde ₡1.200 el café hasta ₡10.500 el Combo Familiar. ¿Quiere que le recomiende algo según su presupuesto?";
+            case 'pedido':
+                return "Es súper fácil: agregan al carrito aquí mismo en la página, eligen método de pago, el pedido nos llega por WhatsApp, nosotros confirmamos disponibilidad y luego van a pagar. ¡Sin rodeos!";
+            case 'pago':
+                return "Aceptamos efectivo, tarjeta y SINPE Móvil 💳 Coordinamos todo al confirmar el pedido.";
+            case 'horario':
+                return "Abrimos de lunes a sábado de 10am a 6pm, y los domingos de 10am a 4pm 🕙 ¡Cualquier antojo dentro de ese horario, con gusto!";
+            case 'ubicacion':
+                return "Estamos ubicados en Desamparados de Alajuela, 150m este del Colegio Saint John. ¡Busque el olorcito a pinto recién hecho!";
+            case 'alergia':
+                return "Entiendo, es súper importante cuidarle. Por favor indíquenos a qué es alérgico o qué dieta sigue directo a nuestro WhatsApp 8802-5793 para confirmarle con la cocina. ¡Ahí le atendemos súper rápido!";
+            case 'producto':
+                return "Para detalles de ingredientes o preparaciones especiales, mejor escríbanos al WhatsApp y le confirmamos con la cocina 😊";
+            case 'redes':
+                return "¡Síganos en Instagram como @srysrapinto1! 📸";
+            case 'evento':
+                return "Para eventos o catering, escríbanos al WhatsApp 8802-5793 🎉";
+            case 'queja':
+                return "Lamentamos el inconveniente 😞 Escríbanos al WhatsApp con detalles y lo resolvemos rápido 🙏";
+            case 'general':
+            default:
+                return "Mmm, no le entendí del todo 😅 Podés preguntarme por el menú, precios, horario o cómo hacer un pedido — con gusto le cuento.";
+        }
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => new ChatManager());
+document.addEventListener('DOMContentLoaded', () => {
+    window.__pintoChat = new ChatManager();
+    window.__pintoChatQuick = function(text) {
+        if (window.__pintoChat.widget.classList.contains('hidden')) {
+            window.__pintoChat.openChat();
+        }
+        window.__pintoChat.input.value = text;
+        window.__pintoChat.sendMessage();
+    };
+});
 </script>
     <!-- MODAL DE ÉXITO -->
     <div id="success-overlay" class="success-overlay">
