@@ -441,7 +441,7 @@ const MenuController = {
     },
 
     CATEGORIAS: [
-        { id: 'pintos',  nombre: 'Pintos',  icon: '🍳', subtitle: 'Gallo pinto hecho con amor, igual de malo pa' la dieta 😉' },
+        { id: 'pintos',  nombre: 'Pintos',  icon: '🍳', subtitle: 'Gallo pinto hecho con amor, igual de malo pa\u2019 la dieta 😉' },
         { id: 'snacks',  nombre: 'Snacks',  icon: '🥟', subtitle: 'Empanadas, patacones y más antojos irresistibles' },
         { id: 'bebidas', nombre: 'Bebidas', icon: '☕' }
     ],
