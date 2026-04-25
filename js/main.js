@@ -126,13 +126,24 @@ const CartManager = {
             }
         }
 
-        // Actualizar visual de chips de pago
+        // Update visual de chips de pago
         document.querySelectorAll('.pay-chip').forEach(chip => {
             const method = chip.dataset.method;
             if (this.selectedPaymentMethod === method) {
                 chip.classList.add('active');
             } else {
                 chip.classList.remove('active');
+            }
+        });
+
+        // Actualizar los botones de agregar en el menú
+        document.querySelectorAll('.mch-add-btn').forEach(btn => {
+            btn.innerHTML = '<i class="fas fa-plus"></i>';
+        });
+        this.items.forEach(item => {
+            const btn = document.getElementById(`add-btn-${item.id}`);
+            if (btn) {
+                btn.innerHTML = `<span style="font-weight: bold; font-size: 1.2rem;">${item.quantity}</span>`;
             }
         });
 
@@ -393,7 +404,10 @@ const MenuController = {
         container.style.transform = 'translateY(10px)';
         
         setTimeout(() => {
-            container.innerHTML = filtered.map(product => `
+            container.innerHTML = filtered.map(product => {
+                const cartItem = CartManager.items.find(i => i.id === product.id);
+                const btnContent = cartItem ? `<span style="font-weight: bold; font-size: 1.2rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
+                return `
                 <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''}">
                     <div class="mch-img">${product.img}</div>
                     <div class="mch-info">
@@ -403,11 +417,11 @@ const MenuController = {
                             <span class="mch-price">₡${product.precio.toLocaleString()}</span>
                         </div>
                     </div>
-                    <button class="mch-add-btn" onclick="CartManager.addItem('${product.id}')">
-                        <i class="fas fa-plus"></i>
+                    <button class="mch-add-btn" id="add-btn-${product.id}" onclick="CartManager.addItem('${product.id}')">
+                        ${btnContent}
                     </button>
                 </div>
-            `).join('');
+            `}).join('');
             
             gsap.to(container, { opacity: 1, y: 0, duration: 0.4 });
         }, 150);
