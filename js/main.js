@@ -375,7 +375,7 @@ const MenuController = {
             nombre: 'Bebidas Hidratantes',
             desc: 'Para recuperar energías y mantenerte hidratado.',
             precio: 1300,
-            img: '<img src="images-catalogo/hidratantes.jpg" alt="Bebidas Hidratantes" class="img-fit">'
+            img: '<img src="images-catalogo/hidratantes.jpg?v=1.1" alt="Bebidas Hidratantes" class="img-fit">'
         }
     ],
 
