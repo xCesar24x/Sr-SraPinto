@@ -45,8 +45,7 @@
         body {
             font-family: 'Montserrat', sans-serif;
             color: var(--blanco);
-            display: flex;
-            justify-content: center;
+            width: 100%;
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
@@ -55,7 +54,7 @@
             background-image: 
                 linear-gradient(to bottom, rgba(20, 5, 8, 0.92), rgba(61, 1, 12, 0.98)),
                 url('images-catalogo/fondogeneral.jpg');
-            background-size: 350px; /* Tamaño ideal para que el patrón se vea nítido */
+            background-size: 350px;
             background-repeat: repeat;
             background-attachment: fixed;
         }
@@ -70,18 +69,22 @@
             pointer-events: none;
         }
 
-        /* ─── CONTENEDOR PRINCIPAL ─── */
-        .container {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            max-width: 430px;
-            padding: 40px 20px 60px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 32px;
+        /* ─── VISTAS (SCREENS) ─── */
+        .view {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease;
+            overflow-x: hidden;
+            box-sizing: border-box;
         }
+        #view-hub { min-height: 100vh; }
+        #view-menu { min-height: 100vh; background: var(--negro); }
+        
+        .view.active { transform: translateX(0); opacity: 1; pointer-events: auto; z-index: 10; }
+        .view.hidden { transform: translateX(100%); opacity: 0; pointer-events: none; z-index: 5; }
+        
+        /* Prevenir scroll horizontal extra */
+        html, body { width: 100%; height: 100%; overflow-x: hidden; }
 
         /* ─── STATUS BADGE (HORARIO DINÁMICO) ─── */
         .status-badge {
@@ -572,20 +575,21 @@
 
         /* HUB LAYOUT */
         .hub-container {
-            width: 100%; max-width: 1200px;
+            width: 100%; 
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 25px 15px 20px;
+            padding: 40px 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            align-items: stretch; /* stretch para que los hijos ocupen todo el ancho */
+            gap: 30px;
+            align-items: center;
+            box-sizing: border-box;
         }
         @media (max-width: 991px) {
-            .hub-container { padding: 15px 12px 12px; gap: 12px; }
-            .hub-right { width: 100%; max-width: 100%; }
+            .hub-container { padding: 25px 15px; gap: 20px; }
+            .hub-right { width: 100%; }
             .hub-buttons-grid { grid-template-columns: 1fr; width: 100%; }
-            .brand-name { font-size: 2.4rem; }
-            .logo-wrapper { width: 190px; }
+            .brand-name { font-size: 2.5rem; }
         }
         @media (min-width: 992px) {
             .hub-container { flex-direction: row; align-items: center; justify-content: center; }
@@ -670,22 +674,29 @@
         }
 
         .menu-layout {
-            max-width: 1200px; margin: -60px auto 0; padding: 0 20px 120px;
-            position: relative; z-index: 10;
-            display: grid; grid-template-columns: 250px 1fr; gap: 40px;
-            box-sizing: border-box; width: 100%;
+            max-width: 1200px; 
+            margin: -60px auto 0; 
+            padding: 0 20px 100px;
+            position: relative; 
+            z-index: 10;
+            display: grid; 
+            grid-template-columns: 250px 1fr; 
+            gap: 40px;
+            width: 100%;
+            box-sizing: border-box;
         }
         @media (max-width: 900px) {
             .menu-layout {
-                display: flex; flex-direction: column;
-                margin-top: -20px; gap: 10px;
-                padding: 0 12px 100px;
-                width: 100%; max-width: 100%;
+                display: flex; 
+                flex-direction: column;
+                margin-top: -30px; 
+                gap: 15px;
+                padding: 0 15px 120px;
             }
-            .menu-list-container { width: 100%; min-width: 0; }
-            .menu-sidebar { position: sticky; top: 70px; z-index: 90; background: var(--negro); padding: 8px 0; }
-            #sidebar-categories { flex-direction: row !important; overflow-x: auto; padding-bottom: 5px; gap: 8px; }
-            .sidebar-btn { white-space: nowrap; padding: 10px 14px; font-size: 0.9rem; }
+            .menu-sidebar { 
+                position: sticky; top: 60px; z-index: 90; 
+                background: var(--negro); padding: 10px 0;
+            }
         }
 
         .menu-sidebar { display: flex; flex-direction: column; gap: 10px; }
