@@ -562,10 +562,10 @@
         /* VIEW MANAGER */
         .view {
             position: absolute;
-            top: 0; left: 0; width: 100%;
+            top: 0; left: 0; right: 0; /* left+right en vez de width:100% para mayor compatibilidad móvil */
             transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.5s ease;
         }
-        #view-hub { min-height: auto; padding-bottom: 40px; }
+        #view-hub { min-height: auto; padding-bottom: 30px; }
         #view-menu { min-height: 100vh; }
         .view.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
         .view.hidden { transform: translateX(100%); opacity: 0; pointer-events: none; }
@@ -574,14 +574,18 @@
         .hub-container {
             width: 100%; max-width: 1200px;
             margin: 0 auto;
-            padding: 30px 20px 20px;
+            padding: 25px 15px 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            align-items: center;
+            gap: 15px;
+            align-items: stretch; /* stretch para que los hijos ocupen todo el ancho */
         }
         @media (max-width: 991px) {
-            .hub-container { padding: 20px 15px 15px; gap: 15px; }
+            .hub-container { padding: 15px 12px 12px; gap: 12px; }
+            .hub-right { width: 100%; max-width: 100%; }
+            .hub-buttons-grid { grid-template-columns: 1fr; width: 100%; }
+            .brand-name { font-size: 2.4rem; }
+            .logo-wrapper { width: 190px; }
         }
         @media (min-width: 992px) {
             .hub-container { flex-direction: row; align-items: center; justify-content: center; }
@@ -641,11 +645,13 @@
         /* MENU VIEW */
         #view-menu { 
             background: var(--negro); min-height: 100vh; 
-            overflow-y: auto; overflow-x: hidden;
+            overflow-y: auto; overflow-x: hidden; width: 100%;
         }
         .menu-header {
-            display: flex; align-items: center; padding: 12px 15px; background: rgba(0,0,0,0.8);
-            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; padding: 10px 12px; background: rgba(0,0,0,0.8);
+            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            width: 100%; box-sizing: border-box;
         }
         .back-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
