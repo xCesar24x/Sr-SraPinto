@@ -415,7 +415,7 @@ const MenuController = {
             nombre: 'Agua',
             desc: 'Agua embotellada fresca.',
             precio: 1000,
-            img: '<div class="img-placeholder"><i class="fas fa-tint"></i></div>'
+            img: '<img src="images-catalogo/agua.jpg" alt="Agua">'
         },
         {
             id: 'b-gaseosas',
@@ -423,7 +423,7 @@ const MenuController = {
             nombre: 'Gaseosas',
             desc: 'Refrescantes gaseosas bien frías.',
             precio: 1200,
-            img: '<div class="img-placeholder"><i class="fas fa-bottle-water"></i></div>'
+            img: '<img src="images-catalogo/gaseosas.jpg" alt="Gaseosas">'
         },
         {
             id: 'b-hidratante',
@@ -431,7 +431,7 @@ const MenuController = {
             nombre: 'Bebidas Hidratantes',
             desc: 'Para recuperar energías y mantenerte hidratado.',
             precio: 1300,
-            img: '<div class="img-placeholder"><i class="fas fa-bolt"></i></div>'
+            img: '<img src="images-catalogo/hidratantes.jpg" alt="Bebidas Hidratantes">'
         }
     ],
 
