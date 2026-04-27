@@ -139,8 +139,9 @@
         .brand-name {
             font-family: 'Lilita One', cursive; font-size: 3.2rem; color: white;
             letter-spacing: 1px; text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-            line-height: 1; margin-bottom: 30px; padding-right: 10px;
+            line-height: 1; margin-bottom: 30px;
             text-transform: uppercase;
+            text-align: center;
             animation: fadeDown 0.8s 0.1s ease both;
         }
 
@@ -580,8 +581,15 @@
             .hub-right { flex: 1; max-width: 700px; }
         }
 
-        .hub-left { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
-        .hub-right { display: flex; flex-direction: column; gap: 20px; width: 100%; animation: fadeUp 0.8s 0.2s ease both; }
+        .hub-left { 
+            display: flex; flex-direction: column; align-items: center; 
+            gap: 20px; text-align: center; width: 100%;
+        }
+        .hub-right { 
+            display: flex; flex-direction: column; gap: 20px; 
+            width: 100%; align-items: center;
+            animation: fadeUp 0.8s 0.2s ease both; 
+        }
 
         .footer-hub { background: rgba(0,0,0,0.4); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); width: 100%; }
 
