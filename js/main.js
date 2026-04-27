@@ -407,7 +407,7 @@ const MenuController = {
             nombre: 'Café Premium Grande (12 onzas)',
             desc: 'Café de calidad premium, recién hecho.',
             precio: 1000,
-            img: '<img src="images-catalogo/12onzas.jpg" alt="Café Premium">'
+            img: '<img src="images-catalogo/12onzas.jpg" alt="Café Premium" class="img-fit">'
         },
         {
             id: 'b-agua',
@@ -415,7 +415,7 @@ const MenuController = {
             nombre: 'Agua',
             desc: 'Agua embotellada fresca.',
             precio: 1000,
-            img: '<img src="images-catalogo/agua.jpg" alt="Agua">'
+            img: '<img src="images-catalogo/agua.jpg" alt="Agua" class="img-fit">'
         },
         {
             id: 'b-gaseosas',
@@ -423,7 +423,7 @@ const MenuController = {
             nombre: 'Gaseosas',
             desc: 'Refrescantes gaseosas bien frías.',
             precio: 1200,
-            img: '<img src="images-catalogo/gaseosas.jpg" alt="Gaseosas">'
+            img: '<img src="images-catalogo/gaseosas.jpg" alt="Gaseosas" class="img-fit">'
         },
         {
             id: 'b-hidratante',
@@ -431,7 +431,7 @@ const MenuController = {
             nombre: 'Bebidas Hidratantes',
             desc: 'Para recuperar energías y mantenerte hidratado.',
             precio: 1300,
-            img: '<img src="images-catalogo/hidratantes.jpg" alt="Bebidas Hidratantes">'
+            img: '<img src="images-catalogo/hidratantes.jpg" alt="Bebidas Hidratantes" class="img-fit">'
         }
     ],
 
