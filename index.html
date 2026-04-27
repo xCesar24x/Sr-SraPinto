@@ -459,7 +459,8 @@
         /* ─── LOADER SCREEN ─── */
         #loader {
             position: fixed; inset: 0; background: var(--negro); z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 25px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            gap: 25px; text-align: center;
         }
         
         #loader.hidden { 
@@ -475,6 +476,7 @@
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent; 
             filter: drop-shadow(0 0 25px rgba(233,19,80,0.5)); 
+            text-align: center;
         }
 
         .loader-bar-wrap { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
@@ -885,7 +887,7 @@
 <div id="loader">
     <div class="loader-logo">Sr. & Sra. Pinto</div>
     <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
-    <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0.4;">Preparando el sabor tico...</div>
+    <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0.4; text-align: center; padding: 0 20px;">Preparando el sabor tico...</div>
 </div>
 
 <!-- CHAT FLOAT BUTTON -->
