@@ -279,7 +279,7 @@ const MenuController = {
             nombre: 'Combo: Señor Pinto + Café',
             desc: 'Lleválo en combo: Señor Pinto + Café Premium Grande.',
             precio: 4000,
-            img: '<div class="img-placeholder"><i class="fas fa-coffee"></i></div>',
+            img: '<img src="images-catalogo/ComboSeñorPintoCafé.jpg" alt="Combo Señor Pinto + Café">',
             badge: 'Combo',
             badgeClass: 'badge-value'
         },
@@ -289,7 +289,7 @@ const MenuController = {
             nombre: 'Burrote de Pinto',
             desc: 'Delicioso gallo pinto con queso, huevo y natilla.',
             precio: 3000,
-            img: '<div class="img-placeholder"><i class="fas fa-wrapped"></i>🌯</div>'
+            img: '<img src="images-catalogo/BurrotedePinto.jpg" alt="Burrote de Pinto">'
         },
         {
             id: 'c-burrote-cafe',
@@ -297,7 +297,7 @@ const MenuController = {
             nombre: 'Combo: Burrote de Pinto + Café',
             desc: 'Lleválo en combo: Burrote de Pinto + Café Premium Grande.',
             precio: 3500,
-            img: '<div class="img-placeholder"><i class="fas fa-coffee"></i></div>',
+            img: '<img src="images-catalogo/BurrotedePintocafe.jpg" alt="Combo Burrote de Pinto + Café">',
             badge: 'Combo',
             badgeClass: 'badge-value'
         },
