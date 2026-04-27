@@ -61,6 +61,14 @@ const CartManager = {
         this.save();
         this.updateCartUI();
         this.notifyAdd(product.nombre);
+
+        // Feedback visual: destello verde en la tarjeta
+        const card = document.getElementById(`card-${productId}`);
+        if (card) {
+            card.classList.remove('card-added');
+            void card.offsetWidth; // reflow para reiniciar animación
+            card.classList.add('card-added');
+        }
     },
     
     removeItem(productId) {
@@ -99,6 +107,12 @@ const CartManager = {
         if (countBadge) countBadge.textContent = this.getCount();
         if (drawerCount) drawerCount.textContent = this.getCount();
         if (totalDisplay) totalDisplay.textContent = `₡${this.getTotal().toLocaleString()}`;
+
+        // Actualizar total en el FAB
+        const fabTotal = document.getElementById('cart-fab-total');
+        if (fabTotal) {
+            fabTotal.textContent = this.getTotal() > 0 ? `₡${this.getTotal().toLocaleString()}` : '₡0';
+        }
         
         if (cartContent) {
             if (this.items.length === 0) {
@@ -430,15 +444,15 @@ const MenuController = {
         const filtered = this.MENU_DATA.filter(p => p.categoria === categoryId);
         if (countEl) countEl.innerText = `${filtered.length} opciones`;
         
-        container.style.opacity = '0';
-        container.style.transform = 'translateY(10px)';
+        container.style.opacity = '1';
+        container.style.transform = 'none';
         
         setTimeout(() => {
             container.innerHTML = filtered.map(product => {
                 const cartItem = CartManager.items.find(i => i.id === product.id);
                 const btnContent = cartItem ? `<span style="font-weight: bold; font-size: 1.2rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
                 return `
-                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''}">
+                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''}" id="card-${product.id}">
                     <div class="mch-img">${product.img}</div>
                     <div class="mch-info">
                         <div class="mch-title">${product.nombre} ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''}</div>
@@ -452,9 +466,16 @@ const MenuController = {
                     </button>
                 </div>
             `}).join('');
-            
-            gsap.to(container, { opacity: 1, y: 0, duration: 0.4 });
-        }, 150);
+
+            // Stagger animation: aparecen una tras otra
+            const cards = container.querySelectorAll('.menu-card-h');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.transition = `opacity 0.3s ease ${index * 0.07}s, transform 0.3s ease ${index * 0.07}s`;
+                    card.classList.add('card-visible');
+                }, 50);
+            });
+        }, 100);
     }
 };
 
@@ -563,24 +584,7 @@ const AppInitializer = {
         // 1. Core Managers
         CartManager.init();
         
-        // Listeners globales para el carrito (drawer)
-        const cartToggle = document.getElementById('cart-fab');
-        const cartClose = document.getElementById('cart-close-btn');
-        const cartDrawer = document.getElementById('cart-drawer');
-
-        if (cartToggle && cartDrawer) {
-            cartToggle.addEventListener('click', () => {
-                cartDrawer.classList.remove('hidden');
-            });
-        }
-
-        if (cartClose && cartDrawer) {
-            cartClose.addEventListener('click', () => {
-                cartDrawer.classList.add('hidden');
-            });
-        }
-
-        
+        // Los listeners del carrito se manejan en DOMContentLoaded
         // 2. Animaciones
         AnimationEngine.playIntroAnimation();
         AnimationEngine.setupFloatingElements();
