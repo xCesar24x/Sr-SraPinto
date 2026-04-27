@@ -279,7 +279,7 @@ const MenuController = {
             nombre: 'Combo: Señor Pinto + Café',
             desc: 'Lleválo en combo: Señor Pinto + Café Premium Grande.',
             precio: 4000,
-            img: '<img src="images-catalogo/ComboSeñorPintoCafé.jpg" alt="Combo Señor Pinto + Café">',
+            img: '<img src="images-catalogo/ComboSeñorPintoCafé.jpg" alt="Combo Señor Pinto + Café" class="img-fit">',
             badge: 'Combo',
             badgeClass: 'badge-value'
         },
