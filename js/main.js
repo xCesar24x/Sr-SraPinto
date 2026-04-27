@@ -262,7 +262,6 @@ const CartManager = {
 // ========================================
 const MenuController = {
     MENU_DATA: [
-
         // ── PINTOS: Desayunos con gallo pinto ──
         {
             id: 'p-senor-pinto',
@@ -270,7 +269,7 @@ const MenuController = {
             nombre: 'Señor Pinto',
             desc: 'Delicioso gallo pinto con queso, plátano, huevo y natilla.',
             precio: 3500,
-            img: '<img src="images-catalogo/arreglada.jpeg" alt="Señor Pinto">',
+            img: '<img src="images-catalogo/Señor Pinto.jpeg" alt="Señor Pinto">',
             badge: 'Recomendado',
             badgeClass: 'badge-chef'
         },
@@ -280,7 +279,7 @@ const MenuController = {
             nombre: 'Combo: Señor Pinto + Café',
             desc: 'Lleválo en combo: Señor Pinto + Café Premium Grande.',
             precio: 4000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">☕🍳</div>',
+            img: '<div class="img-placeholder"><i class="fas fa-coffee"></i></div>',
             badge: 'Combo',
             badgeClass: 'badge-value'
         },
@@ -290,7 +289,7 @@ const MenuController = {
             nombre: 'Burrote de Pinto',
             desc: 'Delicioso gallo pinto con queso, huevo y natilla.',
             precio: 3000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌯</div>'
+            img: '<div class="img-placeholder"><i class="fas fa-wrapped"></i>🌯</div>'
         },
         {
             id: 'c-burrote-cafe',
@@ -298,7 +297,7 @@ const MenuController = {
             nombre: 'Combo: Burrote de Pinto + Café',
             desc: 'Lleválo en combo: Burrote de Pinto + Café Premium Grande.',
             precio: 3500,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌯☕</div>',
+            img: '<div class="img-placeholder"><i class="fas fa-coffee"></i></div>',
             badge: 'Combo',
             badgeClass: 'badge-value'
         },
@@ -316,7 +315,7 @@ const MenuController = {
             nombre: 'Sra. Empanada Arreglada',
             desc: 'Empanada de Pinto acompañada de papas fritas, repollo y nuestra salsa especial de la casa.',
             precio: 3000,
-            img: '<img src="images-catalogo/papas.jpeg" alt="Sra. Empanada Arreglada">',
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">',
             badge: '¡El más pedido!',
             badgeClass: 'badge-popular'
         },
@@ -336,7 +335,7 @@ const MenuController = {
             nombre: 'Empanada de Birria - Carne Res',
             desc: 'Empanada artesanal rellena de jugosa carne de birria de res.',
             precio: 2000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🥩</div>'
+            img: '<div class="img-placeholder"><i class="fas fa-pie"></i></div>'
         },
         {
             id: 'p-sra-empanada-m2',
@@ -344,7 +343,7 @@ const MenuController = {
             nombre: 'Sra. Empanada Arreglada',
             desc: '(Queso o Carne) — Acompañada de papas fritas, repollo y nuestra salsa especial de la casa.',
             precio: 3000,
-            img: '<img src="images-catalogo/papas.jpeg" alt="Sra. Empanada Arreglada">',
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">',
             badge: '¡El más pedido!',
             badgeClass: 'badge-popular'
         },
@@ -354,7 +353,7 @@ const MenuController = {
             nombre: 'Sr. Patacón',
             desc: 'Con carne de birria y queso mozzarella.',
             precio: 3000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🫓</div>',
+            img: '<img src="images-catalogo/Sr. Patacón.jpeg" alt="Sr. Patacón">',
             badge: 'Especial',
             badgeClass: 'badge-chef'
         },
@@ -364,7 +363,7 @@ const MenuController = {
             nombre: 'Sra. Quesadilla',
             desc: 'Con carne de birria y queso mozzarella.',
             precio: 3000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🫔</div>'
+            img: '<img src="images-catalogo/Sra. Quesadilla.jpeg" alt="Sra. Quesadilla">'
         },
         {
             id: 'p-sra-hamburguesa',
@@ -372,7 +371,7 @@ const MenuController = {
             nombre: 'Sra. Hamburguesa con Papas',
             desc: 'Jugosa hamburguesa acompañada de papas fritas.',
             precio: 4000,
-            img: '<img src="images-catalogo/burguer.jpeg" alt="Sra. Hamburguesa con Papas">',
+            img: '<img src="images-catalogo/Sra. Hamburguesa con Papas.jpeg" alt="Sra. Hamburguesa con Papas">',
             badge: 'Favorito',
             badgeClass: 'badge-popular'
         },
@@ -382,7 +381,7 @@ const MenuController = {
             nombre: 'Sr. Cono de SalchiPapas',
             desc: 'Cono generoso de salchipapas, perfecto para compartir.',
             precio: 2500,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🌭🍟</div>'
+            img: '<img src="images-catalogo/Sr. Cono de SalchiPapas.jpeg" alt="Sr. Cono de SalchiPapas">'
         },
         {
             id: 'p-aros-cebolla',
@@ -390,7 +389,7 @@ const MenuController = {
             nombre: 'Aros de Cebolla',
             desc: 'Crujientes aros de cebolla dorados al momento.',
             precio: 2000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧅</div>'
+            img: '<div class="img-placeholder"><i class="fas fa-circle-notch"></i></div>'
         },
         {
             id: 'p-palitos-queso',
@@ -398,7 +397,7 @@ const MenuController = {
             nombre: 'Palitos de Queso Mozzarella',
             desc: 'Palitos de mozzarella crujientes por fuera y derretidos por dentro.',
             precio: 2000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧀</div>'
+            img: '<div class="img-placeholder"><i class="fas fa-cheese"></i></div>'
         },
 
         // ── BEBIDAS (compartidas) ──
@@ -408,7 +407,7 @@ const MenuController = {
             nombre: 'Café Premium Grande (12 onzas)',
             desc: 'Café de calidad premium, recién hecho.',
             precio: 1000,
-            img: '<img src="assets/images/logo2.png" alt="Café" style="object-fit: contain;">'
+            img: '<div class="img-placeholder"><i class="fas fa-coffee"></i></div>'
         },
         {
             id: 'b-agua',
@@ -416,7 +415,7 @@ const MenuController = {
             nombre: 'Agua',
             desc: 'Agua embotellada fresca.',
             precio: 1000,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">💧</div>'
+            img: '<div class="img-placeholder"><i class="fas fa-tint"></i></div>'
         },
         {
             id: 'b-gaseosas',
@@ -424,7 +423,7 @@ const MenuController = {
             nombre: 'Gaseosas',
             desc: 'Refrescantes gaseosas bien frías.',
             precio: 1200,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🥤</div>'
+            img: '<div class="img-placeholder"><i class="fas fa-bottle-water"></i></div>'
         },
         {
             id: 'b-hidratante',
@@ -432,7 +431,7 @@ const MenuController = {
             nombre: 'Bebidas Hidratantes',
             desc: 'Para recuperar energías y mantenerte hidratado.',
             precio: 1300,
-            img: '<div style="font-size: 3rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">🧃</div>'
+            img: '<div class="img-placeholder"><i class="fas fa-bolt"></i></div>'
         }
     ],
 
