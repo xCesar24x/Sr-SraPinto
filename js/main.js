@@ -436,7 +436,7 @@ const MenuController = {
         if (titleEl) {
             titleEl.innerHTML = `${categoryInfo.icon} ${categoryInfo.nombre}${
                 categoryInfo.subtitle
-                    ? ` <span style="font-size:0.75rem; font-weight:500; opacity:0.6; font-family:'Montserrat',sans-serif; letter-spacing:0;">${categoryInfo.subtitle}</span>`
+                    ? `<span>${categoryInfo.subtitle}</span>`
                     : ''
             }`;
         }

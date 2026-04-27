@@ -639,19 +639,24 @@
         }
 
         /* MENU VIEW */
-        #view-menu { background: var(--negro); min-height: 100vh; overflow-y: auto; }
+        #view-menu { 
+            background: var(--negro); min-height: 100vh; 
+            overflow-y: auto; overflow-x: hidden;
+        }
         .menu-header {
-            display: flex; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; padding: 12px 15px; background: rgba(0,0,0,0.8);
             position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .back-btn {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            color: white; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;
+            color: white; padding: 7px 13px; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s;
+            white-space: nowrap; font-size: 0.85rem;
         }
         .back-btn:hover { background: rgba(255,255,255,0.2); }
         .header-brand { font-family: 'Lilita One', cursive; font-size: 1.3rem; color: var(--mostaza); letter-spacing: 0.5px; }
 
-        .menu-banner { height: 250px; width: 100%; overflow: hidden; position: relative; }
+        .menu-banner { height: 180px; width: 100%; overflow: hidden; position: relative; }
+        @media (max-width: 900px) { .menu-banner { height: 130px; } }
         .menu-banner img { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
         .menu-banner::after {
             content: ''; position: absolute; inset: 0;
@@ -662,12 +667,19 @@
             max-width: 1200px; margin: -60px auto 0; padding: 0 20px 120px;
             position: relative; z-index: 10;
             display: grid; grid-template-columns: 250px 1fr; gap: 40px;
+            box-sizing: border-box; width: 100%;
         }
         @media (max-width: 900px) {
-            .menu-layout { display: flex; flex-direction: column; margin-top: -20px; gap: 20px; }
-            .menu-sidebar { position: sticky; top: 70px; z-index: 90; background: var(--negro); padding: 10px 0; }
-            #sidebar-categories { flex-direction: row !important; overflow-x: auto; padding-bottom: 5px; }
-            .sidebar-btn { white-space: nowrap; }
+            .menu-layout {
+                display: flex; flex-direction: column;
+                margin-top: -20px; gap: 10px;
+                padding: 0 12px 100px;
+                width: 100%; max-width: 100%;
+            }
+            .menu-list-container { width: 100%; min-width: 0; }
+            .menu-sidebar { position: sticky; top: 70px; z-index: 90; background: var(--negro); padding: 8px 0; }
+            #sidebar-categories { flex-direction: row !important; overflow-x: auto; padding-bottom: 5px; gap: 8px; }
+            .sidebar-btn { white-space: nowrap; padding: 10px 14px; font-size: 0.9rem; }
         }
 
         .menu-sidebar { display: flex; flex-direction: column; gap: 10px; }
@@ -697,9 +709,23 @@
             transform: translateX(4px);
         }
 
-        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
-        .category-header h3 { font-family: 'Bebas Neue', cursive; font-size: 2rem; letter-spacing: 1px; color: var(--blanco); }
-        .options-count { font-size: 0.8rem; color: rgba(255,255,255,0.5); font-weight: 600; }
+        .category-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+            flex-wrap: wrap; gap: 5px;
+        }
+        .category-header h3 {
+            font-family: 'Bebas Neue', cursive; font-size: 1.6rem;
+            letter-spacing: 1px; color: var(--blanco);
+            display: flex; flex-direction: column; gap: 3px; line-height: 1.1;
+        }
+        .category-header h3 span {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.7rem; font-weight: 500;
+            opacity: 0.55; letter-spacing: 0;
+            white-space: normal; display: block;
+        }
+        .options-count { font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 600; flex-shrink: 0; margin-top: 4px; }
 
         /* HORIZONTAL MENU CARDS */
         .menu-list { display: flex; flex-direction: column; gap: 15px; }
