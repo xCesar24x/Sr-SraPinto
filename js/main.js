@@ -335,7 +335,7 @@ const MenuController = {
             nombre: 'Empanada de Birria - Carne Res',
             desc: 'Empanada artesanal rellena de jugosa carne de birria de res.',
             precio: 2000,
-            img: '<div class="img-placeholder"><i class="fas fa-pie"></i></div>'
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Birria - Carne Res">'
         },
         {
             id: 'p-sra-empanada-m2',
