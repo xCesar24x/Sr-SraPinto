@@ -389,7 +389,7 @@ const MenuController = {
             nombre: 'Aros de Cebolla',
             desc: 'Crujientes aros de cebolla dorados al momento.',
             precio: 2000,
-            img: '<div class="img-placeholder"><i class="fas fa-circle-notch"></i></div>'
+            img: '<img src="images-catalogo/arosdecebolla.jpg" alt="Aros de Cebolla">'
         },
         {
             id: 'p-palitos-queso',
@@ -397,7 +397,7 @@ const MenuController = {
             nombre: 'Palitos de Queso Mozzarella',
             desc: 'Palitos de mozzarella crujientes por fuera y derretidos por dentro.',
             precio: 2000,
-            img: '<div class="img-placeholder"><i class="fas fa-cheese"></i></div>'
+            img: '<img src="images-catalogo/palitosmozarella.jpg" alt="Palitos de Queso Mozzarella">'
         },
 
         // ── BEBIDAS (compartidas) ──
@@ -407,7 +407,7 @@ const MenuController = {
             nombre: 'Café Premium Grande (12 onzas)',
             desc: 'Café de calidad premium, recién hecho.',
             precio: 1000,
-            img: '<div class="img-placeholder"><i class="fas fa-coffee"></i></div>'
+            img: '<img src="images-catalogo/12onzas.jpg" alt="Café Premium">'
         },
         {
             id: 'b-agua',
