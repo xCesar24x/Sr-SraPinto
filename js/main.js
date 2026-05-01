@@ -228,7 +228,7 @@ const MenuController = {
             categoria: 'pintos',
             nombre: 'Señor Pinto',
             desc: 'Tradicional gallo pinto con queso frito, huevo y maduros.',
-            precio: 3000,
+            precio: 3500,
             img: '<img src="images-catalogo/Señor Pinto.jpeg" alt="Señor Pinto">'
         },
         {
@@ -282,7 +282,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Sr. Patacón',
             desc: 'Patacones crujientes con frijoles molidos y queso.',
-            precio: 2500,
+            precio: 3000,
             img: '<img src="images-catalogo/Sr. Patacón.jpeg" alt="Sr. Patacón">'
         },
         {
@@ -298,7 +298,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Sra. Hamburguesa con Papas',
             desc: 'Hamburguesa casera con papas fritas crujientes.',
-            precio: 3500,
+            precio: 4000,
             img: '<img src="images-catalogo/Sra. Hamburguesa con Papas.jpeg" alt="Sra. Hamburguesa con Papas">'
         },
         {
@@ -341,22 +341,7 @@ const MenuController = {
             precio: 2500,
             img: '<img src="images-catalogo/Sr. Cono de SalchiPapas.jpeg" alt="Sr. Cono de SalchiPapas">'
         },
-        {
-            id: 'p-aros-cebolla',
-            categoria: 'snacks',
-            nombre: 'Aros de Cebolla',
-            desc: 'Crujientes aros de cebolla dorados al momento.',
-            precio: 2000,
-            img: '<img src="images-catalogo/arosdecebolla.jpg" alt="Aros de Cebolla">'
-        },
-        {
-            id: 'p-palitos-queso',
-            categoria: 'snacks',
-            nombre: 'Palitos de Queso Mozzarella',
-            desc: 'Palitos de mozzarella crujientes por fuera y derretidos por dentro.',
-            precio: 2000,
-            img: '<img src="images-catalogo/palitosmozarella.jpg" alt="Palitos de Queso Mozzarella">'
-        },
+
 
         // ── BEBIDAS (compartidas) ──
         {
