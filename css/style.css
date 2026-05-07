@@ -29,7 +29,7 @@ html {
 
 body {
     background-color: var(--cream);
-    font-family: 'Fredoka One', cursive;
+    font-family: 'Gotham', 'Fredoka One', sans-serif;
     color: var(--burgundy);
     line-height: 1.6;
     overflow-x: hidden;
@@ -69,7 +69,7 @@ body {
     color: var(--burgundy);
     padding: 0.75rem 1.5rem;
     font-weight: bold;
-    font-family: 'Fredoka One', cursive;
+    font-family: 'Gotham', 'Fredoka One', sans-serif;
     cursor: pointer;
     border-radius: 0.5rem;
     transition: var(--transition-smooth);
@@ -364,7 +364,7 @@ body {
 
 .form-group input, 
 .form-group textarea {
-    font-family: 'Fredoka One', cursive;
+    font-family: 'Gotham', 'Fredoka One', sans-serif;
     color: var(--burgundy);
 }
 
@@ -413,7 +413,7 @@ textarea:invalid:not(:placeholder-shown) {
 button[type="submit"] {
     border-radius: 0.75rem;
     box-shadow: var(--shadow-md);
-    font-family: 'Fredoka One', cursive;
+    font-family: 'Gotham', 'Fredoka One', sans-serif;
     border: none;
     cursor: pointer;
     font-weight: 900;
