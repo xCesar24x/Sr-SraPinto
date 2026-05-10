@@ -212,7 +212,7 @@ const CartManager = {
         message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
         message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
         
-        const url = `https://wa.me/message/OJWZEA6DWF35L1?text=${encodeURIComponent(message)}`;
+        const url = `https://wa.me/50688025793?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
     }
 };
