@@ -275,6 +275,14 @@ const MenuController = {
             precio: 3500,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">'
         },
+        {
+            id: 'p-queso-pinto',
+            categoria: 'pintos',
+            nombre: 'Queso Pinto',
+            desc: 'Delicioso gallo pinto con abundante queso.',
+            precio: 3500,
+            img: '<img src="images-catalogo/Queso Pinto.jpeg" alt="Queso Pinto">'
+        },
 
         // ── SNACKS & ANTOJOS ──
         {
@@ -340,6 +348,14 @@ const MenuController = {
             desc: 'Papas fritas con salchicha y salsas de la casa.',
             precio: 3000,
             img: '<img src="images-catalogo/Sr. Cono de SalchiPapas.jpeg" alt="Sr. Cono de SalchiPapas">'
+        },
+        {
+            id: 'p-sr-papi-carne',
+            categoria: 'snacks',
+            nombre: 'Sr. Papi Carne',
+            desc: 'Deliciosa porción de carne preparada al estilo de la casa.',
+            precio: 3500,
+            img: '<img src="images-catalogo/Sr. Papi Carne.jpeg" alt="Sr. Papi Carne">'
         },
 
 
