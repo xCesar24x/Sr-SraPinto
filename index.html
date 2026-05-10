@@ -560,18 +560,25 @@
 
         .footer-hub { background: rgba(0,0,0,0.4); padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); width: 100%; }
 
-        /* HERO CARD */
+        /* HERO CAROUSEL */
         .hero-card {
             width: 100%; height: 350px; border-radius: 20px; overflow: hidden; position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.1);
         }
-        .hero-card img { width: 100%; height: 100%; object-fit: cover; }
+        .carousel-slide {
+            position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out;
+            z-index: 0;
+        }
+        .carousel-slide.active { opacity: 1; z-index: 1; }
+        .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
         .hero-overlay {
             position: absolute; bottom: 20px; left: 20px; font-family: 'Rotio', 'Bebas Neue', cursive;
             font-size: 1.8rem; color: white; background: rgba(0,0,0,0.6); padding: 5px 15px;
             border-radius: 10px; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 10px;
+            transform: translateY(10px); opacity: 0; transition: all 0.5s ease 0.5s;
         }
+        .carousel-slide.active .hero-overlay { transform: translateY(0); opacity: 1; }
 
         /* 4 BUTTONS GRID */
         .hub-buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -964,11 +971,31 @@
         </div>
 
         <div class="hub-right">
-            <!-- Hero Video/Image -->
-            <div class="hero-card">
-                <img src="images-catalogo/Señor Pinto.jpeg" alt="Preparando Pinto">
-                <div class="hero-overlay">
-                    🔥 EL ARTE DE SR. PINTO
+            <!-- Hero Carousel -->
+            <div class="hero-card" id="hero-carousel">
+                <div class="carousel-slide active">
+                    <img src="images-catalogo/Señor Pinto.jpeg" alt="El Arte de Sr. Pinto">
+                    <div class="hero-overlay">🔥 EL ARTE DE SR. PINTO</div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="images-catalogo/BurrotedePinto.jpg" alt="Burrote de Pinto">
+                    <div class="hero-overlay">🌯 BURROTE - ¡PURO SABOR!</div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="images-catalogo/ComboSeñorPintoCafé.jpg" alt="Combo Señor Pinto">
+                    <div class="hero-overlay">☕ COMBOS COMPLETOS</div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra Empanada Arreglada">
+                    <div class="hero-overlay">🥟 EMPANADAS ARREGLADAS</div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="images-catalogo/Sr. Patacón.jpeg" alt="Sr Patacón">
+                    <div class="hero-overlay">🍌 SR. PATACÓN CRUJIENTE</div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="images-catalogo/Sra. Hamburguesa con Papas.jpeg" alt="Sra Hamburguesa">
+                    <div class="hero-overlay">🍔 SRA. HAMBURGUESA</div>
                 </div>
             </div>
 
@@ -1156,6 +1183,19 @@ document.querySelectorAll('.link-card').forEach(card => {
         card.style.setProperty('--y', `${e.clientY - rect.top}px`);
     });
 });
+
+/**
+ * HERO CAROUSEL
+ */
+let currentSlide = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+if(slides.length > 0) {
+    setInterval(() => {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].classList.add('active');
+    }, 7000);
+}
 
 </script>
     <!-- MODAL DE ÉXITO -->
