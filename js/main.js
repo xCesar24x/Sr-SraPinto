@@ -264,7 +264,7 @@ const MenuController = {
             categoria: 'pintos',
             nombre: 'Empanada de Pinto',
             desc: 'Crujiente empanada rellena de nuestro famoso gallo pinto.',
-            precio: 2000,
+            precio: 2500,
             img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Pinto">'
         },
         {
@@ -272,7 +272,7 @@ const MenuController = {
             categoria: 'pintos',
             nombre: 'Sra. Empanada Arreglada',
             desc: 'Empanada de pinto con ensalada, carne mechada y salsas.',
-            precio: 3000,
+            precio: 3500,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">'
         },
 
@@ -282,7 +282,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Sr. Patacón',
             desc: 'Patacones crujientes con frijoles molidos y queso.',
-            precio: 3000,
+            precio: 4000,
             img: '<img src="images-catalogo/Sr. Patacón.jpeg" alt="Sr. Patacón">'
         },
         {
@@ -290,7 +290,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Sra. Quesadilla',
             desc: 'Tortilla de harina con queso fundido y carne.',
-            precio: 3000,
+            precio: 4000,
             img: '<img src="images-catalogo/Sra. Quesadilla.jpeg" alt="Sra. Quesadilla">'
         },
         {
@@ -298,7 +298,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Sra. Hamburguesa con Papas',
             desc: 'Hamburguesa casera con papas fritas crujientes.',
-            precio: 4000,
+            precio: 5000,
             img: '<img src="images-catalogo/Sra. Hamburguesa con Papas.jpeg" alt="Sra. Hamburguesa con Papas">'
         },
         {
@@ -306,7 +306,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Empanada de Carne',
             desc: 'Empanada artesanal rellena de carne bien sazonada.',
-            precio: 2000,
+            precio: 2500,
             img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Carne">'
         },
         {
@@ -314,7 +314,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Empanada de Queso Mozzarella',
             desc: 'Empanada artesanal rellena de queso mozzarella derretido.',
-            precio: 2000,
+            precio: 2500,
             img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Queso Mozzarella">'
         },
         {
@@ -322,7 +322,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Empanada de Birria - Carne Res',
             desc: 'Empanada artesanal rellena de jugosa carne de birria de res.',
-            precio: 2000,
+            precio: 2500,
             img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Birria - Carne Res">'
         },
         {
@@ -330,7 +330,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Sra. Empanada Arreglada',
             desc: 'Empanada de Carne o Queso con ensalada y salsas.',
-            precio: 3000,
+            precio: 3500,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">'
         },
         {
@@ -338,7 +338,7 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Sr. Cono de SalchiPapas',
             desc: 'Papas fritas con salchicha y salsas de la casa.',
-            precio: 2500,
+            precio: 3000,
             img: '<img src="images-catalogo/Sr. Cono de SalchiPapas.jpeg" alt="Sr. Cono de SalchiPapas">'
         },
 
