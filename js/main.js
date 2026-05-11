@@ -27,6 +27,8 @@ const CartManager = {
     items: [],
     selectedPaymentMethod: 'Efectivo',
     customerName: '',
+    hasAllergies: false,
+    allergiesText: '',
     
     init() {
         const savedCart = localStorage.getItem('srysrapinto_cart');
@@ -181,6 +183,18 @@ const CartManager = {
         this.customerName = name;
     },
 
+    toggleAllergies(checked) {
+        this.hasAllergies = checked;
+        const textArea = document.getElementById('allergies-text');
+        if (textArea) {
+            textArea.style.display = checked ? 'block' : 'none';
+        }
+    },
+
+    updateAllergies(text) {
+        this.allergiesText = text;
+    },
+
     notifyAdd(productName) {
         const toast = document.createElement('div');
         toast.className = 'cart-toast';
@@ -208,10 +222,16 @@ const CartManager = {
             message += `👤 *Cliente:* ${this.customerName}\n\n`;
         }
 
+        if (this.hasAllergies && this.allergiesText.trim() !== '') {
+            message += `⚠️ *Alergias / Restricciones:*\n${this.allergiesText.trim()}\n\n`;
+        }
+
         message += `📝 *Detalle del pedido:*\n${itemsList}\n`;
         message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
         message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
         
+        message += `🔗 Visítanos en: https://sr-sra-pinto.vercel.app/\n`;
+
         const url = `https://wa.me/50688025793?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
     }

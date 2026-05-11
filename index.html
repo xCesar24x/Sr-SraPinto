@@ -1093,6 +1093,15 @@
             <input type="text" id="order-name" class="name-input" placeholder="Tu nombre aquí..." oninput="CartManager.updateName(this.value)">
         </div>
 
+        <!-- ALERGIAS -->
+        <div class="allergies-section" style="margin-top: 15px; text-align: left;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #fff; cursor: pointer;">
+                <input type="checkbox" id="has-allergies" style="accent-color: var(--mostaza, #f7b731); width: 16px; height: 16px;" onchange="CartManager.toggleAllergies(this.checked)">
+                <span>Alergias o restricciones</span>
+            </label>
+            <textarea id="allergies-text" class="name-input" style="display: none; margin-top: 10px; resize: none; height: 60px; font-family: inherit; width: 100%; box-sizing: border-box;" placeholder="Ej: Sin cebolla, alérgico al maní..." oninput="CartManager.updateAllergies(this.value)"></textarea>
+        </div>
+
         <div class="payment-section">
             <h4 class="payment-title">Método de Pago:</h4>
             <div id="payment-options" class="payment-options">
