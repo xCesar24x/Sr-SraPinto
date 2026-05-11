@@ -232,7 +232,7 @@ const CartManager = {
         
         message += `🔗 Visítanos en: https://sr-sra-pinto.vercel.app/\n`;
 
-        const url = `https://wa.me/50688025793?text=${encodeURIComponent(message)}`;
+        const url = `https://wa.me/50688224763?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
     }
 };
