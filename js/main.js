@@ -601,26 +601,15 @@ const ResponsiveHandler = {
 // MÓDULO: Image Expand Manager (Lupa)
 // ========================================
 const ImageExpandManager = {
-    timeoutId: null,
     overlayElement: null,
     isExpanded: false,
 
     init() {
-        // Prevenir menú contextual nativo en imágenes del menú
+        // Añadir cursor pointer para que se entienda que es clickeable
         const style = document.createElement('style');
         style.innerHTML = `
-            .mch-img {
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                user-select: none;
-                touch-action: pan-y; /* Permite scroll vertical pero bloquea comportamientos de hold */
-            }
-            .mch-img img {
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                user-select: none;
-                pointer-events: auto;
-            }
+            .mch-img { cursor: pointer; }
+            .mch-img img { cursor: pointer; }
         `;
         document.head.appendChild(style);
 
@@ -641,6 +630,7 @@ const ImageExpandManager = {
         overlay.style.pointerEvents = 'none';
         overlay.style.transition = 'opacity 0.3s ease';
         overlay.style.backdropFilter = 'blur(10px)';
+        overlay.style.cursor = 'zoom-out'; // Indicador visual al hacer hover en desktop
 
         const img = document.createElement('img');
         img.id = 'fullscreen-image-element';
@@ -656,21 +646,18 @@ const ImageExpandManager = {
         document.body.appendChild(overlay);
         this.overlayElement = overlay;
 
-        // Listeners globales para el Long Press
-        document.addEventListener('mousedown', this.handleDown.bind(this));
-        document.addEventListener('touchstart', this.handleDown.bind(this), {passive: false});
-        
-        window.addEventListener('mouseup', this.handleUp.bind(this));
-        window.addEventListener('touchend', this.handleUp.bind(this));
-        window.addEventListener('touchcancel', this.handleUp.bind(this));
-        window.addEventListener('contextmenu', this.handleContextMenu.bind(this));
-        
-        // También cancelar si hay movimiento (scroll) para no disparar en falso
-        window.addEventListener('touchmove', this.handleMove.bind(this), {passive: true});
-        window.addEventListener('mousemove', this.handleMove.bind(this));
+        // Listener global para el click
+        document.addEventListener('click', this.handleClick.bind(this));
     },
 
-    handleDown(e) {
+    handleClick(e) {
+        // Si el usuario hace clic en el overlay o en la imagen expandida, lo cerramos
+        if (e.target.id === 'fullscreen-image-overlay' || e.target.id === 'fullscreen-image-element') {
+            this.hideFullscreen();
+            return;
+        }
+
+        // Si el usuario hace clic en una imagen del menú, la expandimos
         let targetImg = null;
         if (e.target.tagName === 'IMG' && e.target.closest('.mch-img')) {
             targetImg = e.target;
@@ -679,39 +666,8 @@ const ImageExpandManager = {
         }
 
         if (targetImg) {
-            this.cancelTimer(); // Limpiar por si acaso
-            this.timeoutId = setTimeout(() => {
-                this.showFullscreen(targetImg.src);
-                if (navigator.vibrate) navigator.vibrate(50);
-            }, 1000); // 1 segundo exacto
-        }
-    },
-
-    handleUp(e) {
-        this.cancelTimer();
-        if (this.isExpanded) {
-            this.hideFullscreen();
-            if(e && e.cancelable) {
-                e.preventDefault(); // Prevenir clics accidentales si justo se soltó
-            }
-        }
-    },
-
-    handleMove(e) {
-        // Si el usuario empieza a arrastrar el dedo (scrollear), cancelamos el timer
-        this.cancelTimer();
-    },
-
-    handleContextMenu(e) {
-        if (e.target.tagName === 'IMG' && e.target.closest('.mch-img')) {
-            e.preventDefault(); // Bloquea el menú de "Guardar imagen" de móviles
-        }
-    },
-
-    cancelTimer() {
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-            this.timeoutId = null;
+            this.showFullscreen(targetImg.src);
+            if (navigator.vibrate) navigator.vibrate(50);
         }
     },
 
