@@ -598,12 +598,155 @@ const ResponsiveHandler = {
 };
 
 // ========================================
+// MÓDULO: Image Expand Manager (Lupa)
+// ========================================
+const ImageExpandManager = {
+    timeoutId: null,
+    overlayElement: null,
+    isExpanded: false,
+
+    init() {
+        // Prevenir menú contextual nativo en imágenes del menú
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .mch-img {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+                touch-action: pan-y; /* Permite scroll vertical pero bloquea comportamientos de hold */
+            }
+            .mch-img img {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+                pointer-events: auto;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Contenedor Overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'fullscreen-image-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+        overlay.style.zIndex = '99999';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.transition = 'opacity 0.3s ease';
+        overlay.style.backdropFilter = 'blur(10px)';
+
+        const img = document.createElement('img');
+        img.id = 'fullscreen-image-element';
+        img.style.maxWidth = '95%';
+        img.style.maxHeight = '95%';
+        img.style.objectFit = 'contain';
+        img.style.borderRadius = '15px';
+        img.style.boxShadow = '0 10px 40px rgba(0,0,0,0.8)';
+        img.style.transform = 'scale(0.8)';
+        img.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+        overlay.appendChild(img);
+        document.body.appendChild(overlay);
+        this.overlayElement = overlay;
+
+        // Listeners globales para el Long Press
+        document.addEventListener('mousedown', this.handleDown.bind(this));
+        document.addEventListener('touchstart', this.handleDown.bind(this), {passive: false});
+        
+        window.addEventListener('mouseup', this.handleUp.bind(this));
+        window.addEventListener('touchend', this.handleUp.bind(this));
+        window.addEventListener('touchcancel', this.handleUp.bind(this));
+        window.addEventListener('contextmenu', this.handleContextMenu.bind(this));
+        
+        // También cancelar si hay movimiento (scroll) para no disparar en falso
+        window.addEventListener('touchmove', this.handleMove.bind(this), {passive: true});
+        window.addEventListener('mousemove', this.handleMove.bind(this));
+    },
+
+    handleDown(e) {
+        let targetImg = null;
+        if (e.target.tagName === 'IMG' && e.target.closest('.mch-img')) {
+            targetImg = e.target;
+        } else if (e.target.classList && e.target.classList.contains('mch-img')) {
+            targetImg = e.target.querySelector('img');
+        }
+
+        if (targetImg) {
+            this.cancelTimer(); // Limpiar por si acaso
+            this.timeoutId = setTimeout(() => {
+                this.showFullscreen(targetImg.src);
+                if (navigator.vibrate) navigator.vibrate(50);
+            }, 1000); // 1 segundo exacto
+        }
+    },
+
+    handleUp(e) {
+        this.cancelTimer();
+        if (this.isExpanded) {
+            this.hideFullscreen();
+            if(e && e.cancelable) {
+                e.preventDefault(); // Prevenir clics accidentales si justo se soltó
+            }
+        }
+    },
+
+    handleMove(e) {
+        // Si el usuario empieza a arrastrar el dedo (scrollear), cancelamos el timer
+        this.cancelTimer();
+    },
+
+    handleContextMenu(e) {
+        if (e.target.tagName === 'IMG' && e.target.closest('.mch-img')) {
+            e.preventDefault(); // Bloquea el menú de "Guardar imagen" de móviles
+        }
+    },
+
+    cancelTimer() {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
+    },
+
+    showFullscreen(imgSrc) {
+        this.isExpanded = true;
+        const overlay = this.overlayElement;
+        const img = document.getElementById('fullscreen-image-element');
+        if (overlay && img) {
+            img.src = imgSrc;
+            overlay.style.opacity = '1';
+            overlay.style.pointerEvents = 'auto';
+            setTimeout(() => img.style.transform = 'scale(1)', 50);
+        }
+    },
+
+    hideFullscreen() {
+        this.isExpanded = false;
+        const overlay = this.overlayElement;
+        const img = document.getElementById('fullscreen-image-element');
+        if (overlay && overlay.style.opacity === '1') {
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            if (img) img.style.transform = 'scale(0.8)';
+        }
+    }
+};
+
+// ========================================
 // MÓDULO: Inicializador Global
 // ========================================
 const AppInitializer = {
     initialize() {
         // 1. Core Managers
         CartManager.init();
+        ImageExpandManager.init(); // Inicializar el expansor de imágenes
         
         // Los listeners del carrito se manejan en DOMContentLoaded
         // 2. Animaciones
