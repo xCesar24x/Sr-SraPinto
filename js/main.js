@@ -208,32 +208,83 @@ const CartManager = {
         }, 2000);
     },
 
-    enviarPedidoWhatsApp() {
+    async procesarPedido() {
         if (this.items.length === 0) return;
 
-        let itemsList = '';
-        this.items.forEach(item => {
-            itemsList += `* ✅ ${item.quantity}x ${item.nombre} — ₡${(item.precio * item.quantity).toLocaleString()}\n`;
-        });
+        const btn = document.getElementById('btn-checkout');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        btn.style.pointerEvents = 'none';
 
-        let message = `☕ *NUEVO PEDIDO — Sr. & Sra. Pinto*\n\n`;
-        
-        if (this.customerName) {
-            message += `👤 *Cliente:* ${this.customerName}\n\n`;
+        try {
+            const pedido = {
+                cliente: this.customerName || 'Cliente sin nombre',
+                alergias: this.hasAllergies ? this.allergiesText : '',
+                metodoPago: this.selectedPaymentMethod,
+                total: this.getTotal(),
+                items: this.items.map(item => ({
+                    id: item.id,
+                    nombre: item.nombre,
+                    cantidad: item.quantity,
+                    precio: item.precio
+                })),
+                estado: 'pendiente', // Estados: pendiente, en_preparacion, listo
+                fecha: new Date().toISOString()
+            };
+
+            // Guardar en Firestore
+            if (window.FirebaseDB && window.Firestore) {
+                await window.Firestore.addDoc(
+                    window.Firestore.collection(window.FirebaseDB, "pedidos"),
+                    pedido
+                );
+                console.log("✅ Pedido enviado a la cocina (Firebase)");
+                
+                // Mostrar el modal de éxito existente
+                const successOverlay = document.getElementById('success-overlay');
+                if (successOverlay) {
+                    successOverlay.classList.add('active');
+                    // Actualizar el texto del modal para que tenga más sentido con el nuevo flujo
+                    const textEl = successOverlay.querySelector('.success-text');
+                    if(textEl) {
+                        textEl.innerHTML = `Tu pedido fue enviado directamente a la cocina.<br>En breves momentos comenzará su preparación.<br>¡Gracias por preferir a Sr. & Sra. Pinto!`;
+                    }
+                }
+            } else {
+                console.error("Firebase no está listo. El pedido no se pudo guardar.");
+                alert("Hubo un problema de conexión. Intenta nuevamente.");
+            }
+        } catch (error) {
+            console.error("Error al guardar en Firebase:", error);
+            alert("Error al procesar el pedido. Revisa tu conexión a internet.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = 'auto';
         }
+    },
 
-        if (this.hasAllergies && this.allergiesText.trim() !== '') {
-            message += `⚠️ *Alergias / Restricciones:*\n${this.allergiesText.trim()}\n\n`;
-        }
-
-        message += `📝 *Detalle del pedido:*\n${itemsList}\n`;
-        message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
-        message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
+    resetAndClose() {
+        // Vaciar carrito
+        this.items = [];
+        this.customerName = '';
+        this.hasAllergies = false;
+        this.allergiesText = '';
         
-        message += `🔗 Visítanos en: https://sr-sra-pinto.vercel.app/\n`;
+        // Reset inputs
+        const nameInput = document.getElementById('order-name');
+        if (nameInput) nameInput.value = '';
+        const allergiesCheck = document.getElementById('has-allergies');
+        if (allergiesCheck) { allergiesCheck.checked = false; this.toggleAllergies(false); }
+        const allergiesText = document.getElementById('allergies-text');
+        if (allergiesText) allergiesText.value = '';
 
-        const url = `https://wa.me/50688224763?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
+        this.save();
+        this.updateCartUI();
+        
+        const successOverlay = document.getElementById('success-overlay');
+        if (successOverlay) successOverlay.classList.remove('active');
+        
+        UIController.toggleCart(); // Cierra el carrito
     }
 };
 
