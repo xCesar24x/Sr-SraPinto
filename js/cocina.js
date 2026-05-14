@@ -1,0 +1,187 @@
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Iniciar reloj
+    const clockEl = document.getElementById('clock');
+    setInterval(() => {
+        const now = new Date();
+        clockEl.innerText = now.toLocaleTimeString('es-CR');
+    }, 1000);
+
+    const ticketsContainer = document.getElementById('tickets-container');
+    const bellSound = document.getElementById('bell-sound');
+    
+    // Almacenar pedidos actuales para saber cuándo hay uno nuevo
+    let currentOrders = new Map();
+    let initialLoad = true;
+
+    if (!window.FirebaseDB || !window.Firestore) {
+        ticketsContainer.innerHTML = `<div class="empty-state" style="color:red;"><i class="fas fa-exclamation-triangle"></i><p>Error conectando a Firebase. Revisa firebase-init.js</p></div>`;
+        return;
+    }
+
+    const pedidosRef = window.Firestore.collection(window.FirebaseDB, "pedidos");
+    
+    // Escuchar cambios en tiempo real
+    pedidosRef.where("estado", "==", "pendiente").onSnapshot((snapshot) => {
+        let hasNewOrders = false;
+        
+        // Convertir docs a array para ordenarlos por fecha (del más antiguo al más reciente)
+        const orders = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            data.id = doc.id;
+            orders.push(data);
+            
+            // Si es un ID que no teníamos, es nuevo
+            if (!initialLoad && !currentOrders.has(doc.id)) {
+                hasNewOrders = true;
+            }
+        });
+        
+        // Ordenar: los más viejos primero (FIFO)
+        orders.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+        // Actualizar nuestro mapa local
+        currentOrders.clear();
+        orders.forEach(o => currentOrders.set(o.id, o));
+
+        // Reproducir sonido si hay nuevos
+        if (hasNewOrders) {
+            playBell();
+        }
+
+        renderTickets(orders);
+        initialLoad = false;
+    });
+
+    function renderTickets(orders) {
+        if (orders.length === 0) {
+            ticketsContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-mug-hot"></i>
+                    <p>Esperando comandas...</p>
+                </div>`;
+            return;
+        }
+
+        ticketsContainer.innerHTML = orders.map(order => {
+            // Formatear hora
+            const timeObj = new Date(order.fecha);
+            const timeString = timeObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+            
+            // Evaluar si es "nuevo" (menos de 1 minuto) para ponerle borde brillante
+            const isNew = (new Date() - timeObj) < 60000;
+            
+            let allergiesHtml = '';
+            if (order.alergias && order.alergias.trim() !== '') {
+                allergiesHtml = `
+                    <div class="ticket-allergies">
+                        <i class="fas fa-exclamation-triangle"></i> ${order.alergias}
+                    </div>
+                `;
+            }
+
+            let itemsHtml = order.items.map(item => `
+                <li class="ticket-item">
+                    <span class="item-qty">${item.cantidad}x</span>
+                    <span class="item-name">${item.nombre}</span>
+                </li>
+            `).join('');
+
+            return `
+                <div class="ticket ${isNew ? 'new-ticket' : ''}" id="ticket-${order.id}">
+                    <div class="ticket-header">
+                        <span class="ticket-id">#${order.id.slice(-5).toUpperCase()}</span>
+                        <span class="ticket-time">${timeString}</span>
+                    </div>
+                    <div class="ticket-body">
+                        <div class="ticket-customer">
+                            <i class="fas fa-user"></i> ${order.cliente}
+                        </div>
+                        ${allergiesHtml}
+                        <ul class="ticket-items">
+                            ${itemsHtml}
+                        </ul>
+                    </div>
+                    <div class="ticket-footer">
+                        <button class="btn-complete" onclick="CocinaManager.completar('${order.id}')">
+                            <i class="fas fa-check-circle"></i> Listo
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function playBell() {
+        if(bellSound) {
+            // Chrome requiere interacción previa para reproducir audio a veces,
+            // pero en pantallas KDS de uso dedicado se suelen configurar los permisos.
+            bellSound.currentTime = 0;
+            bellSound.play().catch(e => console.log("Auto-play bloqueado por el navegador:", e));
+        }
+    }
+});
+
+// Lógica global para el botón de completar
+window.CocinaManager = {
+    async completar(id) {
+        const ticketEl = document.getElementById(`ticket-${id}`);
+        if(ticketEl) {
+            const btn = ticketEl.querySelector('.btn-complete');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+        }
+
+        try {
+            const db = window.FirebaseDB;
+            const docRef = db.collection("pedidos").doc(id);
+            
+            // 1. Obtener la orden para saber qué descontar
+            const orderSnap = await docRef.get();
+            if (orderSnap.exists) {
+                const orderData = orderSnap.data();
+                
+                // 2. Procesar inventario
+                if (window.RECETAS) {
+                    const batch = db.batch();
+                    let hasDecrements = false;
+                    
+                    orderData.items.forEach(item => {
+                        const receta = window.RECETAS[item.id];
+                        if (receta) {
+                            receta.forEach(ing => {
+                                const inventarioRef = db.collection('inventario').doc(ing.id);
+                                // Usar set con merge para crearlo si no existe e incrementar negativamente
+                                batch.set(inventarioRef, {
+                                    cantidad: firebase.firestore.FieldValue.increment(-(ing.cant * item.cantidad)),
+                                    nombre: ing.id.replace(/_/g, ' ') // Para que se cree con un nombre si es nuevo
+                                }, { merge: true });
+                                hasDecrements = true;
+                            });
+                        }
+                    });
+                    
+                    if (hasDecrements) {
+                        await batch.commit().catch(err => console.error("Error al actualizar inventario:", err));
+                    }
+                }
+            }
+
+            // 3. Actualizar el estado en Firebase a listo
+            await docRef.update({ estado: "listo" });
+            
+            // Animación de salida
+            if(ticketEl) {
+                ticketEl.classList.add('completed-anim');
+            }
+        } catch(error) {
+            console.error("Error al completar el pedido:", error);
+            alert("No se pudo completar el pedido. Revisa tu conexión.");
+            if(ticketEl) {
+                const btn = ticketEl.querySelector('.btn-complete');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Listo';
+                btn.disabled = false;
+            }
+        }
+    }
+};

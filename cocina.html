@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocina | Sr. & Sra. Pinto</title>
+    
+    <!-- FUENTES DEL BRANDING -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @font-face {
+            font-family: 'Rotio';
+            src: url('fonts/Rotio 2.otf') format('opentype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Gotham';
+            src: url('fonts/GOTHAM-MEDIUM.TTF') format('truetype');
+            font-weight: 500;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="css/cocina.css">
+</head>
+<body>
+
+    <!-- AUDIO PARA NUEVO PEDIDO -->
+    <!-- Usamos un sonido genérico de campana en base64 corto o un link público para evitar problemas locales -->
+    <audio id="bell-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+    <header class="kds-header">
+        <div class="header-left">
+            <img src="logo-brand/PNG/Logo Blanco Horizontal.png" alt="Logo" class="kds-logo">
+            <h1>Pantalla de Cocina</h1>
+        </div>
+        <div class="header-right">
+            <div id="clock" class="kds-clock">00:00:00</div>
+        </div>
+    </header>
+
+    <main class="kds-main">
+        <div id="tickets-container" class="tickets-grid">
+            <!-- Los tickets se inyectarán aquí dinámicamente -->
+            <div class="empty-state">
+                <i class="fas fa-mug-hot"></i>
+                <p>Esperando comandas...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- FIREBASE COMPAT SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    
+    <!-- CONFIGURACIÓN BASE -->
+    <script src="js/firebase-init.js"></script>
+    
+    <!-- LÓGICA DE COCINA -->
+    <script src="js/recetas.js"></script>
+    <script src="js/cocina.js"></script>
+
+</body>
+</html>

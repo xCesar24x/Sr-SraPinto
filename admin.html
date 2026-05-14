@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Sr. & Sra. Pinto</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @font-face {
+            font-family: 'Rotio';
+            src: url('fonts/Rotio 2.otf') format('opentype');
+            font-weight: normal;
+        }
+        @font-face {
+            font-family: 'Gotham';
+            src: url('fonts/GOTHAM-MEDIUM.TTF') format('truetype');
+            font-weight: 500;
+        }
+    </style>
+    
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar">
+            <div class="brand">
+                <img src="logo-brand/PNG/Logo Blanco Horizontal.png" alt="Logo">
+                <h2>Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active"><i class="fas fa-boxes"></i> Inventario</a>
+                <!-- Future sections -->
+                <a href="#"><i class="fas fa-chart-line"></i> Reportes <span class="badge">Pronto</span></a>
+                <a href="#"><i class="fas fa-users"></i> Usuarios <span class="badge">Pronto</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-main">
+            <header class="top-bar">
+                <h1 class="page-title">Gestión de Inventario en Tiempo Real</h1>
+                <button class="btn-primary" onclick="AdminManager.openAddModal()"><i class="fas fa-plus"></i> Ajustar Stock</button>
+            </header>
+
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-egg"></i></div>
+                    <div class="stat-info">
+                        <h3>Huevos</h3>
+                        <p id="stat-huevos">...</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fas fa-cheese"></i></div>
+                    <div class="stat-info">
+                        <h3>Queso Frito</h3>
+                        <p id="stat-queso">...</p>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="stat-info">
+                        <h3>Alertas de Stock</h3>
+                        <p id="stat-alertas">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="inventory-container">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Ingrediente</th>
+                            <th>Stock Actual</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-list">
+                        <!-- Llenado vía JS -->
+                        <tr><td colspan="4" style="text-align: center; padding: 20px;">Cargando inventario...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL AJUSTE STOCK -->
+    <div id="stock-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ajustar Stock</h2>
+                <button onclick="AdminManager.closeAddModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Ingrediente</label>
+                    <select id="stock-item-select">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Operación</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="stock-op" value="add" checked> <span class="op-add">Agregar (+)</span></label>
+                        <label><input type="radio" name="stock-op" value="set"> <span class="op-set">Fijar Exacto (=)</span></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cantidad</label>
+                    <input type="number" id="stock-qty" placeholder="Ej: 30" min="0" step="0.5">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="AdminManager.closeAddModal()">Cancelar</button>
+                <button class="btn-primary" onclick="AdminManager.saveStock()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-init.js"></script>
+    
+    <!-- ADMIN JS -->
+    <script src="js/admin.js"></script>
+
+</body>
+</html>
