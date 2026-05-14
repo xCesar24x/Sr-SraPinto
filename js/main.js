@@ -208,6 +208,37 @@ const CartManager = {
         }, 2000);
     },
 
+    enviarPedidoWhatsApp() {
+        if (this.items.length === 0) return;
+
+        let itemsList = '';
+        this.items.forEach(item => {
+            itemsList += `* ✅ ${item.quantity}x ${item.nombre} — ₡${(item.precio * item.quantity).toLocaleString()}\n`;
+        });
+
+        let message = `☕ *NUEVO PEDIDO — Sr. & Sra. Pinto*\n\n`;
+        
+        if (this.customerName) {
+            message += `👤 *Cliente:* ${this.customerName}\n\n`;
+        }
+
+        if (this.hasAllergies && this.allergiesText.trim() !== '') {
+            message += `⚠️ *Alergias / Restricciones:*\n${this.allergiesText.trim()}\n\n`;
+        }
+
+        message += `📝 *Detalle del pedido:*\n${itemsList}\n`;
+        message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
+        message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
+        
+        message += `🔗 Visítanos en: https://sr-sra-pinto.vercel.app/\n`;
+
+        const url = `https://wa.me/50688224763?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+        
+        // Opcional: mostrar modal de éxito después de enviarlo por WA
+        document.getElementById('success-overlay').classList.add('active');
+    },
+
     async procesarPedido() {
         if (this.items.length === 0) return;
 
