@@ -477,7 +477,7 @@
         #loader {
             position: fixed; inset: 0; background: var(--negro); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            gap: 25px; text-align: center;
+            gap: 30px; text-align: center;
         }
         
         #loader.hidden { 
@@ -486,27 +486,45 @@
             transition: 0.8s cubic-bezier(0.65, 0, 0.35, 1); 
         }
 
-        .loader-logo { 
-            font-family: 'Gotham', 'Montserrat', sans-serif; 
-            font-size: 3.5rem; 
-            background: linear-gradient(var(--mostaza), var(--rojo)); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 0 25px rgba(233,19,80,0.5)); 
-            text-align: center;
-            letter-spacing: 1px;
+        /* Contenedor del efecto de relleno del logo */
+        .loader-logo-wrap {
+            position: relative;
+            width: 280px;
+            max-width: 80vw;
         }
 
-        .loader-bar-wrap { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
-        
-        .loader-bar { 
-            height: 100%; 
-            background: linear-gradient(90deg, var(--rojo), var(--mostaza)); 
-            width: 0%; 
-            animation: loadBar 1.5s forwards cubic-bezier(0.65, 0, 0.35, 1); 
+        /* Capa base: logo oscuro/siluetiado */
+        .loader-logo-base {
+            width: 100%;
+            display: block;
+            opacity: 0.15;
+            filter: brightness(0) invert(1);
         }
 
-        @keyframes loadBar { to { width: 100%; } }
+        /* Capa de relleno: logo completo, se revela con clip-path de izquierda a derecha */
+        .loader-logo-fill {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            display: block;
+            filter: drop-shadow(0 0 20px rgba(233,19,80,0.6));
+            clip-path: inset(0 100% 0 0);
+            animation: logoFill 1.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+        }
+
+        @keyframes logoFill {
+            0%   { clip-path: inset(0 100% 0 0); }
+            100% { clip-path: inset(0 0% 0 0); }
+        }
+
+        .loader-tagline {
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            font-family: 'Gotham', sans-serif;
+            animation: fadeIn 0.5s ease both;
+        }
         @keyframes fadeDown { from { opacity:0; transform: translateY(-30px); } to { opacity:1; transform: translateY(0); } }
         @keyframes fadeUp { from { opacity:0; transform: translateY(40px); } to { opacity:1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
@@ -936,9 +954,13 @@
 
 <!-- Pantalla de Carga -->
 <div id="loader">
-    <div class="loader-logo">Sr. & Sra. Pinto</div>
-    <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
-    <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0.4; text-align: center; padding: 0 20px;">Preparando el sabor tico...</div>
+    <div class="loader-logo-wrap">
+        <!-- Capa base (siluetiada/oscura) -->
+        <img class="loader-logo-base" src="logo-brand/PNG/Logo BLanco Vertical.png" alt="">
+        <!-- Capa de relleno (se revela de izquierda a derecha) -->
+        <img class="loader-logo-fill" src="logo-brand/PNG/Logo BLanco Vertical.png" alt="Sr. y Sra. Pinto">
+    </div>
+    <div class="loader-tagline">Preparando el sabor tico...</div>
 </div>
 
 <div id="view-hub" class="view active">
