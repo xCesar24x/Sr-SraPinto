@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Restringido | Sr. & Sra. Pinto</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @font-face { font-family: 'Gotham'; src: url('fonts/GOTHAM-MEDIUM.TTF') format('truetype'); font-weight: 500; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Gotham', sans-serif; }
+        body { background: #0a0002; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .login-box { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 15px; border: 1px solid rgba(233, 19, 80, 0.3); width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .login-box img { width: 120px; margin-bottom: 20px; }
+        h2 { margin-bottom: 25px; font-size: 1.2rem; color: #fdf5e6; text-transform: uppercase; letter-spacing: 2px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 8px; color: rgba(255,255,255,0.7); font-weight: bold; }
+        .form-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white; font-size: 1rem; }
+        .form-group input:focus { outline: none; border-color: #E91350; }
+        .btn-login { background: linear-gradient(135deg, #E91350, #3D010C); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(233, 19, 80, 0.4); }
+        .error-msg { color: #e74c3c; font-size: 0.85rem; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <img src="logo-brand/PNG/Logo Blanco.png" alt="Logo">
+        <h2 id="role-title">Acceso Personal</h2>
+        
+        <div class="form-group">
+            <label>Número de Cédula</label>
+            <input type="text" id="cedula" placeholder="Ej: 1111" autocomplete="off">
+        </div>
+        
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+
+        <div id="error-msg" class="error-msg">Cédula o contraseña incorrectos.</div>
+
+        <button class="btn-login" onclick="LoginManager.iniciarSesion()">Ingresar <i class="fas fa-arrow-right"></i></button>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="index.html" style="color: rgba(255,255,255,0.3); text-decoration: none; font-size: 0.8rem;"><i class="fas fa-arrow-left"></i> Volver al Menú</a>
+        </div>
+    </div>
+
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-init.js"></script>
+    <script src="js/login.js"></script>
+
+</body>
+</html>
