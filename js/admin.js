@@ -128,11 +128,53 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 
                 this.closeAddModal();
-                // Opcional feedback de exito
             } catch (error) {
                 console.error("Error al actualizar inventario:", error);
                 alert("Hubo un error al guardar.");
             }
+        },
+
+        // Toggle del estado del local (Abierto / Cerrado)
+        async toggleStore() {
+            const card = document.getElementById('store-toggle-card');
+            const isCurrentlyOpen = card.classList.contains('open');
+            const newState = !isCurrentlyOpen;
+
+            try {
+                await db.collection('config').doc('estado').set({
+                    abierto: newState,
+                    actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
+                    fecha: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error("Error al cambiar estado del local:", error);
+                alert("No se pudo cambiar el estado.");
+            }
         }
     };
+
+    // Escuchar el estado del local en tiempo real
+    db.collection('config').doc('estado').onSnapshot((doc) => {
+        const card = document.getElementById('store-toggle-card');
+        const btn = document.getElementById('toggle-btn');
+        const icon = document.getElementById('toggle-icon');
+        const title = document.getElementById('toggle-title');
+        const subtitle = document.getElementById('toggle-subtitle');
+
+        if (doc.exists && doc.data().abierto === true) {
+            card.classList.add('open');
+            btn.classList.add('open');
+            btn.classList.remove('closed');
+            icon.innerHTML = '<i class="fas fa-store"></i>';
+            title.innerText = '¡Local Abierto!';
+            subtitle.innerText = 'Los clientes ven que estás abierto.';
+        } else {
+            card.classList.remove('open');
+            btn.classList.remove('open');
+            btn.classList.add('closed');
+            icon.innerHTML = '<i class="fas fa-store-slash"></i>';
+            title.innerText = 'Local Cerrado';
+            subtitle.innerText = 'Los clientes ven que estás cerrado.';
+        }
+    });
 });

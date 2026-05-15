@@ -1185,36 +1185,51 @@ function showCategory(cat) {
 
 
 /**
- * LÓGICA DE HORARIO (STATUS ENGINE)
+ * LÓGICA DE HORARIO (STATUS ENGINE) — Ahora controlado por el Admin via Firebase
  */
 function checkStatus() {
-    const now = new Date();
-    const day = now.getDay();
-    const hour = now.getHours();
-    
     const dot = document.getElementById('status-dot');
     const text = document.getElementById('status-text');
-    let isOpen = false;
     
-    // Fines de semana
-    if (day === 6 || day === 0) {
-        if (hour >= 10 && hour < 18) isOpen = true;
-    }
-
-    if (isOpen) {
-        dot.style.color = "#25d366";
-        dot.style.background = "#25d366";
-        dot.style.boxShadow = "0 0 15px #25d366";
-        text.innerText = "Abierto ahora • ¡Hace tu pedido!";
+    // Intentar escuchar Firebase para el estado en tiempo real
+    if (window.FirebaseDB) {
+        window.FirebaseDB.collection('config').doc('estado').onSnapshot((doc) => {
+            if (doc.exists && doc.data().abierto === true) {
+                dot.style.color = "#25d366";
+                dot.style.background = "#25d366";
+                dot.style.boxShadow = "0 0 15px #25d366";
+                text.innerText = "Abierto ahora • ¡Hacé tu pedido!";
+            } else {
+                dot.style.color = "#ff2200";
+                dot.style.background = "#ff2200";
+                dot.style.boxShadow = "0 0 15px #ff2200";
+                text.innerText = "Cerrado ahora • Revisá el horario";
+            }
+        });
     } else {
-        dot.style.color = "#ff2200";
-        dot.style.background = "#ff2200";
-        dot.style.boxShadow = "0 0 15px #ff2200";
-        text.innerText = "Cerrado ahora • Revisá el horario";
+        // Fallback: si Firebase no carga, usar horario fijo
+        const now = new Date();
+        const day = now.getDay();
+        const hour = now.getHours();
+        let isOpen = false;
+        if (day === 6 || day === 0) {
+            if (hour >= 10 && hour < 18) isOpen = true;
+        }
+        if (isOpen) {
+            dot.style.color = "#25d366";
+            dot.style.background = "#25d366";
+            dot.style.boxShadow = "0 0 15px #25d366";
+            text.innerText = "Abierto ahora • ¡Hacé tu pedido!";
+        } else {
+            dot.style.color = "#ff2200";
+            dot.style.background = "#ff2200";
+            dot.style.boxShadow = "0 0 15px #ff2200";
+            text.innerText = "Cerrado ahora • Revisá el horario";
+        }
     }
 }
-checkStatus();
-setInterval(checkStatus, 60000);
+// Esperar un momento a que Firebase cargue y luego ejecutar
+setTimeout(checkStatus, 2000);
 
 // EFECTO GLOW DINÁMICO
 document.querySelectorAll('.link-card').forEach(card => {

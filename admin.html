@@ -54,6 +54,22 @@
                 <button class="btn-primary" onclick="AdminManager.openAddModal()"><i class="fas fa-plus"></i> Ajustar Stock</button>
             </header>
 
+            <!-- TOGGLE ABRIR/CERRAR LOCAL -->
+            <div class="store-toggle-card" id="store-toggle-card">
+                <div class="toggle-info">
+                    <div class="toggle-icon" id="toggle-icon">
+                        <i class="fas fa-store-slash"></i>
+                    </div>
+                    <div>
+                        <h3 id="toggle-title">Estado del Local</h3>
+                        <p id="toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cargando...</p>
+                    </div>
+                </div>
+                <button class="toggle-btn closed" id="toggle-btn" onclick="AdminManager.toggleStore()">
+                    <span class="toggle-knob"></span>
+                </button>
+            </div>
+
             <div class="dashboard-stats">
                 <div class="stat-card">
                     <div class="stat-icon"><i class="fas fa-egg"></i></div>

@@ -168,3 +168,53 @@ body { background: var(--negro); color: var(--blanco); min-height: 100vh; }
 .op-set { color: var(--mostaza); }
 
 .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.2); }
+
+/* STORE TOGGLE CARD */
+.store-toggle-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--tarjeta);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 25px;
+    margin-bottom: 20px;
+    transition: 0.4s;
+}
+.store-toggle-card.open {
+    border-color: rgba(46, 204, 113, 0.4);
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.1);
+}
+
+.toggle-info { display: flex; align-items: center; gap: 20px; }
+
+.toggle-icon {
+    width: 50px; height: 50px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; transition: 0.4s;
+    background: rgba(231, 76, 60, 0.15); color: var(--alerta);
+}
+.store-toggle-card.open .toggle-icon {
+    background: rgba(46, 204, 113, 0.15); color: var(--verde);
+}
+
+/* Custom Toggle Switch */
+.toggle-btn {
+    width: 70px; height: 36px; border-radius: 18px; border: none;
+    background: rgba(231, 76, 60, 0.3); cursor: pointer; position: relative;
+    transition: 0.4s; padding: 3px;
+}
+.toggle-btn.open { background: rgba(46, 204, 113, 0.4); }
+
+.toggle-knob {
+    display: block; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--alerta); transition: 0.4s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.toggle-btn.open .toggle-knob {
+    transform: translateX(34px);
+    background: var(--verde);
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.6);
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
