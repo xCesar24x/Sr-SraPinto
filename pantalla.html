@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Pedidos | Sr. & Sra. Pinto</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @font-face { font-family: 'Rotio'; src: url('fonts/Rotio 2.otf') format('opentype'); }
+        @font-face { font-family: 'Gotham'; src: url('fonts/GOTHAM-MEDIUM.TTF') format('truetype'); font-weight: 500; }
+    </style>
+    <link rel="stylesheet" href="css/pantalla.css">
+</head>
+<body>
+
+    <!-- FONDO: CARRUSEL DE IMÁGENES FULLSCREEN -->
+    <div class="bg-slideshow">
+        <div class="bg-slide active" style="background-image: url('images-catalogo/Señor Pinto.jpeg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/BurrotedePinto.jpg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/ComboSeñorPintoCafé.jpg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/Sra. Empanada Arreglada .jpeg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/Sr. Patacón.jpeg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/Sra. Hamburguesa con Papas.jpeg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/Sra. Quesadilla.jpeg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/Sr. Cono de SalchiPapas.jpeg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/Srpapicarne.jpeg')"></div>
+        <div class="bg-slide" style="background-image: url('images-catalogo/Quesopinto.jpeg')"></div>
+    </div>
+
+    <!-- CAPA OSCURA PARA LEGIBILIDAD -->
+    <div class="bg-overlay"></div>
+
+    <!-- HEADER FLOTANTE -->
+    <header class="display-header">
+        <img src="logo-brand/PNG/Logo Blanco Horizontal.png" alt="Logo" class="display-logo">
+        <div class="header-center">
+            <h1>Estado de tu Pedido</h1>
+        </div>
+        <div id="clock" class="display-clock">00:00</div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="display-main">
+        <div id="orders-grid" class="orders-grid">
+            <div class="empty-display">
+                <i class="fas fa-mug-hot"></i>
+                <p>¡Aún no hay pedidos!</p>
+                <span>Hacé tu pedido y mirá acá cuándo está listo</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-init.js"></script>
+    <script src="js/pantalla.js"></script>
+
+</body>
+</html>
