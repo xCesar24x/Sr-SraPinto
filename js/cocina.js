@@ -80,7 +80,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
-            let itemsHtml = order.items.map(item => `
+            // Ordenar items para que las bebidas (id empieza con 'b-') queden al final
+            const sortedItems = [...order.items].sort((a, b) => {
+                const isDrinkA = a.id.startsWith('b-') ? 1 : 0;
+                const isDrinkB = b.id.startsWith('b-') ? 1 : 0;
+                return isDrinkA - isDrinkB;
+            });
+
+            let itemsHtml = sortedItems.map(item => `
                 <li class="ticket-item">
                     <span class="item-qty">${item.cantidad}x</span>
                     <span class="item-name">${item.nombre}</span>

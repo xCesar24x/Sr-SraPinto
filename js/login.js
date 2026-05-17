@@ -2,15 +2,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 1. Setup inicial de usuarios (Solo para la demo, crea los usuarios si no existen)
     setTimeout(async () => {
         if(window.FirebaseDB) {
-            const snapshot = await window.FirebaseDB.collection('empleados').limit(1).get();
-            if(snapshot.empty) {
-                const batch = window.FirebaseDB.batch();
-                batch.set(window.FirebaseDB.collection('empleados').doc('admin'), { cedula: '1111', password: '111', rol: 'admin' });
-                batch.set(window.FirebaseDB.collection('empleados').doc('ventas'), { cedula: '2222', password: '222', rol: 'ventas' });
-                batch.set(window.FirebaseDB.collection('empleados').doc('cocina'), { cedula: '3333', password: '333', rol: 'cocina' });
-                await batch.commit();
-                console.log("Usuarios por defecto creados en Firebase.");
-            }
+            // Actualizar siempre los usuarios para garantizar que las nuevas claves funcionen
+            const batch = window.FirebaseDB.batch();
+            batch.set(window.FirebaseDB.collection('empleados').doc('admin'), { cedula: 'Admin', password: '1001', rol: 'admin' });
+            batch.set(window.FirebaseDB.collection('empleados').doc('ventas'), { cedula: 'Ventas', password: '1002', rol: 'ventas' });
+            batch.set(window.FirebaseDB.collection('empleados').doc('cocina'), { cedula: 'Cocina', password: '1003', rol: 'cocina' });
+            await batch.commit();
+            console.log("Usuarios actualizados en Firebase.");
         }
     }, 1500);
 
