@@ -617,9 +617,12 @@ const UIController = {
         menu.classList.remove('hidden');
         menu.classList.add('active');
         
+        window.scrollTo(0, 0);
         setTimeout(() => {
-            window.scrollTo({ top: 0, behavior: 'instant' });
-        }, 50);
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }, 150);
         
         if (navigator.vibrate) navigator.vibrate(50);
     },
@@ -634,6 +637,13 @@ const UIController = {
         
         hub.classList.remove('hidden');
         hub.classList.add('active');
+        
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        }, 150);
         
         if (navigator.vibrate) navigator.vibrate(50);
     },
