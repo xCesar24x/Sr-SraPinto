@@ -46,23 +46,35 @@ const CartManager = {
         localStorage.setItem('srysrapinto_cart', JSON.stringify(this.items));
     },
     
-    addItem(productId) {
+    addItem(productId, option = null) {
         const product = MenuController.getProductById(productId);
         if (!product) return;
         
-        const existingItem = this.items.find(item => item.id === productId);
+        if (product.requiresOptions && !option) {
+            UIController.showOptionsModal(product);
+            return;
+        }
+
+        const cartItemId = option ? `${productId}-${option.replace(/\s+/g, '-')}` : productId;
+        const cartItemName = option ? `${product.nombre} (${option})` : product.nombre;
+
+        const existingItem = this.items.find(item => item.cartId === cartItemId || (!item.cartId && item.id === cartItemId));
+        
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
             this.items.push({
                 ...product,
+                cartId: cartItemId,
+                option: option,
+                nombre: cartItemName,
                 quantity: 1
             });
         }
         
         this.save();
         this.updateCartUI();
-        this.notifyAdd(product.nombre);
+        this.notifyAdd(cartItemName);
 
         // Feedback visual: destello verde en la tarjeta
         const card = document.getElementById(`card-${productId}`);
@@ -73,8 +85,8 @@ const CartManager = {
         }
     },
     
-    removeItem(productId) {
-        const index = this.items.findIndex(item => item.id === productId);
+    removeItem(cartId) {
+        const index = this.items.findIndex(item => item.cartId === cartId || (!item.cartId && item.id === cartId));
         if (index > -1) {
             if (this.items[index].quantity > 1) {
                 this.items[index].quantity -= 1;
@@ -86,8 +98,8 @@ const CartManager = {
         this.updateCartUI();
     },
 
-    deleteItem(productId) {
-        this.items = this.items.filter(item => item.id !== productId);
+    deleteItem(cartId) {
+        this.items = this.items.filter(item => !(item.cartId === cartId || (!item.cartId && item.id === cartId)));
         this.save();
         this.updateCartUI();
     },
@@ -132,10 +144,10 @@ const CartManager = {
                             <span class="cart-item-price">₡${(item.precio * item.quantity).toLocaleString()}</span>
                         </div>
                         <div class="cart-item-controls">
-                            <button onclick="CartManager.removeItem('${item.id}')"><i class="fas fa-minus"></i></button>
+                            <button onclick="CartManager.removeItem('${item.cartId || item.id}')"><i class="fas fa-minus"></i></button>
                             <span>${item.quantity}</span>
-                            <button onclick="CartManager.addItem('${item.id}')"><i class="fas fa-plus"></i></button>
-                            <button class="delete-btn" onclick="CartManager.deleteItem('${item.id}')"><i class="fas fa-trash"></i></button>
+                            <button onclick="CartManager.addItem('${item.id}', ${item.option ? `'${item.option}'` : 'null'})"><i class="fas fa-plus"></i></button>
+                            <button class="delete-btn" onclick="CartManager.deleteItem('${item.cartId || item.id}')"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `).join('');
@@ -159,7 +171,9 @@ const CartManager = {
         this.items.forEach(item => {
             const btn = document.getElementById(`add-btn-${item.id}`);
             if (btn) {
-                btn.innerHTML = `<span style="font-weight: bold; font-size: 1.2rem;">${item.quantity}</span>`;
+                const allOfThis = this.items.filter(i => i.id === item.id);
+                const totalQty = allOfThis.reduce((s, i) => s + i.quantity, 0);
+                btn.innerHTML = `<span style="font-weight: bold; font-size: 1.2rem;">${totalQty}</span>`;
             }
         });
 
@@ -428,20 +442,22 @@ const MenuController = {
             img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Queso Mozzarella">'
         },
         {
-            id: 'p-empanada-birria',
+            id: 'p-empanada-carne-queso',
             categoria: 'snacks',
-            nombre: 'Empanada de Birria - Carne Res',
-            desc: 'Empanada artesanal rellena de jugosa carne de birria de res.',
+            nombre: 'Empanada de Carne y Queso Mozzarella',
+            desc: 'Empanada artesanal rellena de carne y queso mozzarella derretido.',
             precio: 2500,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Birria - Carne Res">'
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Carne y Queso Mozzarella">'
         },
         {
             id: 'p-sra-empanada-m2',
             categoria: 'snacks',
             nombre: 'Sra. Empanada Arreglada',
-            desc: 'Empanada de Carne o Queso con ensalada y salsas.',
+            desc: 'Empanada con ensalada y salsas. Elige tu relleno.',
             precio: 3500,
-            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">'
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">',
+            requiresOptions: true,
+            options: ['Carne', 'Queso Mozzarella', 'Carne y Queso Mozzarella']
         },
         {
             id: 'p-cono-salchipapa',
@@ -545,6 +561,9 @@ const MenuController = {
         }
 
         const filtered = this.MENU_DATA.filter(p => p.categoria === categoryId);
+        // Ordenar por precio de mayor a menor
+        filtered.sort((a, b) => b.precio - a.precio);
+        
         if (countEl) countEl.innerText = `${filtered.length} opciones`;
         
         container.style.opacity = '1';
@@ -620,6 +639,38 @@ const UIController = {
     toggleCart() {
         const drawer = document.getElementById('cart-drawer');
         if(drawer) drawer.classList.toggle('hidden');
+    },
+
+    showOptionsModal(product) {
+        let modal = document.getElementById('options-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'options-modal';
+            modal.className = 'success-overlay active';
+            modal.style.zIndex = '10000';
+            modal.innerHTML = `
+                <div class="success-modal" style="padding: 30px;">
+                    <div style="font-size: 2rem; color: var(--mostaza); margin-bottom: 10px;"><i class="fas fa-list"></i></div>
+                    <h2 class="success-title" id="options-title" style="font-size: 1.5rem; margin-bottom: 20px;">Elige una opción</h2>
+                    <div id="options-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    </div>
+                    <button class="success-btn" style="padding: 10px; border-color: rgba(255,255,255,0.1);" onclick="document.getElementById('options-modal').classList.remove('active')">
+                        CANCELAR
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        } else {
+            modal.classList.add('active');
+        }
+        
+        document.getElementById('options-title').innerText = product.nombre;
+        const list = document.getElementById('options-list');
+        list.innerHTML = product.options.map(opt => `
+            <button class="success-btn" style="padding: 12px; font-size: 1rem; border-color: var(--mostaza); color: var(--mostaza);" onclick="CartManager.addItem('${product.id}', '${opt}'); document.getElementById('options-modal').classList.remove('active');">
+                ${opt}
+            </button>
+        `).join('');
     }
 };
 
