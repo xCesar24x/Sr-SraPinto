@@ -617,7 +617,9 @@ const UIController = {
         menu.classList.remove('hidden');
         menu.classList.add('active');
         
-        window.scrollTo(0,0);
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }, 50);
         
         if (navigator.vibrate) navigator.vibrate(50);
     },
