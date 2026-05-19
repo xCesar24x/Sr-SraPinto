@@ -559,9 +559,11 @@ const MenuController = {
             id: 'b-gaseosas',
             categoria: 'bebidas',
             nombre: 'Gaseosas',
-            desc: 'Refrescantes gaseosas bien frías.',
+            desc: 'Refrescantes gaseosas bien frías. Elige tu favorita.',
             precio: 1200,
-            img: '<img src="images-catalogo/gaseosas.jpg" alt="Gaseosas" class="img-fit">'
+            img: '<img src="images-catalogo/gaseosas.jpg" alt="Gaseosas" class="img-fit">',
+            requiresOptions: true,
+            options: ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero']
         },
         {
             id: 'b-hidratante',
