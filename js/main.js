@@ -957,6 +957,9 @@ const AppInitializer = {
 };
 
 // ========================================
-// PUNTO DE ENTRADA
-// ========================================
 AppInitializer.initialize();
+
+// Exportar controladores al objeto global window para interacción entre scripts
+window.MenuController = MenuController;
+window.CartManager = CartManager;
+window.StateManager = StateManager;
