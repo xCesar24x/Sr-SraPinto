@@ -521,6 +521,18 @@ const MenuController = {
             options: ['Carne', 'Queso Mozzarella', 'Carne y Queso Mozzarella']
         },
         {
+            id: 'c-empanada-cafe',
+            categoria: 'snacks',
+            nombre: 'Combo: Empanada + Café',
+            desc: 'Llévatelo en combo: Empanada a elegir + Café Premium Grande.',
+            precio: 3500,
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Combo Empanada + Café">',
+            badge: 'Combo',
+            badgeClass: 'badge-value',
+            requiresOptions: true,
+            options: ['Carne', 'Queso Mozzarella', 'Carne y Queso Mozzarella']
+        },
+        {
             id: 'p-cono-salchipapa',
             categoria: 'snacks',
             nombre: 'Sr. Cono de SalchiPapas',
