@@ -1095,6 +1095,11 @@
         <span>Cambios en Comanda</span>
         <span id="returned-orders-count" class="dashboard-badge" style="background: #E91350; color: white; min-width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; margin-left: auto;">0</span>
     </button>
+
+    <button id="btn-inventory" onclick="SalesDashboard.openInventory()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.85); border: 1.5px solid rgba(247, 183, 49, 0.4); border-radius: 15px; color: white; padding: 12px 18px; font-family: 'Gotham', sans-serif; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+        <i class="fas fa-boxes" style="color: #f7b731; font-size: 1.1rem;"></i>
+        <span>Inventario</span>
+    </button>
 </div>
 
 <!-- FLOATING EDITING ORDER BANNER -->
@@ -1321,7 +1326,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
-<script src="js/main.js?v=1.5"></script>
+<script src="js/main.js?v=1.6"></script>
 
 <script>
 /**
@@ -1459,6 +1464,18 @@ if(slides.length > 0) {
     </div>
 </div>
 
+<div id="inventory-modal" class="dashboard-modal">
+    <div class="dashboard-modal-content" style="max-width: 500px;">
+        <div class="dashboard-modal-header">
+            <h3 class="dashboard-modal-title"><i class="fas fa-boxes" style="color: #f7b731;"></i> Control de Inventario</h3>
+            <button onclick="SalesDashboard.closeInventory()" class="dashboard-modal-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="inventory-list" class="dashboard-modal-body" style="background: rgba(0,0,0,0.5); padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Se llena dinámicamente -->
+        </div>
+    </div>
+</div>
+
 <!-- ENGINE DEL DASHBOARD DE VENTAS -->
 <script>
 const SalesDashboard = {
@@ -1572,6 +1589,58 @@ const SalesDashboard = {
 
     closeReturnedOrders() {
         document.getElementById('returned-orders-modal').classList.remove('active');
+    },
+
+    openInventory() {
+        document.getElementById('inventory-modal').classList.add('active');
+        this.renderInventory();
+        if (navigator.vibrate) navigator.vibrate(50);
+    },
+
+    closeInventory() {
+        document.getElementById('inventory-modal').classList.remove('active');
+    },
+
+    renderInventory() {
+        const container = document.getElementById('inventory-list');
+        if (!container || !window.MenuController) return;
+
+        const inventarioActual = window.MenuController.inventario || {};
+
+        container.innerHTML = window.MenuController.MENU_DATA.map(product => {
+            const isAgotado = inventarioActual[product.id] === false;
+            
+            return `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 8px; border-left: 4px solid ${isAgotado ? '#ff3b30' : '#25d366'};">
+                    <span style="font-size: 0.95rem; font-weight: 700; flex: 1; margin-right: 15px;">${product.nombre}</span>
+                    <button onclick="SalesDashboard.toggleInventory('${product.id}', ${!isAgotado})" style="background: ${isAgotado ? '#ff3b30' : '#25d366'}; color: ${isAgotado ? 'white' : 'black'}; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; min-width: 110px; text-transform: uppercase;">
+                        ${isAgotado ? '<i class="fas fa-ban"></i> Agotado' : '<i class="fas fa-check"></i> Disponible'}
+                    </button>
+                </div>
+            `;
+        }).join('');
+    },
+
+    async toggleInventory(productId, currentStatusIsAvailable) {
+        try {
+            const db = window.FirebaseDB;
+            const newStatus = !currentStatusIsAvailable;
+            
+            // Actualizar inventario en Firestore (crear si no existe)
+            await db.collection('config').doc('inventario').set({
+                [productId]: newStatus
+            }, { merge: true });
+            
+            // Re-renderizamos para dar respuesta inmediata al UI del modal
+            setTimeout(() => {
+                this.renderInventory();
+            }, 200);
+
+            if (navigator.vibrate) navigator.vibrate(50);
+        } catch (error) {
+            console.error("Error al actualizar inventario:", error);
+            alert("No se pudo actualizar el inventario.");
+        }
     },
 
     renderWebOrders() {

@@ -585,7 +585,21 @@ const MenuController = {
         { id: 'bebidas', nombre: 'Bebidas', icon: '☕' }
     ],
 
+    inventario: {},
+
     init() {
+        if (window.FirebaseDB) {
+            window.FirebaseDB.collection('config').doc('inventario').onSnapshot((doc) => {
+                if (doc.exists) {
+                    this.inventario = doc.data();
+                } else {
+                    this.inventario = {};
+                }
+                if (StateManager.currentCategory) {
+                    this.renderCategory(StateManager.currentCategory);
+                }
+            });
+        }
         this.renderSidebar();
         this.renderCategory('pintos');
     },
@@ -634,20 +648,21 @@ const MenuController = {
         
         setTimeout(() => {
             container.innerHTML = filtered.map(product => {
+                const isAgotado = this.inventario[product.id] === false;
                 const cartItem = CartManager.items.find(i => i.id === product.id);
                 const btnContent = cartItem ? `<span style="font-weight: bold; font-size: 1.2rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
                 return `
-                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''}" id="card-${product.id}">
+                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" ${isAgotado ? 'style="opacity: 0.5; filter: grayscale(1); pointer-events: none;"' : ''}>
                     <div class="mch-img">${product.img}</div>
                     <div class="mch-info">
-                        <div class="mch-title">${product.nombre} ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''}</div>
+                        <div class="mch-title">${product.nombre} ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''} ${isAgotado ? '<span style="color: #ff3b30; font-weight: 900; font-size: 0.75rem; margin-left: 6px; padding: 2px 6px; border: 1px solid #ff3b30; border-radius: 4px;">AGOTADO</span>' : ''}</div>
                         <div class="mch-desc">${product.desc}</div>
                         <div class="mch-price-row">
                             <span class="mch-price">₡${product.precio.toLocaleString()}</span>
                         </div>
                     </div>
-                    <button class="mch-add-btn" id="add-btn-${product.id}" onclick="CartManager.addItem('${product.id}')">
-                        ${btnContent}
+                    <button class="mch-add-btn" id="add-btn-${product.id}" ${isAgotado ? 'disabled style="background: #ccc; color: #666;"' : ''} onclick="CartManager.addItem('${product.id}')">
+                        ${isAgotado ? '<i class="fas fa-ban"></i>' : btnContent}
                     </button>
                 </div>
             `}).join('');
