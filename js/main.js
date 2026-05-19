@@ -534,7 +534,7 @@ const MenuController = {
             nombre: 'Sr. Papi Carne',
             desc: 'Deliciosa porción de carne preparada al estilo de la casa.',
             precio: 3500,
-            img: '<img src="images-catalogo/Srpapicarne.jpeg" alt="Sr. Papi Carne" style="transform: rotate(270deg);">'
+            img: '<img src="images-catalogo/Srpapicarne.jpeg" alt="Sr. Papi Carne">'
         },
 
 
