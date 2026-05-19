@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             await db.collection("pedidos").doc(order.id).update({ estado: "retirado" });
                         } catch(e) { console.error(e); }
                         completedTimers.delete(order.id);
-                    }, 30000)); // Desaparece después de 30 segundos
+                    }, 120000)); // Desaparece después de 2 minutos (120,000 ms)
                 }
             });
         });
