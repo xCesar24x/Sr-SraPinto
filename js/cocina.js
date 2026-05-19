@@ -109,8 +109,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${itemsHtml}
                         </ul>
                     </div>
-                    <div class="ticket-footer">
-                        <button class="btn-complete" onclick="CocinaManager.completar('${order.id}')">
+                    <div class="ticket-footer" style="display: flex; gap: 10px;">
+                        <button class="btn-return" onclick="CocinaManager.regresar('${order.id}')" style="flex: 1; background: linear-gradient(135deg, var(--rojo), var(--alerta)); border: none; color: white; padding: 12px; border-radius: 8px; font-weight: 700; font-family: inherit; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                            <i class="fas fa-undo"></i> Regresar
+                        </button>
+                        <button class="btn-complete" onclick="CocinaManager.completar('${order.id}')" style="flex: 2; padding: 12px; font-size: 1.1rem;">
                             <i class="fas fa-check-circle"></i> Listo
                         </button>
                     </div>
@@ -129,8 +132,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Lógica global para el botón de completar
+// Lógica global para el botón de completar y regresar
 window.CocinaManager = {
+    async regresar(id) {
+        const ticketEl = document.getElementById(`ticket-${id}`);
+        if(ticketEl) {
+            const btn = ticketEl.querySelector('.btn-return');
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+                btn.disabled = true;
+            }
+        }
+
+        try {
+            const db = window.FirebaseDB;
+            const docRef = db.collection("pedidos").doc(id);
+            
+            // Actualizar el estado en Firebase a regresado
+            await docRef.update({ estado: "regresado" });
+            
+            // Animación de salida
+            if(ticketEl) {
+                ticketEl.classList.add('completed-anim');
+            }
+        } catch(error) {
+            console.error("Error al regresar el pedido:", error);
+            alert("No se pudo regresar el pedido. Revisa tu conexión.");
+            if(ticketEl) {
+                const btn = ticketEl.querySelector('.btn-return');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-undo"></i> Regresar';
+                    btn.disabled = false;
+                }
+            }
+        }
+    },
+
     async completar(id) {
         const ticketEl = document.getElementById(`ticket-${id}`);
         if(ticketEl) {

@@ -29,6 +29,7 @@ const CartManager = {
     customerName: '',
     hasAllergies: false,
     allergiesText: '',
+    editingOrderId: null,
     
     init() {
         const savedCart = localStorage.getItem('srysrapinto_cart');
@@ -262,6 +263,9 @@ const CartManager = {
         btn.style.pointerEvents = 'none';
 
         try {
+            const isSalesPOS = window.location.pathname.includes('ventas.html');
+            const estadoInicial = isSalesPOS ? 'pendiente' : 'pendiente_aprobacion';
+
             const pedido = {
                 cliente: this.customerName || 'Cliente sin nombre',
                 alergias: this.hasAllergies ? this.allergiesText : '',
@@ -273,26 +277,78 @@ const CartManager = {
                     cantidad: item.quantity,
                     precio: item.precio
                 })),
-                estado: 'pendiente', // Estados: pendiente, en_preparacion, listo
+                estado: estadoInicial,
                 fecha: new Date().toISOString()
             };
 
-            // Guardar en Firestore
+            const db = window.FirebaseDB;
             if (window.FirebaseDB && window.Firestore) {
-                await window.Firestore.addDoc(
-                    window.Firestore.collection(window.FirebaseDB, "pedidos"),
-                    pedido
-                );
-                console.log("✅ Pedido enviado a la cocina (Firebase)");
-                
-                // Mostrar el modal de éxito existente
-                const successOverlay = document.getElementById('success-overlay');
-                if (successOverlay) {
-                    successOverlay.classList.add('active');
-                    // Actualizar el texto del modal para que tenga más sentido con el nuevo flujo
-                    const textEl = successOverlay.querySelector('.success-text');
-                    if(textEl) {
-                        textEl.innerHTML = `Tu pedido fue enviado directamente a la cocina.<br>En breves momentos comenzará su preparación.<br>¡Gracias por preferir a Sr. & Sra. Pinto!`;
+                if (this.editingOrderId) {
+                    // Modificar pedido existente
+                    await db.collection("pedidos").doc(this.editingOrderId).update({
+                        cliente: pedido.cliente,
+                        alergias: pedido.alergias,
+                        metodoPago: pedido.metodoPago,
+                        total: pedido.total,
+                        items: pedido.items,
+                        estado: 'pendiente', // Al modificarlo va directo a cocina
+                        fechaModificacion: new Date().toISOString()
+                    });
+                    console.log("✅ Pedido modificado y enviado a cocina");
+
+                    // Ocultar banner de edición si existe
+                    const banner = document.getElementById('editing-order-banner');
+                    if (banner) banner.style.display = 'none';
+                    
+                    // Mostrar modal de éxito
+                    const successOverlay = document.getElementById('success-overlay');
+                    if (successOverlay) {
+                        successOverlay.classList.add('active');
+                        const textEl = successOverlay.querySelector('.success-text');
+                        if(textEl) {
+                            textEl.innerHTML = `La comanda fue modificada con éxito.<br>Los cambios se enviaron directamente a la cocina.<br>¡Buen trabajo!`;
+                        }
+                    }
+                    this.editingOrderId = null;
+                } else {
+                    // Crear nuevo pedido
+                    await window.Firestore.addDoc(
+                        window.Firestore.collection(window.FirebaseDB, "pedidos"),
+                        pedido
+                    );
+                    console.log("✅ Pedido creado en Firebase");
+
+                    // Mostrar modal de éxito
+                    const successOverlay = document.getElementById('success-overlay');
+                    if (successOverlay) {
+                        successOverlay.classList.add('active');
+                        const textEl = successOverlay.querySelector('.success-text');
+                        if(textEl) {
+                            if (isSalesPOS) {
+                                textEl.innerHTML = `El pedido fue enviado directamente a la cocina.<br>En breves momentos comenzará su preparación.<br>¡Buen provecho!`;
+                            } else {
+                                textEl.innerHTML = `Tu pedido fue guardado y enviado por WhatsApp.<br>Espera la aprobación por parte de la caja.<br>¡Gracias por preferir a Sr. & Sra. Pinto!`;
+                            }
+                        }
+                    }
+
+                    // Enviar por WhatsApp si NO es ventas (para mantener el hilo de chat con el cliente)
+                    if (!isSalesPOS) {
+                        let itemsList = '';
+                        this.items.forEach(item => {
+                            itemsList += `* ✅ ${item.quantity}x ${item.nombre} — ₡${(item.precio * item.quantity).toLocaleString()}\n`;
+                        });
+
+                        let message = `☕ *NUEVO PEDIDO — Sr. & Sra. Pinto*\n\n`;
+                        if (this.customerName) { message += `👤 *Cliente:* ${this.customerName}\n\n`; }
+                        if (this.hasAllergies && this.allergiesText.trim() !== '') { message += `⚠️ *Alergias / Restricciones:*\n${this.allergiesText.trim()}\n\n`; }
+                        message += `📝 *Detalle del pedido:*\n${itemsList}\n`;
+                        message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
+                        message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
+                        message += `🔗 Visítanos en: https://sr-sra-pinto.vercel.app/\n`;
+
+                        const url = `https://wa.me/50688224763?text=${encodeURIComponent(message)}`;
+                        window.open(url, '_blank');
                     }
                 }
             } else {
@@ -314,6 +370,7 @@ const CartManager = {
         this.customerName = '';
         this.hasAllergies = false;
         this.allergiesText = '';
+        this.editingOrderId = null;
         
         // Reset inputs
         const nameInput = document.getElementById('order-name');
@@ -322,6 +379,10 @@ const CartManager = {
         if (allergiesCheck) { allergiesCheck.checked = false; this.toggleAllergies(false); }
         const allergiesText = document.getElementById('allergies-text');
         if (allergiesText) allergiesText.value = '';
+
+        // Ocultar banner de edición si existe
+        const banner = document.getElementById('editing-order-banner');
+        if (banner) banner.style.display = 'none';
 
         this.save();
         this.updateCartUI();
