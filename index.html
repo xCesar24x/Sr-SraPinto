@@ -473,6 +473,39 @@
             text-align: center;
         }
 
+        .developed-by {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 12px;
+            transition: color 0.3s ease, opacity 0.3s ease;
+            font-family: 'Gotham', sans-serif;
+        }
+
+        .developed-by img {
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            opacity: 0.6;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            object-fit: contain;
+        }
+
+        .developed-by:hover {
+            color: var(--mostaza);
+        }
+
+        .developed-by:hover img {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
         /* ─── LOADER SCREEN ─── */
         #loader {
             position: fixed; inset: 0; background: var(--negro); z-index: 9999;
@@ -990,6 +1023,11 @@
             <div class="copyright">
                 Sr. & Sra. Pinto © 2025-2026 • Hecho en CR
             </div>
+
+            <a href="https://www.instagram.com/rutadigitalcr/" target="_blank" rel="noopener noreferrer" class="developed-by">
+                <span>Desarrollado por Ruta Digital</span>
+                <img src="assets/images/ruta-digital-logo.png" alt="Ruta Digital">
+            </a>
 
             <!-- Accesos ocultos para personal -->
             <div style="opacity: 0.1; display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
