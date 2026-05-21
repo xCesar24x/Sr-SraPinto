@@ -624,6 +624,56 @@
         .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
         .btn-facebook { background: linear-gradient(135deg, #1877F2, #145dbf); }
 
+        .btn-eventos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 14px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            color: #2B0A11;
+            font-family: 'Gotham', 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #f1c40f, #25D366);
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(255,255,255,0.15);
+            margin: 10px auto 0;
+            box-sizing: border-box;
+        }
+        .btn-eventos:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6);
+            background: linear-gradient(135deg, #f39c12, #128C7E);
+            color: white;
+        }
+        .btn-eventos i {
+            font-size: 1.25rem;
+        }
+        .btn-eventos i.fa-star {
+            color: #2B0A11;
+            animation: starPulse 1.8s infinite ease-in-out;
+        }
+        .btn-eventos:hover i.fa-star {
+            color: white;
+        }
+        .btn-eventos span {
+            flex: 1;
+            text-align: center;
+            font-weight: 900;
+        }
+        @keyframes starPulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
         @media (max-width: 600px) {
             .hub-buttons-grid { grid-template-columns: 1fr; }
             .hero-card { height: 200px; }
@@ -1224,6 +1274,13 @@
                     </div>
                 </a>
             </div>
+            
+            <!-- Botón de Eventos Especiales -->
+            <a href="https://wa.me/50688224763?text=Hola!%20Me%20gustar%C3%ADa%20m%C3%A1s%20informaci%C3%B3n%20sobre%20eventos%20especiales%20🎉" class="btn-eventos" target="_blank">
+                <i class="fas fa-star"></i>
+                <span>Contáctanos para tus eventos especiales</span>
+                <i class="fab fa-whatsapp"></i>
+            </a>
         </div>
     </div>
 </div>
