@@ -686,12 +686,12 @@ const MenuController = {
             this.MENU_DATA.push({
                 id: 'p-patacon-caribeno', categoria: 'snacks', nombre: 'Patacón Caribeño',
                 desc: 'Patacones crujientes estilo caribeño con frijoles, queso fundido y pico de gallo.',
-                precio: activeFeriaPrices['p-patacon-caribeno'] || 4000, img: '<img src="images-catalogo/patacon_caribeno.jpg" alt="Patacón Caribeño" class="img-fit">'
+                precio: activeFeriaPrices['p-patacon-caribeno'] || 4000, img: '<img src="images-catalogo/promo_patacon.jpg" alt="Patacón Caribeño" class="img-fit">'
             });
             this.MENU_DATA.push({
                 id: 'c-queso-pinto-cafe', categoria: 'pintos', nombre: 'Combo: Queso Pinto + Café',
                 desc: 'Delicioso gallo pinto con abundante queso, acompañado de un café.',
-                precio: activeFeriaPrices['c-queso-pinto-cafe'] || 4000, img: '<img src="images-catalogo/queso_pinto_cafe.jpg" alt="Queso Pinto + Café" class="img-fit">', badge: 'Combo', badgeClass: 'badge-value'
+                precio: activeFeriaPrices['c-queso-pinto-cafe'] || 4000, img: '<img src="images-catalogo/promo_quesopinto.jpg" alt="Queso Pinto + Café" class="img-fit">', badge: 'Combo', badgeClass: 'badge-value'
             });
             
             const premiumCafeIndex = this.MENU_DATA.findIndex(p => p.id === 'b-cafe-premium');
@@ -726,12 +726,12 @@ const MenuController = {
                 this.MENU_DATA.push({
                     id: 'ce-hamburguesa-jr-fresco', categoria: 'combos', nombre: 'Hamburguesa Jr + Té Frío',
                     desc: 'Hamburguesa Junior clásica con papas y té frío.',
-                    precio: activeFeriaPrices['ce-hamburguesa-jr-fresco'] || 2500, img: '<img src="images-catalogo/hamburguesa_jr.jpg" alt="Hamburguesa Jr + Té Frío" class="img-fit">'
+                    precio: activeFeriaPrices['ce-hamburguesa-jr-fresco'] || 2500, img: '<img src="images-catalogo/promo_hamburguesa.jpg" alt="Hamburguesa Jr + Té Frío" class="img-fit">'
                 });
                 this.MENU_DATA.push({
                     id: 'ce-hotdog-fresco', categoria: 'combos', nombre: 'Hot Dog + Té Frío',
                     desc: 'Clásico hot dog con papas tostadas, salsas y té frío.',
-                    precio: activeFeriaPrices['ce-hotdog-fresco'] || 2000, img: '<img src="images-catalogo/hot_dog.jpg" alt="Hot Dog + Té Frío" class="img-fit">'
+                    precio: activeFeriaPrices['ce-hotdog-fresco'] || 2000, img: '<img src="images-catalogo/promo_hotdog.jpg" alt="Hot Dog + Té Frío" class="img-fit">'
                 });
             }
         }
