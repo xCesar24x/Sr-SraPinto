@@ -69,7 +69,7 @@ body {
     border-bottom: 2px solid var(--rojo);
 }
 
-.display-logo { height: 45px; }
+.display-logo { height: 80px; }
 
 .display-header h1 {
     font-family: 'Rotio', cursive;
