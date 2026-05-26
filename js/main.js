@@ -601,6 +601,7 @@ const MenuController = {
 
     init() {
         if (window.FirebaseDB) {
+            // Escuchar disponibilidad de inventario
             window.FirebaseDB.collection('config').doc('inventario').onSnapshot((doc) => {
                 if (doc.exists) {
                     this.inventario = doc.data();
@@ -609,6 +610,29 @@ const MenuController = {
                 }
                 if (StateManager.currentCategory) {
                     this.renderCategory(StateManager.currentCategory);
+                }
+            });
+
+            // Escuchar precios modificados en tiempo real
+            window.FirebaseDB.collection('config').doc('precios').onSnapshot((doc) => {
+                if (doc.exists) {
+                    const customPrices = doc.data();
+                    this.MENU_DATA.forEach(p => {
+                        if (customPrices[p.id] !== undefined) {
+                            p.precio = customPrices[p.id];
+                        }
+                    });
+                }
+                if (StateManager.currentCategory) {
+                    this.renderCategory(StateManager.currentCategory);
+                }
+                // Sincronizar UI del panel de ventas (inventario/precios) si está activo
+                if (window.SalesDashboard && typeof window.SalesDashboard.renderInventory === 'function') {
+                    window.SalesDashboard.renderInventory();
+                }
+                // Sincronizar UI del carrito
+                if (window.CartManager && typeof window.CartManager.updateCartUI === 'function') {
+                    window.CartManager.updateCartUI();
                 }
             });
         }

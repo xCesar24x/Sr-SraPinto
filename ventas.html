@@ -1668,11 +1668,20 @@ const SalesDashboard = {
             const isAgotado = inventarioActual[product.id] === false;
             
             return `
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 8px; border-left: 4px solid ${isAgotado ? '#ff3b30' : '#25d366'};">
-                    <span style="font-size: 0.95rem; font-weight: 700; flex: 1; margin-right: 15px;">${product.nombre}</span>
-                    <button onclick="SalesDashboard.toggleInventory('${product.id}', ${!isAgotado})" style="background: ${isAgotado ? '#ff3b30' : '#25d366'}; color: ${isAgotado ? 'white' : 'black'}; border: none; padding: 8px 12px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer; min-width: 110px; text-transform: uppercase;">
-                        ${isAgotado ? '<i class="fas fa-ban"></i> Agotado' : '<i class="fas fa-check"></i> Disponible'}
-                    </button>
+                <div style="display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border-left: 4px solid ${isAgotado ? '#ff3b30' : '#25d366'}; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.95rem; font-weight: 700; color: white; flex: 1; margin-right: 10px;">${product.nombre}</span>
+                        <button onclick="SalesDashboard.toggleInventory('${product.id}', ${!isAgotado})" style="background: ${isAgotado ? 'rgba(255,59,48,0.2)' : 'rgba(37,211,102,0.2)'}; color: ${isAgotado ? '#ff3b30' : '#25d366'}; border: 1px solid ${isAgotado ? '#ff3b30' : '#25d366'}; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer; min-width: 110px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                            ${isAgotado ? '<i class="fas fa-ban"></i> Agotado' : '<i class="fas fa-check"></i> Disponible'}
+                        </button>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.05);">
+                        <label style="font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 700;">Precio de Venta:</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1rem; color: var(--mostaza); font-weight: 800;">₡</span>
+                            <input type="number" value="${product.precio}" onchange="SalesDashboard.updatePrice('${product.id}', this.value)" style="width: 110px; padding: 6px 10px; font-size: 0.95rem; font-weight: 900; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: var(--mostaza); border-radius: 8px; text-align: right; outline: none; transition: 0.2s;" onfocus="this.select();">
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -1683,12 +1692,10 @@ const SalesDashboard = {
             const db = window.FirebaseDB;
             const newStatus = !currentStatusIsAvailable;
             
-            // Actualizar inventario en Firestore (crear si no existe)
             await db.collection('config').doc('inventario').set({
                 [productId]: newStatus
             }, { merge: true });
             
-            // Re-renderizamos para dar respuesta inmediata al UI del modal
             setTimeout(() => {
                 this.renderInventory();
             }, 200);
@@ -1697,6 +1704,30 @@ const SalesDashboard = {
         } catch (error) {
             console.error("Error al actualizar inventario:", error);
             alert("No se pudo actualizar el inventario.");
+        }
+    },
+
+    async updatePrice(productId, newPrice) {
+        const price = parseInt(newPrice);
+        if (isNaN(price) || price <= 0) {
+            alert("Por favor ingresa un precio válido mayor a 0.");
+            this.renderInventory();
+            return;
+        }
+
+        try {
+            const db = window.FirebaseDB;
+            await db.collection('config').doc('precios').set({
+                [productId]: price
+            }, { merge: true });
+            
+            console.log(`✅ Precio actualizado en la nube para ${productId}: ₡${price}`);
+            
+            if (navigator.vibrate) navigator.vibrate(50);
+        } catch (error) {
+            console.error("Error al actualizar precio:", error);
+            alert("No se pudo actualizar el precio en la base de datos.");
+            this.renderInventory();
         }
     },
 
