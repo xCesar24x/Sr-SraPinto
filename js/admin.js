@@ -1,3 +1,34 @@
+// Configuración de costos base de producción para cálculo de rentabilidad
+const COSTOS_PRODUCTOS = {
+    // PINTOS
+    'p-senor-pinto': 1200,
+    'c-senor-pinto-cafe': 1450,
+    'p-burrote': 1000,
+    'c-burrote-cafe': 1250,
+    'p-empanada-pinto': 750,
+    'p-sra-empanada-m1': 1100,
+    'p-queso-pinto': 1100,
+
+    // SNACKS & ANTOJOS
+    'p-sr-patacon': 1300,
+    'p-sra-quesadilla': 1400,
+    'p-sra-hamburguesa': 1900,
+    'p-empanada-carne': 800,
+    'p-empanada-queso': 750,
+    'p-empanada-carne-queso': 850,
+    'p-empanada-birria': 900,
+    'p-sra-empanada-m2': 1050,
+    'c-empanada-cafe': 1100,
+    'p-cono-salchipapa': 950,
+    'p-sr-papi-carne': 1200,
+
+    // BEBIDAS
+    'b-cafe-premium': 300,
+    'b-agua': 200,
+    'b-gaseosas': 450,
+    'b-hidratante': 500
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     
     const inventoryList = document.getElementById('inventory-list');
@@ -215,8 +246,22 @@ document.addEventListener("DOMContentLoaded", () => {
     window.paymentsChartInstance = null;
 
     window.ReportsManager = {
+        currentShift: 'full', // 'full', 'morning', 'afternoon', 'night'
+
         init() {
-            if (ordersListener) return; // Ya está escuchando
+            // Inicializar las fechas por defecto para el rango personalizado si no tienen valor
+            const startInput = document.getElementById('report-start-date');
+            const endInput = document.getElementById('report-end-date');
+            if (startInput && !startInput.value) {
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                startInput.value = oneWeekAgo.toISOString().split('T')[0];
+            }
+            if (endInput && !endInput.value) {
+                endInput.value = new Date().toISOString().split('T')[0];
+            }
+
+            if (ordersListener) return;
 
             // Escuchar pedidos en tiempo real para mantener analíticas actualizadas
             ordersListener = db.collection("pedidos").onSnapshot((snapshot) => {
@@ -231,58 +276,137 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         },
 
+        // Cambiar el filtro de turno
+        setShift(shift) {
+            this.currentShift = shift;
+
+            // Cambiar estilos de botones de turno
+            document.querySelectorAll('.shift-cuts button').forEach(btn => {
+                btn.style.background = 'transparent';
+                btn.style.color = 'var(--blanco)';
+            });
+
+            const activeBtn = document.getElementById(`btn-shift-${shift}`);
+            if (activeBtn) {
+                activeBtn.style.background = 'rgba(233, 19, 80, 0.2)';
+                activeBtn.style.color = 'var(--rojo)';
+            }
+
+            this.loadAnalytics();
+        },
+
+        // Manejar cambio en el selector de periodo
+        handlePeriodChange() {
+            const period = document.getElementById('report-period-select').value;
+            const customRangeContainer = document.getElementById('custom-range-container');
+            
+            if (period === 'rango') {
+                customRangeContainer.style.display = 'flex';
+            } else {
+                customRangeContainer.style.display = 'none';
+            }
+
+            this.loadAnalytics();
+        },
+
         loadAnalytics() {
             const period = document.getElementById('report-period-select').value;
             const now = new Date();
             
             // Definir límites de fecha
             let startLimit = new Date();
+            let endLimit = new Date();
             let checkPeriod = true;
 
             if (period === 'hoy') {
                 startLimit.setHours(0,0,0,0);
+                endLimit.setHours(23,59,59,999);
             } else if (period === 'ayer') {
                 startLimit.setDate(startLimit.getDate() - 1);
                 startLimit.setHours(0,0,0,0);
-                var endLimit = new Date();
                 endLimit.setDate(endLimit.getDate() - 1);
                 endLimit.setHours(23,59,59,999);
             } else if (period === '7dias') {
                 startLimit.setDate(startLimit.getDate() - 7);
+                startLimit.setHours(0,0,0,0);
             } else if (period === 'mes') {
                 startLimit = new Date(now.getFullYear(), now.getMonth(), 1);
+                startLimit.setHours(0,0,0,0);
+            } else if (period === 'rango') {
+                const startDateVal = document.getElementById('report-start-date').value;
+                const endDateVal = document.getElementById('report-end-date').value;
+                
+                if (startDateVal) {
+                    startLimit = new Date(startDateVal + 'T00:00:00');
+                } else {
+                    startLimit.setDate(startLimit.getDate() - 7);
+                    startLimit.setHours(0,0,0,0);
+                }
+                
+                if (endDateVal) {
+                    endLimit = new Date(endDateVal + 'T23:59:59');
+                } else {
+                    endLimit.setHours(23,59,59,999);
+                }
             } else {
                 checkPeriod = false; // Histórico completo
             }
 
-            // Filtrar pedidos (Excluir pendientes de aprobación ya que no son ventas en firme todavía)
+            // Filtrar pedidos (Excluir pendientes de aprobación ya que no son ventas confirmadas)
             const filteredOrders = cachedOrders.filter(order => {
                 if (order.estado === 'pendiente_aprobacion') return false;
                 
                 const orderDate = new Date(order.fecha);
-                if (!checkPeriod) return true;
                 
-                if (period === 'ayer') {
-                    return orderDate >= startLimit && orderDate <= endLimit;
+                // Filtro de Período / Fecha
+                if (checkPeriod) {
+                    if (orderDate < startLimit || orderDate > endLimit) return false;
                 }
-                return orderDate >= startLimit;
+
+                // Filtro de Cortes de Día (Turnos)
+                if (this.currentShift !== 'full') {
+                    const hours = orderDate.getHours();
+                    if (this.currentShift === 'morning' && (hours < 6 || hours >= 12)) return false;
+                    if (this.currentShift === 'afternoon' && (hours < 12 || hours >= 18)) return false;
+                    if (this.currentShift === 'night' && (hours < 18 && hours >= 6)) return false;
+                }
+                
+                return true;
             });
 
             // Ordenar pedidos de más reciente a más antiguo para el log de auditoría
             filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-            // Calcular Métricas
+            // Calcular Métricas Financieras (Ventas, Costos y Rentabilidad)
             let totalRevenue = 0;
+            let totalCogs = 0;
             let ordersCount = filteredOrders.length;
             
-            filteredOrders.forEach(o => {
-                totalRevenue += (o.total || 0);
+            filteredOrders.forEach(order => {
+                totalRevenue += (order.total || 0);
+
+                // Calcular costo estimado de este pedido (COGS)
+                if (order.items) {
+                    order.items.forEach(item => {
+                        // Limpiar ID por si trae sufijos
+                        const cleanId = item.id.split('-')[0];
+                        const costPerUnit = COSTOS_PRODUCTOS[cleanId] || COSTOS_PRODUCTOS[item.id] || (item.precio * 0.4);
+                        totalCogs += (costPerUnit * (item.cantidad || 0));
+                    });
+                }
             });
 
+            // Redondear para evitar decimales molestos
+            totalCogs = Math.round(totalCogs);
+            const totalProfit = Math.max(0, totalRevenue - totalCogs);
+            const profitMargin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0;
             const avgTicket = ordersCount > 0 ? Math.round(totalRevenue / ordersCount) : 0;
 
             // Renderizar métricas en pantalla
             document.getElementById('stat-revenue').innerText = `₡${totalRevenue.toLocaleString()}`;
+            document.getElementById('stat-cogs').innerText = `₡${totalCogs.toLocaleString()}`;
+            document.getElementById('stat-profit').innerText = `₡${totalProfit.toLocaleString()}`;
+            document.getElementById('stat-margin').innerText = `${profitMargin}%`;
             document.getElementById('stat-orders-count').innerText = ordersCount;
             document.getElementById('stat-avg-ticket').innerText = `₡${avgTicket.toLocaleString()}`;
 
@@ -436,12 +560,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const ingredientConsumption = {};
 
             orders.forEach(order => {
-                // Solo contabilizar ingredientes de pedidos despachados/listos/retirados (completados)
+                // Solo despachados/listos/retirados
                 if (order.estado !== 'listo' && order.estado !== 'retirado') return;
 
                 if (order.items) {
                     order.items.forEach(item => {
-                        // Buscar receta en window.RECETAS
                         const receta = window.RECETAS ? window.RECETAS[item.id] : null;
                         if (receta) {
                             receta.forEach(ing => {
@@ -466,7 +589,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const nombreStr = ingId.replace(/_/g, ' ');
                 const percent = Math.round((cant / maxQty) * 100);
                 
-                // Formatear unidades según ingrediente
                 let unit = 'unds';
                 if (ingId.includes('pinto') || ingId.includes('carne') || ingId.includes('papas_fritas') || ingId.includes('ensalada') || ingId.includes('frijoles')) {
                     unit = 'porciones';
@@ -528,14 +650,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.UsersManager = {
         init() {
-            // Escuchar la colección de empleados en tiempo real
             db.collection("empleados").onSnapshot((snapshot) => {
                 const employees = [];
                 snapshot.forEach(doc => {
                     employees.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Ordenar por rol y luego por cédula/nombre
                 employees.sort((a, b) => {
                     const roleCompare = a.rol.localeCompare(b.rol);
                     if (roleCompare !== 0) return roleCompare;
@@ -556,7 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             userList.innerHTML = users.map(user => {
-                const isMasked = userMaskState[user.id] !== false; // Masked by default
+                const isMasked = userMaskState[user.id] !== false;
                 const passwordDisplay = isMasked ? '••••' : user.password;
                 const eyeIcon = isMasked ? 'fa-eye' : 'fa-eye-slash';
 
@@ -589,7 +709,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         togglePasswordMask(userId) {
             userMaskState[userId] = !userMaskState[userId];
-            // Volver a activar la visualización
             this.init();
         },
 
@@ -607,7 +726,6 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('user-modal-title').innerText = "Editar Colaborador";
             document.getElementById('user-edit-id').value = id;
             document.getElementById('user-username').value = cedula;
-            // No permitimos editar el identificador principal (cédula/id documento) para no romper relaciones de autoría
             document.getElementById('user-username').disabled = true;
             document.getElementById('user-password').value = password;
             document.getElementById('user-role').value = rol;
@@ -640,17 +758,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 if (editId) {
-                    // Actualizar usuario existente
                     await db.collection('empleados').doc(editId).update({
                         rol: role,
                         password: password
                     });
                 } else {
-                    // Crear nuevo usuario
-                    // El id de documento será una versión en minúsculas del nombre o un slug
                     const newDocId = username.toLowerCase().replace(/[^a-z0-9]/g, '_');
                     
-                    // Verificar si ya existe un documento con ese ID
                     const existingDoc = await db.collection('empleados').doc(newDocId).get();
                     if (existingDoc.exists) {
                         alert("Ya existe un colaborador con este nombre o identificación.");
@@ -677,7 +791,6 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         async deleteUser(id, name) {
-            // Evitar que el administrador se elimine a sí mismo
             const currentSessionUser = localStorage.getItem('srsrapinto_cedula');
             if (name === currentSessionUser || id === 'admin') {
                 alert("Acción denegada: No puedes eliminar tu propia cuenta de administrador.");

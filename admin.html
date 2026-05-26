@@ -118,25 +118,64 @@
 
             <!-- SECTION: REPORTS (ADVANCED ANALYTICS) -->
             <section id="section-reports" class="admin-section">
-                <header class="top-bar">
+                <header class="top-bar" style="flex-wrap: wrap; gap: 15px;">
                     <h1 class="page-title">Analítica Avanzada y Métricas</h1>
-                    <div class="filter-bar">
-                        <select id="report-period-select" onchange="ReportsManager.loadAnalytics()" class="report-select">
-                            <option value="hoy" selected>Hoy</option>
-                            <option value="ayer">Ayer</option>
-                            <option value="7dias">Últimos 7 días</option>
-                            <option value="mes">Este Mes</option>
-                            <option value="todos">Histórico Completo</option>
-                        </select>
+                    <div class="filter-controls" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <!-- Shift Cuts -->
+                        <div class="shift-cuts" style="display: flex; gap: 5px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 3px; border-radius: 8px;">
+                            <button onclick="ReportsManager.setShift('full')" class="btn-secondary" id="btn-shift-full" style="padding: 6px 12px; font-size: 0.75rem; border: none; background: rgba(233, 19, 80, 0.2); color: var(--rojo);">Todo el Día</button>
+                            <button onclick="ReportsManager.setShift('morning')" class="btn-secondary" id="btn-shift-morning" style="padding: 6px 12px; font-size: 0.75rem; border: none;">Mañana (Corte 12pm)</button>
+                            <button onclick="ReportsManager.setShift('afternoon')" class="btn-secondary" id="btn-shift-afternoon" style="padding: 6px 12px; font-size: 0.75rem; border: none;">Tarde (Corte 6pm)</button>
+                            <button onclick="ReportsManager.setShift('night')" class="btn-secondary" id="btn-shift-night" style="padding: 6px 12px; font-size: 0.75rem; border: none;">Noche (Cierre)</button>
+                        </div>
+                        
+                        <div class="filter-bar" style="display: flex; gap: 10px; align-items: center;">
+                            <select id="report-period-select" onchange="ReportsManager.handlePeriodChange()" class="report-select">
+                                <option value="hoy" selected>Hoy</option>
+                                <option value="ayer">Ayer</option>
+                                <option value="7dias">Últimos 7 días</option>
+                                <option value="mes">Este Mes</option>
+                                <option value="rango">Rango Personalizado 📅</option>
+                                <option value="todos">Histórico Completo</option>
+                            </select>
+                            
+                            <!-- Custom Date Range Picker Container (hidden by default) -->
+                            <div id="custom-range-container" style="display: none; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);">
+                                <input type="date" id="report-start-date" onchange="ReportsManager.loadAnalytics()" class="report-select" style="padding: 5px; font-size: 0.85rem;">
+                                <span style="font-size: 0.8rem; opacity: 0.5;">al</span>
+                                <input type="date" id="report-end-date" onchange="ReportsManager.loadAnalytics()" class="report-select" style="padding: 5px; font-size: 0.85rem;">
+                            </div>
+                        </div>
                     </div>
                 </header>
 
-                <div class="dashboard-stats">
+                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                     <div class="stat-card">
                         <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.1);"><i class="fas fa-hand-holding-usd"></i></div>
                         <div class="stat-info">
                             <h3>Ventas Totales</h3>
                             <p id="stat-revenue">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #e74c3c; background: rgba(231, 76, 60, 0.1);"><i class="fas fa-tags"></i></div>
+                        <div class="stat-info">
+                            <h3>Costo de Ventas (COGS)</h3>
+                            <p id="stat-cogs">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(46, 204, 113, 0.3);">
+                        <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.15);"><i class="fas fa-wallet"></i></div>
+                        <div class="stat-info">
+                            <h3>Utilidad Bruta</h3>
+                            <p id="stat-profit" style="color: #2ecc71;">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-chart-pie"></i></div>
+                        <div class="stat-info">
+                            <h3>Margen Utilidad</h3>
+                            <p id="stat-margin">0%</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -147,7 +186,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-calculator"></i></div>
+                        <div class="stat-icon" style="color: #f39c12; background: rgba(243, 156, 18, 0.1);"><i class="fas fa-calculator"></i></div>
                         <div class="stat-info">
                             <h3>Ticket Promedio</h3>
                             <p id="stat-avg-ticket">₡0</p>
