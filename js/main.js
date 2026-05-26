@@ -598,8 +598,14 @@ const MenuController = {
     ],
 
     inventario: {},
+    customPrices: {},
+    feriaConfig: { active: false, combos_active: false },
+    feriaCustomPrices: null,
 
     init() {
+        this.ORIGINAL_MENU_DATA = JSON.parse(JSON.stringify(this.MENU_DATA));
+        this.ORIGINAL_CATEGORIAS = JSON.parse(JSON.stringify(this.CATEGORIAS));
+
         if (window.FirebaseDB) {
             // Escuchar disponibilidad de inventario
             window.FirebaseDB.collection('config').doc('inventario').onSnapshot((doc) => {
@@ -616,29 +622,145 @@ const MenuController = {
             // Escuchar precios modificados en tiempo real
             window.FirebaseDB.collection('config').doc('precios').onSnapshot((doc) => {
                 if (doc.exists) {
-                    const customPrices = doc.data();
-                    this.MENU_DATA.forEach(p => {
-                        if (customPrices[p.id] !== undefined) {
-                            p.precio = customPrices[p.id];
-                        }
-                    });
+                    this.customPrices = doc.data();
+                } else {
+                    this.customPrices = {};
                 }
-                if (StateManager.currentCategory) {
-                    this.renderCategory(StateManager.currentCategory);
+                this.applyStateAndRender();
+            });
+
+            // Escuchar Modo Feria
+            window.FirebaseDB.collection('config').doc('feria').onSnapshot((doc) => {
+                if (doc.exists) {
+                    this.feriaConfig = doc.data();
+                } else {
+                    this.feriaConfig = { active: false, combos_active: false };
                 }
-                // Sincronizar UI del panel de ventas (inventario/precios) si está activo
-                if (window.SalesDashboard && typeof window.SalesDashboard.renderInventory === 'function') {
-                    window.SalesDashboard.renderInventory();
+                this.applyStateAndRender();
+            });
+
+            // Escuchar Precios de Feria
+            window.FirebaseDB.collection('config').doc('feria_precios').onSnapshot((doc) => {
+                if (doc.exists) {
+                    this.feriaCustomPrices = doc.data();
+                } else {
+                    this.feriaCustomPrices = null;
                 }
-                // Sincronizar UI del carrito
-                if (window.CartManager && typeof window.CartManager.updateCartUI === 'function') {
-                    window.CartManager.updateCartUI();
-                }
+                this.applyStateAndRender();
             });
         }
         this.renderSidebar();
         this.renderCategory('pintos');
     },
+
+    applyStateAndRender() {
+        // 1. Restaurar al estado original
+        this.MENU_DATA = JSON.parse(JSON.stringify(this.ORIGINAL_MENU_DATA));
+        this.CATEGORIAS = JSON.parse(JSON.stringify(this.ORIGINAL_CATEGORIAS));
+
+        // 2. Aplicar Modo Feria si está activo
+        if (this.feriaConfig && this.feriaConfig.active) {
+            // Precios de Feria (mezcla entre los estáticos y los editados)
+            const baseFeriaPrices = {
+                'p-senor-pinto': 4000, 'c-senor-pinto-cafe': 4000, 'c-burrote-cafe': 3000,
+                'p-sr-patacon': 4000, 'p-sra-quesadilla': 4000, 'p-empanada-carne': 2000,
+                'p-empanada-queso': 2000, 'p-empanada-carne-queso': 2000, 'p-sra-empanada-m1': 3500,
+                'p-sra-empanada-m2': 3500, 'p-sra-hamburguesa': 5000, 'p-cono-salchipapa': 3000,
+                'p-sr-papi-carne': 3500, 'b-cafe-premium': 1300, 'p-patacon-caribeno': 4000,
+                'c-queso-pinto-cafe': 4000, 'b-cafe-8oz': 1000, 'ce-empanada-fresco': 2000,
+                'ce-salchipapa-fresco': 2500, 'ce-hamburguesa-jr-fresco': 2500, 'ce-hotdog-fresco': 2000
+            };
+            
+            const activeFeriaPrices = this.feriaCustomPrices ? { ...baseFeriaPrices, ...this.feriaCustomPrices } : baseFeriaPrices;
+
+            // Ocultar Burrote de Pinto regular en modo feria
+            this.MENU_DATA = this.MENU_DATA.filter(p => p.id !== 'p-burrote');
+
+            this.MENU_DATA.forEach(p => {
+                if (activeFeriaPrices[p.id] !== undefined) {
+                    p.precio = activeFeriaPrices[p.id];
+                }
+            });
+
+            // Añadir nuevos productos generales de feria
+            this.MENU_DATA.push({
+                id: 'p-patacon-caribeno', categoria: 'snacks', nombre: 'Patacón Caribeño',
+                desc: 'Patacones crujientes estilo caribeño con frijoles, queso fundido y pico de gallo.',
+                precio: activeFeriaPrices['p-patacon-caribeno'] || 4000, img: '<img src="images-catalogo/patacon_caribeno.png" alt="Patacón Caribeño" class="img-fit">'
+            });
+            this.MENU_DATA.push({
+                id: 'c-queso-pinto-cafe', categoria: 'pintos', nombre: 'Combo: Queso Pinto + Café',
+                desc: 'Delicioso gallo pinto con abundante queso, acompañado de un café.',
+                precio: activeFeriaPrices['c-queso-pinto-cafe'] || 4000, img: '<img src="images-catalogo/queso_pinto_cafe.png" alt="Queso Pinto + Café" class="img-fit">', badge: 'Combo', badgeClass: 'badge-value'
+            });
+            
+            const premiumCafeIndex = this.MENU_DATA.findIndex(p => p.id === 'b-cafe-premium');
+            const cafe8oz = {
+                id: 'b-cafe-8oz', categoria: 'bebidas', nombre: 'Café (8 onzas)',
+                desc: 'Café de calidad premium en presentación de 8 onzas.',
+                precio: activeFeriaPrices['b-cafe-8oz'] || 1000, img: '<img src="images-catalogo/12onzas.jpg" alt="Café 8 onzas" class="img-fit">' // reusando imagen de cafe
+            };
+            if (premiumCafeIndex !== -1) {
+                this.MENU_DATA.splice(premiumCafeIndex + 1, 0, cafe8oz);
+            } else {
+                this.MENU_DATA.push(cafe8oz);
+            }
+
+            // 3. Aplicar Combos Estudiantiles si está activo
+            if (this.feriaConfig.combos_active) {
+                // Insertar categoría después de bebidas
+                this.CATEGORIAS.push({ id: 'combos', nombre: 'Combos Estudiantiles', icon: '🎓', subtitle: '¡Combos especiales a precios de estudiante!' });
+                
+                // Añadir combos
+                this.MENU_DATA.push({
+                    id: 'ce-empanada-fresco', categoria: 'combos', nombre: 'Empanada + Té Frío',
+                    desc: 'Empanada a tu elección acompañada de un refrescante té frío.',
+                    precio: activeFeriaPrices['ce-empanada-fresco'] || 2000, img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada + Té Frío" class="img-fit">',
+                    requiresOptions: true, options: ['Carne', 'Queso', 'Carne y Queso']
+                });
+                this.MENU_DATA.push({
+                    id: 'ce-salchipapa-fresco', categoria: 'combos', nombre: 'Salchipapas + Té Frío',
+                    desc: 'Nuestras famosas salchipapas con un delicioso té frío.',
+                    precio: activeFeriaPrices['ce-salchipapa-fresco'] || 2500, img: '<img src="images-catalogo/Sr. Cono de SalchiPapas.jpeg" alt="Salchipapas + Té Frío" class="img-fit">'
+                });
+                this.MENU_DATA.push({
+                    id: 'ce-hamburguesa-jr-fresco', categoria: 'combos', nombre: 'Hamburguesa Jr + Té Frío',
+                    desc: 'Hamburguesa Junior clásica con papas y té frío.',
+                    precio: activeFeriaPrices['ce-hamburguesa-jr-fresco'] || 2500, img: '<img src="images-catalogo/hamburguesa_jr.png" alt="Hamburguesa Jr + Té Frío" class="img-fit">'
+                });
+                this.MENU_DATA.push({
+                    id: 'ce-hotdog-fresco', categoria: 'combos', nombre: 'Hot Dog + Té Frío',
+                    desc: 'Clásico hot dog con papas tostadas, salsas y té frío.',
+                    precio: activeFeriaPrices['ce-hotdog-fresco'] || 2000, img: '<img src="images-catalogo/hot_dog.png" alt="Hot Dog + Té Frío" class="img-fit">'
+                });
+            }
+        }
+
+        // 4. Aplicar Precios Manuales (sobreescriben cualquier precio anterior)
+        if (this.customPrices) {
+            this.MENU_DATA.forEach(p => {
+                if (this.customPrices[p.id] !== undefined) {
+                    p.precio = this.customPrices[p.id];
+                }
+            });
+        }
+
+        // 5. Re-renderizar
+        this.renderSidebar();
+        if (StateManager.currentCategory) {
+            this.renderCategory(StateManager.currentCategory);
+        }
+        
+        // Sincronizar UI del panel de ventas
+        if (window.SalesDashboard && typeof window.SalesDashboard.renderInventory === 'function') {
+            window.SalesDashboard.renderInventory();
+        }
+        // Sincronizar UI del carrito
+        if (window.CartManager && typeof window.CartManager.updateCartUI === 'function') {
+            window.CartManager.updateCartUI();
+        }
+    },
+
 
     renderSidebar() {
         const sidebar = document.getElementById('sidebar-categories');
@@ -674,8 +796,11 @@ const MenuController = {
         }
 
         const filtered = this.MENU_DATA.filter(p => p.categoria === categoryId);
-        // Ordenar por precio de mayor a menor
-        filtered.sort((a, b) => b.precio - a.precio);
+        
+        // Ordenar por precio de mayor a menor (excepto bebidas para mantener cafés juntos)
+        if (categoryId !== 'bebidas') {
+            filtered.sort((a, b) => b.precio - a.precio);
+        }
         
         if (countEl) countEl.innerText = `${filtered.length} opciones`;
         

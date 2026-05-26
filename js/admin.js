@@ -903,4 +903,209 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // ========================================
+    // FERIA MANAGER
+    // ========================================
+    window.FeriaManager = {
+        feriaActive: false,
+        combosActive: false,
+
+        init() {
+            if (!window.FirebaseDB) return;
+            const db = window.FirebaseDB;
+
+            // Escuchar cambios en config/feria
+            db.collection('config').doc('feria').onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    this.feriaActive = !!data.active;
+                    this.combosActive = !!data.combos_active;
+                } else {
+                    this.feriaActive = false;
+                    this.combosActive = false;
+                    // Create default if not exists
+                    db.collection('config').doc('feria').set({ active: false, combos_active: false });
+                }
+                this.updateUI();
+            });
+        },
+
+        updateUI() {
+            const feriaBtn = document.getElementById('btn-feria-toggle');
+            const combosBtn = document.getElementById('btn-combos-toggle');
+            const feriaCard = document.getElementById('feria-toggle-card');
+            const combosCard = document.getElementById('combos-toggle-card');
+            const combosSubtitle = document.getElementById('combos-toggle-subtitle');
+
+            if (feriaBtn) {
+                if (this.feriaActive) {
+                    feriaBtn.classList.add('active');
+                    feriaBtn.classList.remove('disabled');
+                    feriaCard.classList.add('active-mode');
+                } else {
+                    feriaBtn.classList.remove('active');
+                    feriaBtn.classList.remove('disabled');
+                    feriaCard.classList.remove('active-mode');
+                }
+            }
+
+            if (combosBtn) {
+                if (this.feriaActive) {
+                    combosBtn.disabled = false;
+                    combosBtn.classList.remove('disabled');
+                    if (this.combosActive) {
+                        combosBtn.classList.add('active');
+                        combosCard.classList.add('active-mode');
+                    } else {
+                        combosBtn.classList.remove('active');
+                        combosCard.classList.remove('active-mode');
+                    }
+                    if(combosSubtitle) combosSubtitle.style.opacity = '1';
+                } else {
+                    combosBtn.disabled = true;
+                    combosBtn.classList.remove('active');
+                    combosBtn.classList.add('disabled');
+                    combosCard.classList.remove('active-mode');
+                    if(combosSubtitle) combosSubtitle.style.opacity = '0.5';
+                }
+            }
+        },
+
+        async toggleFeriaMode() {
+            const newState = !this.feriaActive;
+            try {
+                // If disabling Feria Mode, also disable Combos Estudiantiles automatically
+                const updateData = { active: newState };
+                if (!newState) {
+                    updateData.combos_active = false;
+                }
+                await window.FirebaseDB.collection('config').doc('feria').update(updateData);
+            } catch (e) {
+                console.error("Error updating feria mode:", e);
+                alert("Hubo un error al actualizar el Modo Feria.");
+            }
+        },
+
+        async toggleCombosMode() {
+            if (!this.feriaActive) {
+                alert("Debes activar el Modo Feria primero para poder activar los Combos Estudiantiles.");
+                return;
+            }
+            const newState = !this.combosActive;
+            try {
+                await window.FirebaseDB.collection('config').doc('feria').update({ combos_active: newState });
+            } catch (e) {
+                console.error("Error updating combos mode:", e);
+                alert("Hubo un error al actualizar los Combos Estudiantiles.");
+            }
+        },
+
+        // --- NEW EDIT PRICES LOGIC ---
+        feriaPricesData: {},
+        feriaProductsList: [
+            { id: 'p-senor-pinto', nombre: 'Señor Pinto' },
+            { id: 'c-senor-pinto-cafe', nombre: 'Combo: Señor Pinto + Café' },
+            { id: 'c-burrote-cafe', nombre: 'Combo: Burrote + Café' },
+            { id: 'p-sr-patacon', nombre: 'Sr. Patacón' },
+            { id: 'p-sra-quesadilla', nombre: 'Sra. Quesadilla' },
+            { id: 'p-empanada-carne', nombre: 'Empanada Carne' },
+            { id: 'p-empanada-queso', nombre: 'Empanada Queso' },
+            { id: 'p-empanada-carne-queso', nombre: 'Empanada Carne/Queso' },
+            { id: 'p-sra-empanada-m1', nombre: 'Sra. Empanada Arreglada' },
+            { id: 'p-sra-empanada-m2', nombre: 'Sra. Empanada Arreglada (Opciones)' },
+            { id: 'p-sra-hamburguesa', nombre: 'Hamburguesa Premium' },
+            { id: 'p-cono-salchipapa', nombre: 'Cono Salchipapa' },
+            { id: 'p-sr-papi-carne', nombre: 'Sr. Papi Carne' },
+            { id: 'b-cafe-premium', nombre: 'Café Premium Grande' },
+            { id: 'p-patacon-caribeno', nombre: 'Patacón Caribeño (Nuevo)' },
+            { id: 'c-queso-pinto-cafe', nombre: 'Combo: Queso Pinto + Café' },
+            { id: 'b-cafe-8oz', nombre: 'Café (8 onzas)' },
+            { id: 'ce-empanada-fresco', nombre: 'Estudiantil: Empanada + Té Frío' },
+            { id: 'ce-salchipapa-fresco', nombre: 'Estudiantil: Salchipapa + Té Frío' },
+            { id: 'ce-hamburguesa-jr-fresco', nombre: 'Estudiantil: Burguer Jr + Té Frío' },
+            { id: 'ce-hotdog-fresco', nombre: 'Estudiantil: Hot Dog + Té Frío' }
+        ],
+
+        openPricesModal() {
+            document.getElementById('feria-prices-modal').classList.add('active');
+            this.loadPricesEditor();
+        },
+
+        closePricesModal() {
+            document.getElementById('feria-prices-modal').classList.remove('active');
+        },
+
+        async loadPricesEditor() {
+            const container = document.getElementById('feria-prices-container');
+            container.innerHTML = '<p style="text-align: center; padding: 20px;">Cargando productos...</p>';
+            try {
+                const doc = await window.FirebaseDB.collection('config').doc('feria_precios').get();
+                const defaultFeriaPrices = {
+                    'p-senor-pinto': 4000, 'c-senor-pinto-cafe': 4000, 'c-burrote-cafe': 3000,
+                    'p-sr-patacon': 4000, 'p-sra-quesadilla': 4000, 'p-empanada-carne': 2000,
+                    'p-empanada-queso': 2000, 'p-empanada-carne-queso': 2000, 'p-sra-empanada-m1': 3500,
+                    'p-sra-empanada-m2': 3500, 'p-sra-hamburguesa': 5000, 'p-cono-salchipapa': 3000,
+                    'p-sr-papi-carne': 3500, 'b-cafe-premium': 1300, 'p-patacon-caribeno': 4000,
+                    'c-queso-pinto-cafe': 4000, 'b-cafe-8oz': 1000, 'ce-empanada-fresco': 2000,
+                    'ce-salchipapa-fresco': 2500, 'ce-hamburguesa-jr-fresco': 2500, 'ce-hotdog-fresco': 2000
+                };
+
+                if (doc.exists) {
+                    this.feriaPricesData = { ...defaultFeriaPrices, ...doc.data() };
+                } else {
+                    this.feriaPricesData = defaultFeriaPrices;
+                }
+
+                let html = '';
+                this.feriaProductsList.forEach(p => {
+                    const currentPrice = this.feriaPricesData[p.id] || '';
+                    html += `
+                        <div class="form-group" style="margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                            <label style="display:flex; justify-content:space-between;">
+                                <span>${p.nombre}</span>
+                            </label>
+                            <div style="display:flex; align-items:center; gap:10px; margin-top:5px;">
+                                <span style="color:var(--rojo); font-weight:bold;">₡</span>
+                                <input type="number" class="feria-price-input" data-id="${p.id}" value="${currentPrice}" placeholder="Precio" style="flex:1;">
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (e) {
+                console.error("Error loading feria prices:", e);
+                container.innerHTML = '<p style="text-align: center; color: var(--alerta);">Error al cargar precios.</p>';
+            }
+        },
+
+        async savePrices() {
+            const btn = document.getElementById('btn-save-feria-prices');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+
+            const inputs = document.querySelectorAll('.feria-price-input');
+            const newPrices = {};
+            inputs.forEach(input => {
+                const val = parseInt(input.value);
+                if (!isNaN(val) && val > 0) {
+                    newPrices[input.dataset.id] = val;
+                }
+            });
+
+            try {
+                await window.FirebaseDB.collection('config').doc('feria_precios').set(newPrices);
+                this.closePricesModal();
+            } catch (e) {
+                console.error("Error saving feria prices:", e);
+                alert("Ocurrió un error al guardar los precios.");
+            } finally {
+                btn.innerHTML = 'Guardar Precios';
+                btn.disabled = false;
+            }
+        }
+    };
+
+    // Initialize Feria Manager
+    FeriaManager.init();
+
 });

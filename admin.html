@@ -44,6 +44,7 @@
                 <a href="#" id="nav-inventory" class="active" onclick="AdminManager.switchTab('inventory', event)"><i class="fas fa-boxes"></i> Inventario</a>
                 <a href="#" id="nav-reports" onclick="AdminManager.switchTab('reports', event)"><i class="fas fa-chart-line"></i> Reportes</a>
                 <a href="#" id="nav-users" onclick="AdminManager.switchTab('users', event)"><i class="fas fa-users"></i> Usuarios</a>
+                <a href="#" id="nav-feria" onclick="AdminManager.switchTab('feria', event)"><i class="fas fa-store-slash"></i> Modo Feria</a>
             </nav>
             <div class="sidebar-footer">
                 <a href="#" onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
@@ -270,6 +271,53 @@
                     </table>
                 </div>
             </section>
+
+            <!-- SECTION: MODO FERIA -->
+            <section id="section-feria" class="admin-section">
+                <header class="top-bar">
+                    <h1 class="page-title">Configuración Especial: Modo Feria 🎪</h1>
+                </header>
+
+                <div class="feria-controls-container">
+                    <!-- TOGGLE MODO FERIA -->
+                    <div class="feria-toggle-card" id="feria-toggle-card">
+                        <div class="feria-toggle-info">
+                            <div class="feria-toggle-icon" id="feria-toggle-icon">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <div>
+                                <h3>Activar Modo Feria</h3>
+                                <p id="feria-toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cambia los precios y añade productos exclusivos para la feria.</p>
+                            </div>
+                        </div>
+                        <button class="feria-toggle-btn disabled" id="btn-feria-toggle" onclick="FeriaManager.toggleFeriaMode()">
+                            <span class="feria-toggle-knob"></span>
+                        </button>
+                    </div>
+
+                    <!-- TOGGLE COMBOS ESTUDIANTILES -->
+                    <div class="feria-toggle-card" id="combos-toggle-card">
+                        <div class="feria-toggle-info">
+                            <div class="feria-toggle-icon" id="combos-toggle-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div>
+                                <h3>Activar Combos Estudiantiles</h3>
+                                <p id="combos-toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Muestra la categoría especial con combos para estudiantes.</p>
+                            </div>
+                        </div>
+                        <button class="feria-toggle-btn disabled" id="btn-combos-toggle" onclick="FeriaManager.toggleCombosMode()">
+                            <span class="feria-toggle-knob"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn-primary" onclick="FeriaManager.openPricesModal()" style="background: transparent; border: 1px solid var(--rojo); color: var(--blanco); padding: 12px 20px; font-size: 1rem; border-radius: 8px;">
+                        <i class="fas fa-tags"></i> Ajustar Precios Especiales
+                    </button>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -355,6 +403,26 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="ReportsManager.closeCostsModal()">Cancelar</button>
                 <button class="btn-primary" id="btn-save-costs" onclick="ReportsManager.saveCosts()">Guardar Costos</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AJUSTAR PRECIOS FERIA -->
+    <div id="feria-prices-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Ajustar Precios Modo Feria 🎪</h2>
+                <button onclick="FeriaManager.closePricesModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto; gap: 12px; padding-right: 10px;">
+                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 5px;">Define los precios que se aplicarán automáticamente cuando el Modo Feria o los Combos Estudiantiles estén activos.</p>
+                <div id="feria-prices-container">
+                    <p style="text-align: center; padding: 20px;">Cargando productos...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="FeriaManager.closePricesModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-save-feria-prices" onclick="FeriaManager.savePrices()">Guardar Precios</button>
             </div>
         </div>
     </div>
