@@ -33,7 +33,7 @@ body { background: var(--negro); color: var(--blanco); min-height: 100vh; }
     gap: 15px;
     border-bottom: 1px solid var(--border);
 }
-.brand img { width: 40px; }
+.brand img { width: 85px; }
 .brand h2 { font-family: 'Rotio', cursive; color: var(--mostaza); font-size: 1.5rem; letter-spacing: 1px; }
 
 .sidebar-nav {
