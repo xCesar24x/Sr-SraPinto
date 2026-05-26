@@ -1,5 +1,5 @@
-// Configuración de costos base de producción para cálculo de rentabilidad
-const COSTOS_PRODUCTOS = {
+// Costos base de producción por defecto (fallback e inicialización en la nube)
+let COSTOS_PRODUCTOS = {
     // PINTOS
     'p-senor-pinto': 1200,
     'c-senor-pinto-cafe': 1450,
@@ -52,8 +52,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const db = window.FirebaseDB;
 
+    // Cargar costos desde Firestore en tiempo real para mantener rentabilidades actualizadas
+    db.collection('config').doc('costos').onSnapshot((doc) => {
+        if (doc.exists) {
+            // Mezclar con los locales por si hay nuevos productos agregados
+            COSTOS_PRODUCTOS = { ...COSTOS_PRODUCTOS, ...doc.data() };
+            console.log("✅ Costos de producción sincronizados desde Firestore:", COSTOS_PRODUCTOS);
+        } else {
+            // Inicializar el documento en Firestore si no existe
+            db.collection('config').doc('costos').set(COSTOS_PRODUCTOS)
+                .then(() => console.log("🌱 Documento de costos inicializado en Firestore con valores por defecto."))
+                .catch(err => console.error("Error inicializando costos en la nube:", err));
+        }
+        
+        // Recalcular analíticas si estamos en la pestaña activa
+        if (document.getElementById('section-reports').classList.contains('active')) {
+            ReportsManager.loadAnalytics();
+        }
+    });
+
     // ========================================
-    // MÓDULO: Inventario (Existente)
+    // MÓDULO: Inventario
     // ========================================
     db.collection("inventario").onSnapshot((snapshot) => {
         currentInventory = [];
@@ -388,7 +407,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Calcular costo estimado de este pedido (COGS)
                 if (order.items) {
                     order.items.forEach(item => {
-                        // Limpiar ID por si trae sufijos
                         const cleanId = item.id.split('-')[0];
                         const costPerUnit = COSTOS_PRODUCTOS[cleanId] || COSTOS_PRODUCTOS[item.id] || (item.precio * 0.4);
                         totalCogs += (costPerUnit * (item.cantidad || 0));
@@ -444,7 +462,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const ctx = document.getElementById('bestsellers-chart').getContext('2d');
             if (data.length === 0) {
-                // Dibujar texto vacío
                 ctx.clearRect(0, 0, 400, 280);
                 ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
                 ctx.font = "14px Gotham";
@@ -560,7 +577,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const ingredientConsumption = {};
 
             orders.forEach(order => {
-                // Solo despachados/listos/retirados
                 if (order.estado !== 'listo' && order.estado !== 'retirado') return;
 
                 if (order.items) {
@@ -637,6 +653,83 @@ document.addEventListener("DOMContentLoaded", () => {
                     </tr>
                 `;
             }).join('');
+        },
+
+        // --- GESTIÓN DINÁMICA DE COSTOS EN FIRESTORE ---
+        openCostsModal() {
+            const container = document.getElementById('costs-inputs-container');
+            const costsModal = document.getElementById('costs-modal');
+            
+            // Ordenar alfabéticamente por ID de producto para mostrarlo ordenado
+            const sortedCosts = Object.entries(COSTOS_PRODUCTOS).sort((a, b) => a[0].localeCompare(b[0]));
+
+            container.innerHTML = sortedCosts.map(([id, cost]) => {
+                // Hacer el nombre más legible
+                let name = id.replace(/^(p|c|b)-/, '').replace(/_/g, ' ').replace(/-/g, ' ');
+                // Prefijo indicador según el tipo de producto
+                let prefix = '';
+                if (id.startsWith('p-')) prefix = '🍳 ';
+                else if (id.startsWith('c-')) prefix = '✨ ';
+                else if (id.startsWith('b-')) prefix = '☕ ';
+
+                return `
+                    <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+                        <label style="text-transform: capitalize; font-size: 0.85rem; font-weight: 700; margin: 0; color: var(--blanco);">${prefix}${name}</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 0.9rem; opacity: 0.5; color: var(--mostaza);">₡</span>
+                            <input type="number" data-id="${id}" value="${cost}" style="width: 100px; padding: 6px; text-align: right; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--mostaza); border-radius: 6px; font-weight: 900;" min="0">
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            costsModal.classList.add('active');
+        },
+
+        closeCostsModal() {
+            document.getElementById('costs-modal').classList.remove('active');
+        },
+
+        async saveCosts() {
+            const inputs = document.querySelectorAll('#costs-inputs-container input');
+            const newCosts = {};
+            let hasErrors = false;
+
+            inputs.forEach(input => {
+                const id = input.dataset.id;
+                const cost = parseInt(input.value);
+                if (isNaN(cost) || cost < 0) {
+                    hasErrors = true;
+                    return;
+                }
+                newCosts[id] = cost;
+            });
+
+            if (hasErrors) {
+                alert("Por favor ingresa costos válidos mayores o iguales a 0.");
+                return;
+            }
+
+            const btnSave = document.getElementById('btn-save-costs');
+            btnSave.disabled = true;
+            btnSave.innerText = "Guardando...";
+
+            try {
+                // Guardar en la base de datos Firestore de forma persistente
+                await db.collection('config').doc('costos').set(newCosts);
+                
+                // Actualizar nuestra variable local para el recálculo
+                COSTOS_PRODUCTOS = newCosts;
+                
+                this.closeCostsModal();
+                this.loadAnalytics(); // Recargar analíticas al instante con los nuevos costos
+            } catch (error) {
+                console.error("Error guardando costos en la nube:", error);
+                alert("Ocurrió un error al guardar los costos en la base de datos.");
+            } finally {
+                btnSave.disabled = false;
+                btnSave.innerText = "Guardar Costos";
+            }
         }
     };
 

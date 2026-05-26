@@ -130,6 +130,10 @@
                         </div>
                         
                         <div class="filter-bar" style="display: flex; gap: 10px; align-items: center;">
+                            <button onclick="ReportsManager.openCostsModal()" class="btn-primary" style="background: transparent; border: 1px solid var(--rojo); color: var(--blanco); padding: 10px 15px; font-size: 0.85rem;">
+                                <i class="fas fa-coins"></i> Ajustar Costos
+                            </button>
+
                             <select id="report-period-select" onchange="ReportsManager.handlePeriodChange()" class="report-select">
                                 <option value="hoy" selected>Hoy</option>
                                 <option value="ayer">Ayer</option>
@@ -331,6 +335,26 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="UsersManager.closeModal()">Cancelar</button>
                 <button class="btn-primary" id="btn-user-submit" onclick="UsersManager.saveUser()">Guardar Colaborador</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AJUSTAR COSTOS -->
+    <div id="costs-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Ajustar Costos de Producción</h2>
+                <button onclick="ReportsManager.closeCostsModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="max-height: 400px; overflow-y: auto; gap: 12px; padding-right: 10px;">
+                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 5px;">Define el costo base de producción (colones) de cada producto para calcular la rentabilidad real de tu negocio.</p>
+                <div id="costs-inputs-container">
+                    <p style="text-align: center; padding: 20px;">Cargando productos...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="ReportsManager.closeCostsModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-save-costs" onclick="ReportsManager.saveCosts()">Guardar Costos</button>
             </div>
         </div>
     </div>
