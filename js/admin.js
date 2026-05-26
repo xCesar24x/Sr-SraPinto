@@ -660,28 +660,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById('costs-inputs-container');
             const costsModal = document.getElementById('costs-modal');
             
-            // Ordenar alfabéticamente por ID de producto para mostrarlo ordenado
-            const sortedCosts = Object.entries(COSTOS_PRODUCTOS).sort((a, b) => a[0].localeCompare(b[0]));
-
-            container.innerHTML = sortedCosts.map(([id, cost]) => {
-                // Hacer el nombre más legible
+            // Construir array con nombres legibles para ordenar correctamente
+            const formattedCosts = Object.entries(COSTOS_PRODUCTOS).map(([id, cost]) => {
                 let name = id.replace(/^(p|c|b)-/, '').replace(/_/g, ' ').replace(/-/g, ' ');
-                // Prefijo indicador según el tipo de producto
                 let prefix = '';
                 if (id.startsWith('p-')) prefix = '🍳 ';
                 else if (id.startsWith('c-')) prefix = '✨ ';
                 else if (id.startsWith('b-')) prefix = '☕ ';
+                
+                return { id, cost, name, prefix };
+            });
 
-                return `
-                    <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
-                        <label style="text-transform: capitalize; font-size: 0.85rem; font-weight: 700; margin: 0; color: var(--blanco);">${prefix}${name}</label>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 0.9rem; opacity: 0.5; color: var(--mostaza);">₡</span>
-                            <input type="number" data-id="${id}" value="${cost}" style="width: 100px; padding: 6px; text-align: right; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--mostaza); border-radius: 6px; font-weight: 900;" min="0">
-                        </div>
+            // Ordenar alfabéticamente de la A a la Z según el nombre legible del producto
+            formattedCosts.sort((a, b) => a.name.localeCompare(b.name));
+
+            container.innerHTML = formattedCosts.map(item => `
+                <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <label style="text-transform: capitalize; font-size: 0.85rem; font-weight: 700; margin: 0; color: var(--blanco);">${item.prefix}${item.name}</label>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.9rem; opacity: 0.5; color: var(--mostaza);">₡</span>
+                        <input type="number" data-id="${item.id}" value="${item.cost}" style="width: 100px; padding: 6px; text-align: right; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--mostaza); border-radius: 6px; font-weight: 900;" min="0">
                     </div>
-                `;
-            }).join('');
+                </div>
+            `).join('');
 
             costsModal.classList.add('active');
         },
