@@ -295,6 +295,7 @@ const CartManager = {
                         fechaModificacion: new Date().toISOString()
                     });
                     console.log("✅ Pedido modificado y enviado a cocina");
+                    window.lastProcessedOrder = { ...pedido, id: this.editingOrderId };
 
                     // Ocultar banner de edición si existe
                     const banner = document.getElementById('editing-order-banner');
@@ -317,6 +318,7 @@ const CartManager = {
                         pedido
                     );
                     console.log("✅ Pedido creado en Firebase");
+                    window.lastProcessedOrder = pedido;
 
                     // Mostrar modal de éxito
                     const successOverlay = document.getElementById('success-overlay');
@@ -391,6 +393,159 @@ const CartManager = {
         if (successOverlay) successOverlay.classList.remove('active');
         
         UIController.toggleCart(); // Cierra el carrito
+    },
+
+    convertirLogoYEjecutar(callback) {
+        const logoUrl = 'logo-brand/PNG/Logo vertical Rojo.png';
+        const img = new Image();
+        img.src = logoUrl;
+        img.crossOrigin = 'Anonymous';
+        
+        img.onload = () => {
+            try {
+                const canvas = document.createElement("canvas");
+                // Scale to 180px width for 58mm ticket
+                const targetWidth = 180;
+                const scale = targetWidth / img.width;
+                canvas.width = targetWidth;
+                canvas.height = img.height * scale;
+                
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                const dataURL = canvas.toDataURL("image/png");
+                callback(dataURL);
+            } catch (e) {
+                console.error("Error al convertir logo a base64:", e);
+                callback(null);
+            }
+        };
+        
+        img.onerror = () => {
+            console.warn("No se pudo cargar el logo de la marca para el ticket.");
+            callback(null);
+        };
+    },
+
+    imprimirTiquete(pedido) {
+        if (!pedido) {
+            alert("No hay ningún pedido cargado para imprimir.");
+            return;
+        }
+
+        // Obtener el nombre del empleado que inició sesión
+        const empleadoName = localStorage.getItem('srsrapinto_cedula') || 'Vendedor 1';
+
+        this.convertirLogoYEjecutar((logoBase64) => {
+            let logoHtml = '';
+            if (logoBase64) {
+                logoHtml = `<img class="logo" src="${logoBase64}" style="display: block; margin: 0 auto 5px; width: 140px;" />`;
+            }
+
+            const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 270px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+        .divider { border-top: 1px dashed #000; margin: 8px 0; }
+        .flex { display: flex; justify-content: space-between; }
+        .item-row { margin-bottom: 6px; }
+        .item-qty { font-size: 11px; margin-top: 1px; }
+    </style>
+</head>
+<body>
+    <div class="text-center">
+        ${logoHtml}
+        <div class="bold" style="font-size: 14px; margin-top: 5px;">Sr & Sra Pinto</div>
+        <div style="font-size: 10px; margin-top: 2px; letter-spacing: 0.5px;">EL SABOR DE SER TICO</div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div>
+        <div>Empleado: ${empleadoName}</div>
+        <div>TPV: POS tablet B</div>
+        <div class="bold" style="margin-top: 4px;">Comer dentro</div>
+        ${pedido.alergias && pedido.alergias.trim() !== '' ? `
+            <div style="background: #000; color: #fff; padding: 4px; font-weight: bold; margin-top: 4px; font-size: 11px;">
+                ⚠️ ALERGIAS: ${pedido.alergias}
+            </div>
+        ` : ''}
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div>
+        ${pedido.items.map(item => `
+            <div class="item-row">
+                <div class="flex">
+                    <span class="bold">${item.nombre}</span>
+                    <span class="bold">₡${(item.precio * item.quantity || item.precio * item.cantidad).toLocaleString()}</span>
+                </div>
+                <div class="item-qty">${item.quantity || item.cantidad} x ₡${item.precio.toLocaleString()}</div>
+            </div>
+        `).join('')}
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="bold">
+        <div class="flex" style="font-size: 14px;">
+            <span>Total</span>
+            <span>₡${pedido.total.toLocaleString()}</span>
+        </div>
+        <div class="flex" style="margin-top: 4px;">
+            <span>${pedido.metodoPago}</span>
+            <span>₡${pedido.total.toLocaleString()}</span>
+        </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="text-center" style="font-size: 11px;">
+        <div>Gracias por tu compra!</div>
+        <div style="margin-top: 2px;">Dios te bendiga :)</div>
+        <div style="margin-top: 8px; font-size: 9px; opacity: 0.8;">
+            ${new Date(pedido.fecha).toLocaleDateString('es-CR')} ${new Date(pedido.fecha).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+        </div>
+    </div>
+    
+    <div style="height: 35px;"></div>
+</body>
+</html>
+            `;
+
+            try {
+                // Codificar HTML en Base64
+                const encodedContent = btoa(unescape(encodeURIComponent(htmlContent)));
+                
+                // Android Intent para disparar impresión directa con RawBT
+                const intentUrl = 'intent:#Intent;' +
+                    'action=android.intent.action.SEND;' +
+                    'type=text/html;' +
+                    'component=ru.a402d.rawbtprinter/.PrintDownloadActivity;' +
+                    'S.android.intent.extra.TEXT=' + encodedContent + ';' +
+                    'end';
+                
+                window.location.href = intentUrl;
+            } catch (error) {
+                console.error("Error al disparar la impresión de RawBT:", error);
+                alert("Error al enviar el ticket a la impresora. Revisa la configuración de RawBT.");
+            }
+        });
     }
 };
 

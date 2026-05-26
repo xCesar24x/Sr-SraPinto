@@ -1471,6 +1471,9 @@ if(slides.length > 0) {
                     <span>💳 Tarjeta</span>
                 </div>
             </div>
+            <button class="success-btn" onclick="CartManager.imprimirTiquete(window.lastProcessedOrder)" style="background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-print"></i> IMPRIMIR TIQUETE
+            </button>
             <button class="success-btn" onclick="CartManager.resetAndClose()">
                 <i class="fas fa-redo"></i> HACER OTRO PEDIDO
             </button>
@@ -1773,6 +1776,9 @@ const SalesDashboard = {
                         <button onclick="SalesDashboard.aprobarPedido('${order.id}')" class="ticket-btn-approve">
                             <i class="fas fa-check-circle"></i> Aprobar y Mandar a Cocina
                         </button>
+                        <button onclick="CartManager.imprimirTiquete(${JSON.stringify(order).replace(/"/g, '&quot;')})" class="ticket-btn-reject" style="flex: 0 0 50px; display: flex; align-items: center; justify-content: center; background: rgba(247, 183, 49, 0.15); border-color: #f7b731; color: #f7b731; padding: 12px; border-radius: 10px;" title="Imprimir Ticket">
+                            <i class="fas fa-print" style="font-size: 1.1rem;"></i>
+                        </button>
                         <button onclick="SalesDashboard.rechazarPedido('${order.id}')" class="ticket-btn-reject">
                             <i class="fas fa-trash-alt"></i> Rechazar
                         </button>
@@ -1835,6 +1841,9 @@ const SalesDashboard = {
                     <div class="ticket-actions-row">
                         <button onclick="SalesDashboard.iniciarModificacion('${order.id}', '${order.cliente}', '${order.alergias || ''}', '${order.metodoPago}', ${itemsJson})" class="ticket-btn-edit">
                             <i class="fas fa-edit"></i> Modificar Comanda
+                        </button>
+                        <button onclick="CartManager.imprimirTiquete(${JSON.stringify(order).replace(/"/g, '&quot;')})" class="ticket-btn-reject" style="flex: 0 0 50px; display: flex; align-items: center; justify-content: center; background: rgba(247, 183, 49, 0.15); border-color: #f7b731; color: #f7b731; padding: 12px; border-radius: 10px;" title="Imprimir Ticket">
+                            <i class="fas fa-print" style="font-size: 1.1rem;"></i>
                         </button>
                     </div>
                 </div>
