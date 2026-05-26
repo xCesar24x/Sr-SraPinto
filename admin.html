@@ -12,6 +12,10 @@
     </script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Chart.js CDN for premium analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Recipes for ingredients consumption metrics -->
+    <script src="js/recetas.js"></script>
     <style>
         @font-face {
             font-family: 'Rotio';
@@ -37,10 +41,9 @@
                 <h2>Admin</h2>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="active"><i class="fas fa-boxes"></i> Inventario</a>
-                <!-- Future sections -->
-                <a href="#"><i class="fas fa-chart-line"></i> Reportes <span class="badge">Pronto</span></a>
-                <a href="#"><i class="fas fa-users"></i> Usuarios <span class="badge">Pronto</span></a>
+                <a href="#" id="nav-inventory" class="active" onclick="AdminManager.switchTab('inventory', event)"><i class="fas fa-boxes"></i> Inventario</a>
+                <a href="#" id="nav-reports" onclick="AdminManager.switchTab('reports', event)"><i class="fas fa-chart-line"></i> Reportes</a>
+                <a href="#" id="nav-users" onclick="AdminManager.switchTab('users', event)"><i class="fas fa-users"></i> Usuarios</a>
             </nav>
             <div class="sidebar-footer">
                 <a href="#" onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
@@ -49,67 +52,181 @@
 
         <!-- MAIN CONTENT -->
         <main class="admin-main">
-            <header class="top-bar">
-                <h1 class="page-title">Gestión de Inventario en Tiempo Real</h1>
-                <button class="btn-primary" onclick="AdminManager.openAddModal()"><i class="fas fa-plus"></i> Ajustar Stock</button>
-            </header>
+            <!-- SECTION: INVENTORY -->
+            <section id="section-inventory" class="admin-section active">
+                <header class="top-bar">
+                    <h1 class="page-title">Gestión de Inventario en Tiempo Real</h1>
+                    <button class="btn-primary" onclick="AdminManager.openAddModal()"><i class="fas fa-plus"></i> Ajustar Stock</button>
+                </header>
 
-            <!-- TOGGLE ABRIR/CERRAR LOCAL -->
-            <div class="store-toggle-card" id="store-toggle-card">
-                <div class="toggle-info">
-                    <div class="toggle-icon" id="toggle-icon">
-                        <i class="fas fa-store-slash"></i>
+                <!-- TOGGLE ABRIR/CERRAR LOCAL -->
+                <div class="store-toggle-card" id="store-toggle-card">
+                    <div class="toggle-info">
+                        <div class="toggle-icon" id="toggle-icon">
+                            <i class="fas fa-store-slash"></i>
+                        </div>
+                        <div>
+                            <h3>Estado del Local</h3>
+                            <p id="toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cargando...</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 id="toggle-title">Estado del Local</h3>
-                        <p id="toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cargando...</p>
-                    </div>
+                    <button class="toggle-btn closed" id="toggle-btn" onclick="AdminManager.toggleStore()">
+                        <span class="toggle-knob"></span>
+                    </button>
                 </div>
-                <button class="toggle-btn closed" id="toggle-btn" onclick="AdminManager.toggleStore()">
-                    <span class="toggle-knob"></span>
-                </button>
-            </div>
 
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-egg"></i></div>
-                    <div class="stat-info">
-                        <h3>Huevos</h3>
-                        <p id="stat-huevos">...</p>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-egg"></i></div>
+                        <div class="stat-info">
+                            <h3>Huevos</h3>
+                            <p id="stat-huevos">...</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-cheese"></i></div>
+                        <div class="stat-info">
+                            <h3>Queso Frito</h3>
+                            <p id="stat-queso">...</p>
+                        </div>
+                    </div>
+                    <div class="stat-card warning" id="alerts-card">
+                        <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="stat-info">
+                            <h3>Alertas de Stock</h3>
+                            <p id="stat-alertas">0</p>
+                        </div>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-cheese"></i></div>
-                    <div class="stat-info">
-                        <h3>Queso Frito</h3>
-                        <p id="stat-queso">...</p>
-                    </div>
-                </div>
-                <div class="stat-card warning">
-                    <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                    <div class="stat-info">
-                        <h3>Alertas de Stock</h3>
-                        <p id="stat-alertas">0</p>
-                    </div>
-                </div>
-            </div>
 
-            <div class="inventory-container">
-                <table class="inventory-table">
-                    <thead>
-                        <tr>
-                            <th>Ingrediente</th>
-                            <th>Stock Actual</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-list">
-                        <!-- Llenado vía JS -->
-                        <tr><td colspan="4" style="text-align: center; padding: 20px;">Cargando inventario...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+                <div class="inventory-container">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Ingrediente</th>
+                                <th>Stock Actual</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-list">
+                            <tr><td colspan="4" style="text-align: center; padding: 20px;">Cargando inventario...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION: REPORTS (ADVANCED ANALYTICS) -->
+            <section id="section-reports" class="admin-section">
+                <header class="top-bar">
+                    <h1 class="page-title">Analítica Avanzada y Métricas</h1>
+                    <div class="filter-bar">
+                        <select id="report-period-select" onchange="ReportsManager.loadAnalytics()" class="report-select">
+                            <option value="hoy" selected>Hoy</option>
+                            <option value="ayer">Ayer</option>
+                            <option value="7dias">Últimos 7 días</option>
+                            <option value="mes">Este Mes</option>
+                            <option value="todos">Histórico Completo</option>
+                        </select>
+                    </div>
+                </header>
+
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.1);"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div class="stat-info">
+                            <h3>Ventas Totales</h3>
+                            <p id="stat-revenue">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #3498db; background: rgba(52, 152, 219, 0.1);"><i class="fas fa-receipt"></i></div>
+                        <div class="stat-info">
+                            <h3>Pedidos</h3>
+                            <p id="stat-orders-count">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-calculator"></i></div>
+                        <div class="stat-info">
+                            <h3>Ticket Promedio</h3>
+                            <p id="stat-avg-ticket">₡0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-hamburger"></i> Productos Más Vendidos</h3>
+                        <div class="chart-container-canvas">
+                            <canvas id="bestsellers-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fas fa-credit-card"></i> Métodos de Pago</h3>
+                        <div class="chart-container-canvas">
+                            <canvas id="payment-methods-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reports-split">
+                    <!-- ESTIMATED INGREDIENTS CONSUMPTION -->
+                    <div class="report-box">
+                        <h3><i class="fas fa-clipboard-list"></i> Consumo de Ingredientes Estimado</h3>
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 15px;">Consumo calculado según recetas y pedidos completados.</p>
+                        <div class="consumption-list" id="consumption-list">
+                            <div style="padding: 20px; text-align: center; opacity: 0.5;">No hay ventas registradas en este período.</div>
+                        </div>
+                    </div>
+
+                    <!-- TRANSACTION AUDIT LOG -->
+                    <div class="report-box">
+                        <h3><i class="fas fa-history"></i> Historial de Ventas</h3>
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-bottom: 15px;">Auditoría de comandas facturadas y despachadas.</p>
+                        <div class="audit-table-container">
+                            <table class="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha / Hora</th>
+                                        <th>Cliente</th>
+                                        <th>Total</th>
+                                        <th>Método</th>
+                                        <th>Detalles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="audit-orders-list">
+                                    <tr><td colspan="5" style="text-align: center; padding: 20px; opacity: 0.5;">Cargando historial...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: USERS (STAFF MANAGEMENT) -->
+            <section id="section-users" class="admin-section">
+                <header class="top-bar">
+                    <h1 class="page-title">Gestión de Colaboradores</h1>
+                    <button class="btn-primary" onclick="UsersManager.openAddModal()"><i class="fas fa-user-plus"></i> Agregar Colaborador</button>
+                </header>
+
+                <div class="inventory-container">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre / Identificación</th>
+                                <th>Rol asignado</th>
+                                <th>Contraseña</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list">
+                            <tr><td colspan="4" style="text-align: center; padding: 20px;">Cargando colaboradores...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -142,6 +259,39 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="AdminManager.closeAddModal()">Cancelar</button>
                 <button class="btn-primary" onclick="AdminManager.saveStock()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL COLABORADORES -->
+    <div id="user-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="user-modal-title">Agregar Colaborador</h2>
+                <button onclick="UsersManager.closeModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="user-edit-id">
+                <div class="form-group">
+                    <label>Nombre / Identificación (Cédula)</label>
+                    <input type="text" id="user-username" placeholder="Ej: Ventas, Cocina, o nombre del empleado">
+                </div>
+                <div class="form-group">
+                    <label>Rol de Acceso</label>
+                    <select id="user-role">
+                        <option value="ventas">Ventas (Caja y Registro de Pedidos)</option>
+                        <option value="cocina">Cocina (Pantalla de KDS)</option>
+                        <option value="admin">Administrador (Acceso Completo)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña de Acceso (Pin numérico/Texto)</label>
+                    <input type="password" id="user-password" placeholder="Ej: 1002" minlength="4">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="UsersManager.closeModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-user-submit" onclick="UsersManager.saveUser()">Guardar Colaborador</button>
             </div>
         </div>
     </div>

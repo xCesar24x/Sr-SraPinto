@@ -218,3 +218,216 @@ body { background: var(--negro); color: var(--blanco); min-height: 100vh; }
 }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* TAB & SECTION CONTROLS */
+.admin-section {
+    display: none;
+    animation: fadeIn 0.4s ease forwards;
+}
+.admin-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* REPORTS & ANALYTICS STYLES */
+.report-select {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    color: var(--blanco);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+}
+.report-select:focus {
+    border-color: var(--rojo);
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+@media (max-width: 768px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: var(--tarjeta);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.chart-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--mostaza);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.chart-container-canvas {
+    position: relative;
+    height: 280px;
+    width: 100%;
+}
+
+.reports-split {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+@media (max-width: 992px) {
+    .reports-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.report-box {
+    background: var(--tarjeta);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+}
+.report-box h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--blanco);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+/* Consumption Items */
+.consumption-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+.consumption-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+}
+.consumption-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+.consumption-bar-container {
+    background: rgba(255, 255, 255, 0.05);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.consumption-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rojo), #ff6b8b);
+    border-radius: 4px;
+    width: 0;
+    transition: width 0.6s ease;
+}
+
+.audit-table-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* User management specific status and layout */
+.user-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+.badge-admin {
+    background: rgba(233, 19, 80, 0.15);
+    color: var(--rojo);
+    border: 1px solid rgba(233, 19, 80, 0.3);
+}
+.badge-ventas {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+.badge-cocina {
+    background: rgba(46, 204, 113, 0.15);
+    color: var(--verde);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.password-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.password-masked {
+    font-family: monospace;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+}
+.password-toggle {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: 0.2s;
+}
+.password-toggle:hover {
+    color: var(--blanco);
+}
+
+.btn-edit {
+    color: #3498db;
+    background: transparent;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 5px;
+    transition: 0.2s;
+}
+.btn-edit:hover {
+    color: #5dade2;
+    transform: scale(1.1);
+}
+
+.btn-delete {
+    color: var(--alerta);
+    background: transparent;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 5px;
+    transition: 0.2s;
+}
+.btn-delete:hover {
+    color: #ec7063;
+    transform: scale(1.1);
+}
+
