@@ -413,12 +413,16 @@
             if (metodo === "text-plain") {
                 try {
                     const textContent = generarTextoPlano(pedido);
-                    const encodedText = btoa(unescape(encodeURIComponent(textContent)));
 
-                    // Protocolo directo nativo de RawBT para Texto Plano (sin double slashes que confunden a la app)
-                    const intentUrl = 'rawbt:data:text/plain;base64,' + encodedText;
+                    // Intent SEND de Android con texto plano (Chrome lo ejecuta 100% directo y sin cartel de confirmación)
+                    const intentUrl = 'intent://#Intent;' +
+                        'action=android.intent.action.SEND;' +
+                        'type=text/plain;' +
+                        'package=ru.a402d.rawbtprinter;' +
+                        'S.android.intent.extra.TEXT=' + encodeURIComponent(textContent) + ';' +
+                        'end';
 
-                    console.log("🖨️ Despachando impresión en TEXTO PLANO:", intentUrl.substring(0, 100) + "...");
+                    console.log("🖨️ Despachando impresión en TEXTO PLANO (Auto-Print):", intentUrl.substring(0, 100) + "...");
                     window.location.href = intentUrl;
                     actualizarHistorialPantalla(pedido);
                 } catch (error) {
