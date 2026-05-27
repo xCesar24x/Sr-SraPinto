@@ -231,6 +231,7 @@
         <div style="margin-bottom: 20px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <label style="font-size: 0.8rem; opacity: 0.6; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; color: var(--mostaza);">MÉTODO DE CONEXIÓN (SUNMI)</label>
             <select id="select-print-method" onchange="cambiarMetodoImpresion(this.value)" style="width: 100%; background: #120003; color: white; border: 1px solid rgba(233,19,80,0.4); padding: 10px; border-radius: 8px; font-family: inherit; font-size: 0.9rem; cursor: pointer; outline: none;">
+                <option value="text-plain">Método D: Texto Plano (Súper Rápido y Compatible) ⭐</option>
                 <option value="intent-send">Método A: Intent Send HTML (Original)</option>
                 <option value="intent-view">Método B: Intent View Custom (Más Compatible)</option>
                 <option value="rawbt-uri">Método C: Protocolo Directo rawbt:// (Sencillo)</option>
@@ -268,6 +269,7 @@
         
         // Descripciones de métodos
         const descripciones = {
+            "text-plain": "Envía el tiquete en formato texto clásico (tipo POS tradicional) usando el motor de impresión ultra rápido nativo de RawBT. No usa el WebView de Android, por lo que nunca se cuelga en el Sunmi V2.",
             "intent-send": "Envía el HTML estructurado directamente a RawBT como texto enriquecido. Método nativo oficial.",
             "intent-view": "Envía el HTML usando Intent VIEW y un esquema de URI personalizado. Altamente recomendado si el Método A no responde en el Chrome del Sunmi.",
             "rawbt-uri": "Llama directamente al protocolo registrado rawbt:// en Android. El método más directo y compatible si los Intents fallan."
@@ -280,8 +282,8 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Cargar método guardado o usar por defecto Método B (el más compatible para evitar fallas)
-            const metodoGuardado = localStorage.getItem("metodoImpresion") || "intent-view";
+            // Cargar método guardado o usar por defecto Método D (el más compatible y rápido)
+            const metodoGuardado = localStorage.getItem("metodoImpresion") || "text-plain";
             document.getElementById("select-print-method").value = metodoGuardado;
             cambiarMetodoImpresion(metodoGuardado);
 
@@ -330,6 +332,48 @@
             }
         });
 
+        // Generar tiquete en Texto Plano (32 caracteres de ancho para impresora 58mm)
+        function generarTextoPlano(pedido) {
+            let t = "";
+            t += "         SR & SRA PINTO\n";
+            t += "      EL SABOR DE SER TICO\n";
+            t += "--------------------------------\n";
+            t += `Empleado: Vendedor 1\n`;
+            t += `TPV: POS tablet B\n`;
+            t += "Comer dentro\n";
+            if (pedido.alergias && pedido.alergias.trim() !== '') {
+                t += `⚠️ ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
+            }
+            t += "--------------------------------\n";
+            pedido.items.forEach(item => {
+                let nombre = item.nombre.toUpperCase();
+                if (nombre.length > 20) nombre = nombre.substring(0, 20);
+                let totalItem = `₡${(item.precio * item.cantidad).toLocaleString()}`;
+                
+                let esp = 32 - nombre.length - totalItem.length;
+                if (esp < 1) esp = 1;
+                t += nombre + " ".repeat(esp) + totalItem + "\n";
+                t += `  ${item.cantidad} x ₡${item.precio.toLocaleString()}\n`;
+            });
+            t += "--------------------------------\n";
+            let totalStr = `₡${pedido.total.toLocaleString()}`;
+            let espT = 32 - 6 - totalStr.length;
+            t += "TOTAL:" + " ".repeat(espT) + totalStr + "\n";
+            
+            let pagoStr = `₡${pedido.total.toLocaleString()}`;
+            let metStr = pedido.metodoPago.toUpperCase();
+            let espM = 32 - metStr.length - pagoStr.length;
+            t += metStr + " ".repeat(espM) + pagoStr + "\n";
+            t += "--------------------------------\n";
+            t += "    ¡Gracias por tu compra!\n";
+            t += "      Dios te bendiga :)\n";
+            
+            const fechaStr = new Date(pedido.fecha).toLocaleDateString('es-CR');
+            const horaStr = new Date(pedido.fecha).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+            t += `       ${fechaStr} ${horaStr}\n\n\n\n`;
+            return t;
+        }
+
         // Función para cargar logo vertical, dibujarlo en canvas a 180px de ancho y ejecutar callback
         function convertirLogoYEjecutar(callback) {
             const logoUrl = 'logo-brand/PNG/Logo vertical Rojo.png';
@@ -364,6 +408,28 @@
 
         // Función central para enviar tiquetes a RawBT
         function imprimirPedidoFisico(pedido) {
+            const metodo = localStorage.getItem("metodoImpresion") || "text-plain";
+
+            if (metodo === "text-plain") {
+                try {
+                    const textContent = generarTextoPlano(pedido);
+                    const encodedText = btoa(unescape(encodeURIComponent(textContent)));
+
+                    // Intent VIEW con datos de texto plano
+                    const intentUrl = 'intent://data:text/plain;base64,' + encodedText + '#Intent;' +
+                        'scheme=rawbt;' +
+                        'package=ru.a402d.rawbtprinter;' +
+                        'end';
+
+                    console.log("🖨️ Despachando impresión en TEXTO PLANO:", intentUrl.substring(0, 100) + "...");
+                    window.location.href = intentUrl;
+                    actualizarHistorialPantalla(pedido);
+                } catch (error) {
+                    console.error("Error al imprimir texto plano:", error);
+                }
+                return;
+            }
+
             convertirLogoYEjecutar((logoBase64) => {
                 let logoHtml = '';
                 if (logoBase64) {
