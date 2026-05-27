@@ -227,7 +227,20 @@
             <div class="counter-badge" id="print-counter">Tickets impresos hoy: 0</div>
         </div>
 
-        <button class="btn-test" onclick="printTestTicket()">
+        <!-- SELECTOR DE MÉTODO DE IMPRESIÓN -->
+        <div style="margin-bottom: 20px; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <label style="font-size: 0.8rem; opacity: 0.6; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; color: var(--mostaza);">MÉTODO DE CONEXIÓN (SUNMI)</label>
+            <select id="select-print-method" onchange="cambiarMetodoImpresion(this.value)" style="width: 100%; background: #120003; color: white; border: 1px solid rgba(233,19,80,0.4); padding: 10px; border-radius: 8px; font-family: inherit; font-size: 0.9rem; cursor: pointer; outline: none;">
+                <option value="intent-send">Método A: Intent Send HTML (Original)</option>
+                <option value="intent-view">Método B: Intent View Custom (Más Compatible)</option>
+                <option value="rawbt-uri">Método C: Protocolo Directo rawbt:// (Sencillo)</option>
+            </select>
+            <div id="method-description" style="font-size: 0.75rem; opacity: 0.7; margin-top: 8px; line-height: 1.3; color: #fff;">
+                Cargando descripción...
+            </div>
+        </div>
+
+        <button class="btn-test" onclick="printTestTicket()" style="margin-bottom: 10px; width: 100%; justify-content: center;">
             <i class="fas fa-print"></i> Imprimir Ticket de Prueba
         </button>
 
@@ -252,8 +265,26 @@
     <script>
         let printCount = 0;
         const loggedTickets = [];
+        
+        // Descripciones de métodos
+        const descripciones = {
+            "intent-send": "Envía el HTML estructurado directamente a RawBT como texto enriquecido. Método nativo oficial.",
+            "intent-view": "Envía el HTML usando Intent VIEW y un esquema de URI personalizado. Altamente recomendado si el Método A no responde en el Chrome del Sunmi.",
+            "rawbt-uri": "Llama directamente al protocolo registrado rawbt:// en Android. El método más directo y compatible si los Intents fallan."
+        };
+
+        function cambiarMetodoImpresion(val) {
+            localStorage.setItem("metodoImpresion", val);
+            document.getElementById("method-description").innerText = descripciones[val] || "";
+            console.log("⚙️ Método de impresión cambiado a:", val);
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
+            // Cargar método guardado o usar por defecto Método B (el más compatible para evitar fallas)
+            const metodoGuardado = localStorage.getItem("metodoImpresion") || "intent-view";
+            document.getElementById("select-print-method").value = metodoGuardado;
+            cambiarMetodoImpresion(metodoGuardado);
+
             // Inicializar Firestore listener para pedidos pendientes
             if (window.FirebaseDB) {
                 console.log("🔥 Conectado a Firestore. Iniciando servidor de impresión...");
@@ -425,18 +456,31 @@
 </html>
                 `;
 
-                try {
-                    // Codificar HTML en Base64
-                    const encodedContent = btoa(unescape(encodeURIComponent(htmlContent)));
-                    
-                    // Android Intent de RawBT
-                    const intentUrl = 'intent://#Intent;' +
-                        'action=android.intent.action.SEND;' +
-                        'type=text/html;' +
-                        'component=ru.a402d.rawbtprinter/.activity.PrintDownloadActivity;' +
-                        'package=ru.a402d.rawbtprinter;' +
-                        'S.android.intent.extra.TEXT=' + encodedContent + ';' +
-                        'end';
+                    // Obtener método activo
+                    const metodo = localStorage.getItem("metodoImpresion") || "intent-view";
+                    let intentUrl = "";
+
+                    if (metodo === "intent-send") {
+                        // Método A: Intent SEND nativo
+                        intentUrl = 'intent://#Intent;' +
+                            'action=android.intent.action.SEND;' +
+                            'type=text/html;' +
+                            'component=ru.a402d.rawbtprinter/.activity.PrintDownloadActivity;' +
+                            'package=ru.a402d.rawbtprinter;' +
+                            'S.android.intent.extra.TEXT=' + encodedContent + ';' +
+                            'end';
+                    } else if (metodo === "intent-view") {
+                        // Método B: Intent VIEW con esquema custom (Altamente compatible)
+                        intentUrl = 'intent://data:text/html;base64,' + encodedContent + '#Intent;' +
+                            'scheme=rawbt;' +
+                            'package=ru.a402d.rawbtprinter;' +
+                            'end';
+                    } else {
+                        // Método C: Protocolo directo rawbt://
+                        intentUrl = 'rawbt:data:text/html;base64,' + encodedContent;
+                    }
+
+                    console.log(`🖨️ Despachando impresión con Método [${metodo}]:`, intentUrl.substring(0, 100) + "...");
                     
                     // Redirigir a RawBT
                     window.location.href = intentUrl;
