@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servidor de Impresión | Sr. & Sra. Pinto</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+        @font-face {
+            font-family: 'Rotio';
+            src: url('fonts/Rotio 2.otf') format('opentype');
+        }
+        @font-face {
+            font-family: 'Gotham';
+            src: url('fonts/GOTHAM-MEDIUM.TTF') format('truetype');
+            font-weight: 500;
+        }
+
+        :root {
+            --rojo:     #E91350;     /* Pinto Pink */
+            --mostaza:  #fdf5e6;     /* Cream */
+            --negro:    #120003;     /* Dark Burgundy */
+            --carbon:   #3D010C;     /* Burgundy */
+            --blanco:   #ffffff;
+            --verde:    #2ecc71;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Gotham', sans-serif;
+            background-color: var(--negro);
+            color: var(--blanco);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* BRANDE PATTERN BACKGROUND */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(to bottom, rgba(18, 0, 3, 0.95), rgba(61, 1, 12, 0.98)),
+                url('images-catalogo/fondogeneral.jpg');
+            background-size: 300px;
+            background-repeat: repeat;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        .server-container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(61, 1, 12, 0.6);
+            border: 2px solid rgba(233, 19, 80, 0.3);
+            border-radius: 24px;
+            padding: 40px 30px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo-img {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Rotio', cursive;
+            font-size: 2.2rem;
+            color: var(--mostaza);
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .status-card {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .status-dot-pulse {
+            width: 16px;
+            height: 16px;
+            background-color: var(--verde);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--verde);
+            animation: pulse 1.8s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 15px 10px rgba(46, 204, 113, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        .status-text {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--verde);
+        }
+
+        .counter-badge {
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .btn-test {
+            background: linear-gradient(135deg, var(--rojo), var(--carbon));
+            color: var(--blanco);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(233,19,80,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(233,19,80,0.5);
+        }
+
+        /* RECENT LOGS CONTAINER */
+        .logs-section {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .logs-title {
+            font-size: 0.8rem;
+            opacity: 0.5;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .logs-list {
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            list-style: none;
+        }
+
+        .log-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            opacity: 0.5;
+            font-size: 0.75rem;
+        }
+
+        .log-client {
+            font-weight: bold;
+            color: var(--mostaza);
+        }
+
+        .log-total {
+            font-weight: 900;
+            color: var(--verde);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="server-container">
+        <img class="logo-img" src="logo-brand/PNG/Logo Blanco Horizontal.png" alt="Logo">
+        <h1>Servidor de Impresión</h1>
+        <div class="subtitle">Sr. & Sra. Pinto</div>
+
+        <div class="status-card">
+            <div class="status-dot-pulse" id="status-dot"></div>
+            <div class="status-text" id="status-text">ESPERANDO COMANDAS...</div>
+            <div class="counter-badge" id="print-counter">Tickets impresos hoy: 0</div>
+        </div>
+
+        <button class="btn-test" onclick="printTestTicket()">
+            <i class="fas fa-print"></i> Imprimir Ticket de Prueba
+        </button>
+
+        <div class="logs-section">
+            <div class="logs-title">
+                <span>Historial de Impresión Reciente</span>
+                <span onclick="clearHistory()" style="cursor:pointer; text-decoration: underline; opacity:0.7;">Limpiar</span>
+            </div>
+            <ul class="logs-list" id="logs-list">
+                <li class="log-item" style="justify-content: center; opacity: 0.4;">No hay tickets procesados en esta sesión.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- FIREBASE COMPAT SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    
+    <!-- CONFIGURACIÓN DE FIREBASE -->
+    <script src="js/firebase-init.js"></script>
+
+    <script>
+        let printCount = 0;
+        const loggedTickets = [];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Inicializar Firestore listener para pedidos pendientes
+            if (window.FirebaseDB) {
+                console.log("🔥 Conectado a Firestore. Iniciando servidor de impresión...");
+                
+                // Escuchar en tiempo real cambios en pedidos con estado "pendiente"
+                window.FirebaseDB.collection("pedidos")
+                    .where("estado", "==", "pendiente")
+                    .onSnapshot((snapshot) => {
+                        snapshot.docChanges().forEach(async (change) => {
+                            if (change.type === "added" || change.type === "modified") {
+                                const pedido = { id: change.doc.id, ...change.doc.data() };
+                                
+                                // Si no ha sido impreso en caja, lo imprimimos automáticamente
+                                if (!pedido.impreso_caja) {
+                                    console.log("🖨️ Nuevo pedido detectado para imprimir:", pedido.cliente);
+                                    
+                                    // 1. Marcar como impreso en Firebase primero para evitar bucle/duplicados
+                                    try {
+                                        await window.FirebaseDB.collection("pedidos").doc(pedido.id).update({
+                                            impreso_caja: true,
+                                            fechaImpresion: new Date().toISOString()
+                                        });
+                                        
+                                        // 2. Ejecutar la impresión física por RawBT
+                                        imprimirPedidoFisico(pedido);
+                                    } catch (err) {
+                                        console.error("Error al actualizar estado impreso:", err);
+                                    }
+                                }
+                            }
+                        });
+                    }, (error) => {
+                        console.error("Error en listener de impresión:", error);
+                        document.getElementById('status-text').innerText = "ERROR DE CONEXIÓN";
+                        document.getElementById('status-text').style.color = "var(--rojo)";
+                        document.getElementById('status-dot').style.backgroundColor = "var(--rojo)";
+                        document.getElementById('status-dot').style.boxShadow = "0 0 15px var(--rojo)";
+                    });
+            } else {
+                console.error("Error: Firebase no está cargado.");
+                document.getElementById('status-text').innerText = "FIREBASE NO CONFIGURADO";
+                document.getElementById('status-text').style.color = "var(--rojo)";
+            }
+        });
+
+        // Función para cargar logo vertical, dibujarlo en canvas a 180px de ancho y ejecutar callback
+        function convertirLogoYEjecutar(callback) {
+            const logoUrl = 'logo-brand/PNG/Logo vertical Rojo.png';
+            const img = new Image();
+            img.src = logoUrl;
+            img.crossOrigin = 'Anonymous';
+            
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement("canvas");
+                    const targetWidth = 180;
+                    const scale = targetWidth / img.width;
+                    canvas.width = targetWidth;
+                    canvas.height = img.height * scale;
+                    
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    const dataURL = canvas.toDataURL("image/png");
+                    callback(dataURL);
+                } catch (e) {
+                    console.error("Error canvas logo:", e);
+                    callback(null);
+                }
+            };
+            
+            img.onerror = () => {
+                console.warn("Logo vertical no cargado.");
+                callback(null);
+            };
+        }
+
+        // Función central para enviar tiquetes a RawBT
+        function imprimirPedidoFisico(pedido) {
+            convertirLogoYEjecutar((logoBase64) => {
+                let logoHtml = '';
+                if (logoBase64) {
+                    logoHtml = `<img class="logo" src="${logoBase64}" style="display: block; margin: 0 auto 5px; width: 140px;" />`;
+                }
+
+                const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 270px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+        .divider { border-top: 1px dashed #000; margin: 8px 0; }
+        .flex { display: flex; justify-content: space-between; }
+        .item-row { margin-bottom: 6px; }
+        .item-qty { font-size: 11px; margin-top: 1px; }
+    </style>
+</head>
+<body>
+    <div class="text-center">
+        ${logoHtml}
+        <div class="bold" style="font-size: 14px; margin-top: 5px;">Sr & Sra Pinto</div>
+        <div style="font-size: 10px; margin-top: 2px; letter-spacing: 0.5px;">EL SABOR DE SER TICO</div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div>
+        <div>Empleado: Vendedor 1</div>
+        <div>TPV: POS tablet B</div>
+        <div class="bold" style="margin-top: 4px;">Comer dentro</div>
+        ${pedido.alergias && pedido.alergias.trim() !== '' ? `
+            <div style="background: #000; color: #fff; padding: 4px; font-weight: bold; margin-top: 4px; font-size: 11px;">
+                ⚠️ ALERGIAS: ${pedido.alergias}
+            </div>
+        ` : ''}
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div>
+        ${pedido.items.map(item => `
+            <div class="item-row">
+                <div class="flex">
+                    <span class="bold">${item.nombre}</span>
+                    <span class="bold">₡${(item.precio * item.cantidad).toLocaleString()}</span>
+                </div>
+                <div class="item-qty">${item.cantidad} x ₡${item.precio.toLocaleString()}</div>
+            </div>
+        `).join('')}
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="bold">
+        <div class="flex" style="font-size: 14px;">
+            <span>Total</span>
+            <span>₡${pedido.total.toLocaleString()}</span>
+        </div>
+        <div class="flex" style="margin-top: 4px;">
+            <span>${pedido.metodoPago}</span>
+            <span>₡${pedido.total.toLocaleString()}</span>
+        </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="text-center" style="font-size: 11px;">
+        <div>Gracias por tu compra!</div>
+        <div style="margin-top: 2px;">Dios te bendiga :)</div>
+        <div style="margin-top: 8px; font-size: 9px; opacity: 0.8;">
+            ${new Date(pedido.fecha).toLocaleDateString('es-CR')} ${new Date(pedido.fecha).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
+        </div>
+    </div>
+    
+    <div style="height: 35px;"></div>
+</body>
+</html>
+                `;
+
+                try {
+                    // Codificar HTML en Base64
+                    const encodedContent = btoa(unescape(encodeURIComponent(htmlContent)));
+                    
+                    // Android Intent de RawBT
+                    const intentUrl = 'intent:#Intent;' +
+                        'action=android.intent.action.SEND;' +
+                        'type=text/html;' +
+                        'component=ru.a402d.rawbtprinter/.PrintDownloadActivity;' +
+                        'S.android.intent.extra.TEXT=' + encodedContent + ';' +
+                        'end';
+                    
+                    // Redirigir a RawBT
+                    window.location.href = intentUrl;
+                    
+                    // Actualizar log en pantalla
+                    actualizarHistorialPantalla(pedido);
+                } catch (error) {
+                    console.error("Error al disparar RawBT:", error);
+                }
+            });
+        }
+
+        // Actualizar UI del historial de impresión
+        function actualizarHistorialPantalla(pedido) {
+            printCount++;
+            document.getElementById("print-counter").innerText = `Tickets impresos hoy: ${printCount}`;
+
+            const timeStr = new Date().toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            loggedTickets.unshift({
+                time: timeStr,
+                client: pedido.cliente,
+                total: pedido.total
+            });
+
+            // Mantener solo los últimos 10 logs en memoria
+            if (loggedTickets.length > 10) loggedTickets.pop();
+
+            const logsList = document.getElementById("logs-list");
+            logsList.innerHTML = loggedTickets.map(log => `
+                <li class="log-item">
+                    <span class="log-time">${log.time}</span>
+                    <span class="log-client">${log.client}</span>
+                    <span class="log-total">₡${log.total.toLocaleString()}</span>
+                </li>
+            `).join('');
+        }
+
+        function clearHistory() {
+            loggedTickets.length = 0;
+            document.getElementById("logs-list").innerHTML = `<li class="log-item" style="justify-content: center; opacity: 0.4;">No hay tickets procesados en esta sesión.</li>`;
+        }
+
+        // Impresión de prueba manual
+        function printTestTicket() {
+            const testPedido = {
+                cliente: "Tiquete de Prueba",
+                alergias: "Ninguna",
+                metodoPago: "Efectivo",
+                total: 3500,
+                fecha: new Date().toISOString(),
+                items: [
+                    { nombre: "Empanada de Carne", cantidad: 1, precio: 1500 },
+                    { nombre: "Café Premium Grande", cantidad: 1, precio: 2000 }
+                ]
+            };
+            imprimirPedidoFisico(testPedido);
+        }
+    </script>
+
+</body>
+</html>
