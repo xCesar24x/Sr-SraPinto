@@ -342,30 +342,30 @@
             t += `TPV: POS tablet B\n`;
             t += "Comer dentro\n";
             if (pedido.alergias && pedido.alergias.trim() !== '') {
-                t += `⚠️ ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
+                t += `* ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
             }
             t += "------------------------------\n";
             pedido.items.forEach(item => {
                 let nombre = item.nombre.toUpperCase();
                 if (nombre.length > 18) nombre = nombre.substring(0, 18);
-                let totalItem = `₡${(item.precio * item.cantidad).toLocaleString()}`;
+                let totalItem = `c.${(item.precio * item.cantidad).toLocaleString()}`;
                 
                 let esp = 30 - nombre.length - totalItem.length;
                 if (esp < 1) esp = 1;
                 t += nombre + " ".repeat(esp) + totalItem + "\n";
-                t += `  ${item.cantidad} x ₡${item.precio.toLocaleString()}\n`;
+                t += `  ${item.cantidad} x c.${item.precio.toLocaleString()}\n`;
             });
             t += "------------------------------\n";
-            let totalStr = `₡${pedido.total.toLocaleString()}`;
+            let totalStr = `c.${pedido.total.toLocaleString()}`;
             let espT = 30 - 6 - totalStr.length;
             t += "TOTAL:" + " ".repeat(espT) + totalStr + "\n";
             
-            let pagoStr = `₡${pedido.total.toLocaleString()}`;
+            let pagoStr = `c.${pedido.total.toLocaleString()}`;
             let metStr = pedido.metodoPago.toUpperCase();
             let espM = 30 - metStr.length - pagoStr.length;
             t += metStr + " ".repeat(espM) + pagoStr + "\n";
             t += "------------------------------\n";
-            t += "   ¡Gracias por tu compra!\n";
+            t += "    Gracias por tu compra!\n";
             t += "     Dios te bendiga :)\n";
             
             const fechaStr = new Date(pedido.fecha).toLocaleDateString('es-CR');
