@@ -456,6 +456,10 @@
 </html>
                 `;
 
+                try {
+                    // Codificar HTML en Base64
+                    const encodedContent = btoa(unescape(encodeURIComponent(htmlContent)));
+
                     // Obtener método activo
                     const metodo = localStorage.getItem("metodoImpresion") || "intent-view";
                     let intentUrl = "";
