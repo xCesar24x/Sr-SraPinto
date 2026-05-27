@@ -415,11 +415,8 @@
                     const textContent = generarTextoPlano(pedido);
                     const encodedText = btoa(unescape(encodeURIComponent(textContent)));
 
-                    // Intent VIEW con datos de texto plano
-                    const intentUrl = 'intent://data:text/plain;base64,' + encodedText + '#Intent;' +
-                        'scheme=rawbt;' +
-                        'package=ru.a402d.rawbtprinter;' +
-                        'end';
+                    // Protocolo directo nativo de RawBT para Texto Plano (sin double slashes que confunden a la app)
+                    const intentUrl = 'rawbt:data:text/plain;base64,' + encodedText;
 
                     console.log("🖨️ Despachando impresión en TEXTO PLANO:", intentUrl.substring(0, 100) + "...");
                     window.location.href = intentUrl;
