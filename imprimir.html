@@ -332,45 +332,45 @@
             }
         });
 
-        // Generar tiquete en Texto Plano (32 caracteres de ancho para impresora 58mm)
+        // Generar tiquete en Texto Plano (30 caracteres de ancho para impresora 58mm sin desbordamiento)
         function generarTextoPlano(pedido) {
             let t = "";
-            t += "         SR & SRA PINTO\n";
-            t += "      EL SABOR DE SER TICO\n";
-            t += "--------------------------------\n";
+            t += "        SR & SRA PINTO\n";
+            t += "     EL SABOR DE SER TICO\n";
+            t += "------------------------------\n";
             t += `Empleado: Vendedor 1\n`;
             t += `TPV: POS tablet B\n`;
             t += "Comer dentro\n";
             if (pedido.alergias && pedido.alergias.trim() !== '') {
                 t += `⚠️ ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
             }
-            t += "--------------------------------\n";
+            t += "------------------------------\n";
             pedido.items.forEach(item => {
                 let nombre = item.nombre.toUpperCase();
-                if (nombre.length > 20) nombre = nombre.substring(0, 20);
+                if (nombre.length > 18) nombre = nombre.substring(0, 18);
                 let totalItem = `₡${(item.precio * item.cantidad).toLocaleString()}`;
                 
-                let esp = 32 - nombre.length - totalItem.length;
+                let esp = 30 - nombre.length - totalItem.length;
                 if (esp < 1) esp = 1;
                 t += nombre + " ".repeat(esp) + totalItem + "\n";
                 t += `  ${item.cantidad} x ₡${item.precio.toLocaleString()}\n`;
             });
-            t += "--------------------------------\n";
+            t += "------------------------------\n";
             let totalStr = `₡${pedido.total.toLocaleString()}`;
-            let espT = 32 - 6 - totalStr.length;
+            let espT = 30 - 6 - totalStr.length;
             t += "TOTAL:" + " ".repeat(espT) + totalStr + "\n";
             
             let pagoStr = `₡${pedido.total.toLocaleString()}`;
             let metStr = pedido.metodoPago.toUpperCase();
-            let espM = 32 - metStr.length - pagoStr.length;
+            let espM = 30 - metStr.length - pagoStr.length;
             t += metStr + " ".repeat(espM) + pagoStr + "\n";
-            t += "--------------------------------\n";
-            t += "    ¡Gracias por tu compra!\n";
-            t += "      Dios te bendiga :)\n";
+            t += "------------------------------\n";
+            t += "   ¡Gracias por tu compra!\n";
+            t += "     Dios te bendiga :)\n";
             
             const fechaStr = new Date(pedido.fecha).toLocaleDateString('es-CR');
             const horaStr = new Date(pedido.fecha).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
-            t += `       ${fechaStr} ${horaStr}\n\n\n\n`;
+            t += `      ${fechaStr} ${horaStr}\n\n\n\n`;
             return t;
         }
 
