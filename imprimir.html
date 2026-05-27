@@ -415,9 +415,9 @@
                     const textContent = generarTextoPlano(pedido);
                     const encodedText = btoa(unescape(encodeURIComponent(textContent)));
 
-                    // Intent híbrido (Bypassea cartel de Chrome + Decodifica Base64 correctamente en RawBT usando scheme=rawbt:data)
-                    const intentUrl = 'intent:data:text/plain;base64,' + encodedText + '#Intent;' +
-                        'scheme=rawbt:data;' +
+                    // Intent híbrido (Bypassea cartel de Chrome + Decodifica Base64 correctamente en RawBT usando la ruta oficial intent:base64)
+                    const intentUrl = 'intent:base64,' + encodedText + '#Intent;' +
+                        'scheme=rawbt;' +
                         'package=ru.a402d.rawbtprinter;' +
                         'end';
 
