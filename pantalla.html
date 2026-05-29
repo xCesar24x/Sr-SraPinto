@@ -42,11 +42,33 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="display-main">
-        <div id="orders-grid" class="orders-grid">
-            <div class="empty-display">
-                <i class="fas fa-mug-hot"></i>
-                <p>¡Aún no hay pedidos!</p>
-                <span>Hacé tu pedido y mirá acá cuándo está listo</span>
+        <!-- VISTA VACÍA (Se muestra cuando no hay pedidos del todo) -->
+        <div id="empty-display" class="empty-display">
+            <i class="fas fa-mug-hot"></i>
+            <p>¡Aún no hay pedidos!</p>
+            <span>Hacé tu pedido y mirá acá cuándo está listo</span>
+        </div>
+
+        <!-- VISTA DE COLUMNAS ESTILO FAST-FOOD (Se muestra cuando hay pedidos) -->
+        <div class="display-columns" id="display-columns" style="display: none;">
+            <!-- COLUMNA: EN PREPARACIÓN -->
+            <div class="display-column prep-column">
+                <div class="column-header prep-header">
+                    <i class="fas fa-fire pulse-orange"></i> EN PREPARACIÓN
+                </div>
+                <div id="preparing-list" class="column-list">
+                    <!-- Pedidos en preparación inyectados dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- COLUMNA: LISTO PARA RETIRAR -->
+            <div class="display-column ready-column">
+                <div class="column-header ready-header">
+                    <i class="fas fa-check-circle pulse-green"></i> LISTO PARA RETIRAR
+                </div>
+                <div id="ready-list" class="column-list">
+                    <!-- Pedidos listos inyectados dinámicamente -->
+                </div>
             </div>
         </div>
     </main>

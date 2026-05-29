@@ -21,10 +21,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ─── FIREBASE: ESCUCHAR PEDIDOS EN TIEMPO REAL ───
-    const ordersGrid = document.getElementById('orders-grid');
+    const emptyDisplay = document.getElementById('empty-display');
+    const displayColumns = document.getElementById('display-columns');
+    const preparingList = document.getElementById('preparing-list');
+    const readyList = document.getElementById('ready-list');
 
     if (!window.FirebaseDB) {
-        ordersGrid.innerHTML = `<div class="empty-display"><i class="fas fa-exclamation-triangle" style="color:red;"></i><p>Error de conexión</p></div>`;
+        if (emptyDisplay) {
+            emptyDisplay.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:red; font-size: 5rem;"></i><p>Error de conexión</p><span>No se pudo cargar la base de datos de Firebase.</span>`;
+        }
         return;
     }
 
@@ -38,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Map para rastrear pedidos completados y removerlos después de un rato
     const completedTimers = new Map();
 
-    // Escuchar pedidos pendientes (en proceso)
+    // Escuchar pedidos pendientes (en proceso) e inyectar en tiempo real
     db.collection("pedidos")
         .where("estado", "in", ["pendiente", "listo"])
         .onSnapshot((snapshot) => {
@@ -53,16 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            // Ordenar: pendientes primero, luego listos. Dentro de cada grupo, por fecha
-            orders.sort((a, b) => {
-                if (a.estado === 'pendiente' && b.estado === 'listo') return -1;
-                if (a.estado === 'listo' && b.estado === 'pendiente') return 1;
-                return new Date(a.fecha) - new Date(b.fecha);
-            });
+            // Ordenar: por fecha ascendente para que los más antiguos queden arriba
+            orders.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
             renderOrders(orders);
 
-            // Programar auto-desaparición de los pedidos completados
+            // Programar auto-desaparición de los pedidos listos/completados
             orders.forEach(order => {
                 if (order.estado === 'listo' && !completedTimers.has(order.id)) {
                     completedTimers.set(order.id, setTimeout(async () => {
@@ -78,41 +79,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderOrders(orders) {
         if (orders.length === 0) {
-            ordersGrid.innerHTML = `
-                <div class="empty-display">
-                    <i class="fas fa-mug-hot"></i>
-                    <p>¡Aún no hay pedidos!</p>
-                    <span>Hacé tu pedido y mirá acá cuándo está listo</span>
-                </div>`;
+            emptyDisplay.style.display = 'flex';
+            displayColumns.style.display = 'none';
             return;
         }
 
-        ordersGrid.innerHTML = orders.map(order => {
-            const isPendiente = order.estado === 'pendiente';
-            const cardClass = isPendiente ? 'en-proceso' : 'completado';
-            
-            // Items list
-            const itemsHtml = order.items.map(item => 
-                `<li><span class="qty">${item.cantidad}x</span> ${item.nombre}</li>`
-            ).join('');
+        emptyDisplay.style.display = 'none';
+        displayColumns.style.display = 'grid';
 
-            // Status badge
-            const statusHtml = isPendiente
-                ? `<div class="card-status status-proceso"><i class="fas fa-fire"></i> En Preparación</div>`
-                : `<div class="card-status status-listo"><i class="fas fa-check-circle"></i> ¡Listo para retirar!</div>`;
+        const preparingOrders = orders.filter(o => o.estado === 'pendiente');
+        const readyOrders = orders.filter(o => o.estado === 'listo');
 
-            return `
-                <div class="order-card ${cardClass}">
-                    <div class="card-status-bar"></div>
-                    <div class="card-body">
-                        <div class="card-customer">
-                            <i class="fas fa-user-circle"></i> ${order.cliente}
-                        </div>
-                        <ul class="card-items">${itemsHtml}</ul>
-                        ${statusHtml}
+        // 1. Renderizar Columna: EN PREPARACIÓN
+        if (preparingOrders.length === 0) {
+            preparingList.innerHTML = `
+                <div class="column-empty-state">
+                    <i class="fas fa-check-double"></i>
+                    <p>¡Sin pendientes!</p>
+                    <span>Todo lo solicitado está listo para retirar</span>
+                </div>`;
+        } else {
+            preparingList.innerHTML = preparingOrders.map(order => renderOrderCard(order)).join('');
+        }
+
+        // 2. Renderizar Columna: LISTO PARA RETIRAR
+        if (readyOrders.length === 0) {
+            readyList.innerHTML = `
+                <div class="column-empty-state">
+                    <i class="fas fa-clock"></i>
+                    <p>Esperando entregas</p>
+                    <span>Los pedidos aparecerán aquí cuando estén listos</span>
+                </div>`;
+        } else {
+            readyList.innerHTML = readyOrders.map(order => renderOrderCard(order)).join('');
+        }
+    }
+
+    function renderOrderCard(order) {
+        const isPendiente = order.estado === 'pendiente';
+        const cardClass = isPendiente ? 'en-proceso' : 'completado';
+        
+        // Lista de platillos
+        const itemsHtml = order.items.map(item => 
+            `<li><span class="qty">${item.cantidad}x</span> ${item.nombre}</li>`
+        ).join('');
+
+        // Badge de estado específico
+        const statusHtml = isPendiente
+            ? `<div class="card-status status-proceso"><i class="fas fa-fire"></i> En Preparación</div>`
+            : `<div class="card-status status-listo"><i class="fas fa-check-circle"></i> ¡Listo para retirar!</div>`;
+
+        return `
+            <div class="order-card ${cardClass}">
+                <div class="card-status-bar"></div>
+                <div class="card-body">
+                    <div class="card-customer">
+                        <i class="fas fa-user-circle"></i> ${order.cliente}
                     </div>
+                    <ul class="card-items">${itemsHtml}</ul>
+                    ${statusHtml}
                 </div>
-            `;
-        }).join('');
+            </div>
+        `;
     }
 });
