@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    // ─── CHEQUEAR ROTACIÓN FORZADA (Por URL ?rotate=true) ───
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('rotate') === 'true' || urlParams.get('rotar') === 'true') {
+        document.body.classList.add('force-rotated');
+    }
+
     // ─── RELOJ ───
     const clockEl = document.getElementById('clock');
     function updateClock() {

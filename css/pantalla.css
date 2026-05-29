@@ -408,3 +408,52 @@ body {
         font-size: 1.2rem;
     }
 }
+
+/* ─── ROTACIÓN FORZADA POR CSS 90° (Para TVs instaladas horizontalmente) ─── */
+body.force-rotated {
+    width: 100vh !important;
+    height: 100vw !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 100vw !important;
+    transform: rotate(90deg) !important;
+    transform-origin: top left !important;
+    overflow: hidden !important;
+}
+
+/* Replicar las mejoras visuales de escala vertical dentro de la rotación forzada */
+body.force-rotated .display-header {
+    padding: 20px 25px;
+}
+body.force-rotated .display-logo {
+    height: 60px;
+}
+body.force-rotated .display-header h1 {
+    font-size: 1.8rem;
+}
+body.force-rotated .display-clock {
+    font-size: 1.4rem;
+    padding: 6px 14px;
+}
+body.force-rotated .display-main {
+    padding: 20px 20px;
+}
+body.force-rotated .display-columns {
+    gap: 20px;
+}
+body.force-rotated .display-column {
+    padding: 20px 15px;
+    border-radius: 20px;
+}
+body.force-rotated .column-header {
+    font-size: 1.6rem;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    gap: 10px;
+}
+body.force-rotated .card-customer {
+    font-size: 2rem;
+}
+body.force-rotated .card-items li {
+    font-size: 1.2rem;
+}
