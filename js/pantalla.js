@@ -140,26 +140,19 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderOrderCard(order) {
         const isPendiente = order.estado === 'pendiente';
         const cardClass = isPendiente ? 'en-proceso' : 'completado';
-        
-        // Lista de platillos
-        const itemsHtml = order.items.map(item => 
-            `<li><span class="qty">${item.cantidad}x</span> ${item.nombre}</li>`
-        ).join('');
-
-        // Badge de estado específico
-        const statusHtml = isPendiente
-            ? `<div class="card-status status-proceso"><i class="fas fa-fire"></i> En Preparación</div>`
-            : `<div class="card-status status-listo"><i class="fas fa-check-circle"></i> ¡Listo para retirar!</div>`;
+        const ticketId = `#${order.id.slice(-5).toUpperCase()}`;
 
         return `
             <div class="order-card ${cardClass}">
                 <div class="card-status-bar"></div>
-                <div class="card-body">
-                    <div class="card-customer">
-                        <i class="fas fa-user-circle"></i> ${order.cliente}
+                <div class="card-body" style="padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                    <div class="card-customer" style="margin-bottom: 0; display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        <i class="fas fa-user-circle"></i> 
+                        <span style="font-weight: 900; letter-spacing: 0.5px;">${order.cliente}</span>
                     </div>
-                    <ul class="card-items">${itemsHtml}</ul>
-                    ${statusHtml}
+                    <div class="card-order-id" style="font-size: 2rem; font-weight: 900; color: var(--mostaza); font-family: 'Rotio', sans-serif; background: rgba(255,255,255,0.06); padding: 8px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px; flex-shrink: 0;">
+                        ${ticketId}
+                    </div>
                 </div>
             </div>
         `;

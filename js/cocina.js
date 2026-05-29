@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let itemsHtml = sortedItems.map(item => `
                 <li class="ticket-item">
-                    <span class="item-qty">${item.cantidad}x</span>
+                    <span class="item-qty">${item.cantidad}</span>
                     <span class="item-name">${item.nombre}</span>
                 </li>
             `).join('');

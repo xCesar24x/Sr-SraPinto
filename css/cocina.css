@@ -199,8 +199,8 @@ body {
 
 .item-qty {
     font-weight: 900;
-    color: var(--rojo);
-    background: rgba(233, 19, 80, 0.2);
+    color: var(--verde);
+    background: rgba(46, 204, 113, 0.2);
     padding: 3px 10px;
     border-radius: 8px;
     margin-right: 10px;
