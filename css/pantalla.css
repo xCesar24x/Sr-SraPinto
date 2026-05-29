@@ -409,7 +409,9 @@ body {
     }
 }
 
-/* ─── ROTACIÓN FORZADA POR CSS 90° (Para TVs instaladas horizontalmente) ─── */
+/* ─── ROTACIÓN FORZADA POR CSS (Para TVs instaladas físicamente en vertical pero con señal horizontal) ─── */
+
+/* Opción A: Rotación Horaria (TV rotada hacia la derecha) */
 body.force-rotated {
     width: 100vh !important;
     height: 100vw !important;
@@ -421,39 +423,61 @@ body.force-rotated {
     overflow: hidden !important;
 }
 
-/* Replicar las mejoras visuales de escala vertical dentro de la rotación forzada */
-body.force-rotated .display-header {
+/* Opción B: Rotación Antihoraria (TV rotada hacia la izquierda - el caso más común) */
+body.force-rotated-counter {
+    width: 100vh !important;
+    height: 100vw !important;
+    position: absolute !important;
+    top: 100vh !important;
+    left: 0 !important;
+    transform: rotate(-90deg) !important;
+    transform-origin: top left !important;
+    overflow: hidden !important;
+}
+
+/* Replicar las mejoras visuales de escala vertical para ambos tipos de rotación forzada */
+body.force-rotated .display-header,
+body.force-rotated-counter .display-header {
     padding: 20px 25px;
 }
-body.force-rotated .display-logo {
+body.force-rotated .display-logo,
+body.force-rotated-counter .display-logo {
     height: 60px;
 }
-body.force-rotated .display-header h1 {
+body.force-rotated .display-header h1,
+body.force-rotated-counter .display-header h1 {
     font-size: 1.8rem;
 }
-body.force-rotated .display-clock {
+body.force-rotated .display-clock,
+body.force-rotated-counter .display-clock {
     font-size: 1.4rem;
     padding: 6px 14px;
 }
-body.force-rotated .display-main {
+body.force-rotated .display-main,
+body.force-rotated-counter .display-main {
     padding: 20px 20px;
 }
-body.force-rotated .display-columns {
+body.force-rotated .display-columns,
+body.force-rotated-counter .display-columns {
     gap: 20px;
 }
-body.force-rotated .display-column {
+body.force-rotated .display-column,
+body.force-rotated-counter .display-column {
     padding: 20px 15px;
     border-radius: 20px;
 }
-body.force-rotated .column-header {
+body.force-rotated .column-header,
+body.force-rotated-counter .column-header {
     font-size: 1.6rem;
     margin-bottom: 15px;
     padding-bottom: 12px;
     gap: 10px;
 }
-body.force-rotated .card-customer {
+body.force-rotated .card-customer,
+body.force-rotated-counter .card-customer {
     font-size: 2rem;
 }
-body.force-rotated .card-items li {
+body.force-rotated .card-items li,
+body.force-rotated-counter .card-items li {
     font-size: 1.2rem;
 }

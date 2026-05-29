@@ -1,9 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // ─── CHEQUEAR ROTACIÓN FORZADA (Por URL ?rotate=true) ───
+    // ─── CHEQUEAR ROTACIÓN FORZADA (Por URL ?rotate=true / ?rotate=counter) ───
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('rotate') === 'true' || urlParams.get('rotar') === 'true') {
+    const rotationType = urlParams.get('rotate') || urlParams.get('rotar');
+    
+    if (rotationType === 'true' || rotationType === 'clockwise' || rotationType === '90') {
         document.body.classList.add('force-rotated');
+    } else if (rotationType === 'counter' || rotationType === 'counter-clockwise' || rotationType === '-90' || rotationType === '270') {
+        document.body.classList.add('force-rotated-counter');
     }
 
     // ─── RELOJ ───
