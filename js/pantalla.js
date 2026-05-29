@@ -140,7 +140,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderOrderCard(order) {
         const isPendiente = order.estado === 'pendiente';
         const cardClass = isPendiente ? 'en-proceso' : 'completado';
-        const ticketId = `#${order.num_pedido || order.id.slice(-5).toUpperCase()}`;
+        const cleanNum = (order.num_pedido !== undefined && order.num_pedido !== null) ? order.num_pedido.toString().replace(/['"]/g, '') : '';
+        const ticketId = cleanNum || order.id.slice(-5).toUpperCase();
 
         return `
             <div class="order-card ${cardClass}">
