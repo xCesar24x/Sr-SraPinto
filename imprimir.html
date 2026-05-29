@@ -340,6 +340,7 @@
             t += "------------------------------\n";
             t += `Empleado: Vendedor 1\n`;
             t += `TPV: POS tablet B\n`;
+            t += `COMANDA: #${pedido.num_pedido || pedido.id.slice(-5).toUpperCase()}\n`;
             t += "Comer dentro\n";
             if (pedido.alergias && pedido.alergias.trim() !== '') {
                 t += `* ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
@@ -473,6 +474,7 @@
         <div>Empleado: Vendedor 1</div>
         <div>TPV: POS tablet B</div>
         <div class="bold" style="margin-top: 4px;">Comer dentro</div>
+        <div class="bold" style="font-size: 14px; margin-top: 4px; background: #000; color: #fff; padding: 4px; text-align: center;">COMANDA: #${pedido.num_pedido || pedido.id.slice(-5).toUpperCase()}</div>
         ${pedido.alergias && pedido.alergias.trim() !== '' ? `
             <div style="background: #000; color: #fff; padding: 4px; font-weight: bold; margin-top: 4px; font-size: 11px;">
                 ⚠️ ALERGIAS: ${pedido.alergias}

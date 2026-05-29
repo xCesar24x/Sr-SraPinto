@@ -60,20 +60,39 @@
                     <button class="btn-primary" onclick="AdminManager.openAddModal()"><i class="fas fa-plus"></i> Ajustar Stock</button>
                 </header>
 
-                <!-- TOGGLE ABRIR/CERRAR LOCAL -->
-                <div class="store-toggle-card" id="store-toggle-card">
-                    <div class="toggle-info">
-                        <div class="toggle-icon" id="toggle-icon">
-                            <i class="fas fa-store-slash"></i>
+                <!-- CONTENEDORES DE ESTADO (LOCAL Y TURNO) -->
+                <div class="toggles-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <!-- TOGGLE ABRIR/CERRAR LOCAL -->
+                    <div class="store-toggle-card" id="store-toggle-card" style="margin-bottom: 0;">
+                        <div class="toggle-info">
+                            <div class="toggle-icon" id="toggle-icon">
+                                <i class="fas fa-store-slash"></i>
+                            </div>
+                            <div>
+                                <h3>Estado del Local</h3>
+                                <p id="toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cargando...</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3>Estado del Local</h3>
-                            <p id="toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cargando...</p>
-                        </div>
+                        <button class="toggle-btn closed" id="toggle-btn" onclick="AdminManager.toggleStore()">
+                            <span class="toggle-knob"></span>
+                        </button>
                     </div>
-                    <button class="toggle-btn closed" id="toggle-btn" onclick="AdminManager.toggleStore()">
-                        <span class="toggle-knob"></span>
-                    </button>
+
+                    <!-- TOGGLE INICIAR/CERRAR TURNO -->
+                    <div class="store-toggle-card" id="shift-toggle-card" style="margin-bottom: 0;">
+                        <div class="toggle-info">
+                            <div class="toggle-icon" id="shift-toggle-icon" style="background: rgba(231, 76, 60, 0.15); color: var(--alerta);">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div>
+                                <h3>Turno del Día</h3>
+                                <p id="shift-toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cargando...</p>
+                            </div>
+                        </div>
+                        <button class="toggle-btn closed" id="shift-toggle-btn" onclick="AdminManager.toggleShift()">
+                            <span class="toggle-knob"></span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="dashboard-stats">

@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return `
                 <div class="ticket ${isNew ? 'new-ticket' : ''}" id="ticket-${order.id}">
                     <div class="ticket-header">
-                        <span class="ticket-id">#${order.id.slice(-5).toUpperCase()}</span>
+                        <span class="ticket-id">#${order.num_pedido || order.id.slice(-5).toUpperCase()}</span>
                         <span class="ticket-time">${timeString}</span>
                     </div>
                     <div class="ticket-body">

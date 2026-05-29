@@ -227,6 +227,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("Error al cambiar estado del local:", error);
                 alert("No se pudo cambiar el estado.");
             }
+        },
+
+        // Toggle del estado del turno (Iniciar / Cerrar Turno)
+        async toggleShift() {
+            const card = document.getElementById('shift-toggle-card');
+            const isCurrentlyActive = card.classList.contains('open');
+            const newActiveState = !isCurrentlyActive;
+
+            if (newActiveState) {
+                if (!confirm("⚠️ ¿Deseas INICIAR un nuevo turno?\n\nEsto habilitará la caja para ventas y reiniciará el número de comanda a la número #1.")) return;
+            } else {
+                if (!confirm("⚠️ ¿Deseas CERRAR el turno actual?\n\nEsto bloqueará el registro de nuevas comandas en la caja hasta que se abra otro turno.")) return;
+            }
+
+            try {
+                await db.collection('config').doc('turno').set({
+                    activo: newActiveState,
+                    siguiente_numero: 1, // Se reinicia/prepara siempre en 1
+                    actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
+                    fecha: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error("Error al cambiar estado del turno:", error);
+                alert("No se pudo cambiar el estado del turno.");
+            }
         }
     };
 
@@ -254,6 +279,42 @@ document.addEventListener("DOMContentLoaded", () => {
             icon.innerHTML = '<i class="fas fa-store-slash"></i>';
             if(title) title.innerText = 'Local Cerrado';
             if(subtitle) subtitle.innerText = 'Los clientes ven que estás cerrado.';
+        }
+    });
+
+    // Escuchar el estado del turno en tiempo real
+    db.collection('config').doc('turno').onSnapshot((doc) => {
+        const card = document.getElementById('shift-toggle-card');
+        const btn = document.getElementById('shift-toggle-btn');
+        const icon = document.getElementById('shift-toggle-icon');
+        const title = card ? card.querySelector('h3') : null;
+        const subtitle = document.getElementById('shift-toggle-subtitle');
+
+        if (!card || !btn) return;
+
+        if (doc.exists && doc.data().activo === true) {
+            card.classList.add('open');
+            btn.classList.add('open');
+            btn.classList.remove('closed');
+            if (icon) {
+                icon.style.background = 'rgba(46, 204, 113, 0.15)';
+                icon.style.color = 'var(--verde)';
+                icon.innerHTML = '<i class="fas fa-clock"></i>';
+            }
+            if(title) title.innerText = 'Turno Iniciado';
+            const nextNum = doc.data().siguiente_numero || 1;
+            if(subtitle) subtitle.innerText = `Siguiente Comanda: #${nextNum}. Turno activo.`;
+        } else {
+            card.classList.remove('open');
+            btn.classList.remove('open');
+            btn.classList.add('closed');
+            if (icon) {
+                icon.style.background = 'rgba(231, 76, 60, 0.15)';
+                icon.style.color = 'var(--alerta)';
+                icon.innerHTML = '<i class="fas fa-history"></i>';
+            }
+            if(title) title.innerText = 'Turno Cerrado';
+            if(subtitle) subtitle.innerText = 'Presiona para iniciar turno y resetear a #1.';
         }
     });
 
@@ -646,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return `
                     <tr>
                         <td style="font-size: 0.8rem;">${dateStr}</td>
-                        <td style="font-weight:700;">${order.cliente} ${statusBadge}</td>
+                        <td style="font-weight:700;">[#${order.num_pedido || order.id.slice(-5).toUpperCase()}] ${order.cliente} ${statusBadge}</td>
                         <td style="font-weight:900;">₡${(order.total || 0).toLocaleString()}</td>
                         <td><span class="user-badge badge-${(order.metodoPago || 'Efectivo').toLowerCase().replace(/\s/g, '')}">${order.metodoPago || 'Efectivo'}</span></td>
                         <td style="font-size: 0.8rem; opacity: 0.8;" title="${order.items.map(i => `${i.cantidad}x ${i.nombre}`).join('\n')}">${detailsText}</td>

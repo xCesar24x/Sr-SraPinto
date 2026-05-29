@@ -284,7 +284,7 @@ const CartManager = {
             const db = window.FirebaseDB;
             if (window.FirebaseDB && window.Firestore) {
                 if (this.editingOrderId) {
-                    // Modificar pedido existente
+                    // Modificar pedido existente (se preserva el num_pedido original automáticamente por .update)
                     await db.collection("pedidos").doc(this.editingOrderId).update({
                         cliente: pedido.cliente,
                         alergias: pedido.alergias,
@@ -295,7 +295,11 @@ const CartManager = {
                         fechaModificacion: new Date().toISOString()
                     });
                     console.log("✅ Pedido modificado y enviado a cocina");
-                    window.lastProcessedOrder = { ...pedido, id: this.editingOrderId };
+                    
+                    // Recuperar el comanda ID o usar fallback para el ticket
+                    const originalSnap = await db.collection("pedidos").doc(this.editingOrderId).get();
+                    const originalData = originalSnap.data() || {};
+                    window.lastProcessedOrder = { ...pedido, id: this.editingOrderId, num_pedido: originalData.num_pedido };
 
                     // Ocultar banner de edición si existe
                     const banner = document.getElementById('editing-order-banner');
@@ -312,13 +316,50 @@ const CartManager = {
                     }
                     this.editingOrderId = null;
                 } else {
+                    // Si es venta en POS, obtenemos comanda secuencial atómicamente
+                    if (isSalesPOS) {
+                        let numPedido = null;
+                        try {
+                            const turnoRef = db.collection('config').doc('turno');
+                            await db.runTransaction(async (transaction) => {
+                                const turnoDoc = await transaction.get(turnoRef);
+                                if (!turnoDoc.exists) {
+                                    transaction.set(turnoRef, { activo: true, siguiente_numero: 2, fecha: new Date().toISOString() });
+                                    numPedido = 1;
+                                } else {
+                                    const data = turnoDoc.data();
+                                    if (data.activo) {
+                                        numPedido = data.siguiente_numero || 1;
+                                        transaction.update(turnoRef, { 
+                                            siguiente_numero: numPedido + 1,
+                                            fechaActualizacion: new Date().toISOString()
+                                        });
+                                    } else {
+                                        throw new Error("turno_cerrado");
+                                    }
+                                }
+                            });
+                        } catch (e) {
+                            if (e.message === "turno_cerrado") {
+                                alert("⚠️ EL TURNO ESTÁ CERRADO.\n\nPor favor, ve al panel de Administración e inicia el Turno del Día para poder procesar comandas (esto reseteará el contador a la número #1).");
+                            } else {
+                                console.error("Error en transacción de turno:", e);
+                                alert("Hubo un error de conexión al verificar el turno. Intenta de nuevo.");
+                            }
+                            throw e; // Interrumpir flujo
+                        }
+                        
+                        // Añadir número de comanda secuencial
+                        pedido.num_pedido = numPedido;
+                    }
+
                     // Crear nuevo pedido
-                    await window.Firestore.addDoc(
+                    const docRef = await window.Firestore.addDoc(
                         window.Firestore.collection(window.FirebaseDB, "pedidos"),
                         pedido
                     );
                     console.log("✅ Pedido creado en Firebase");
-                    window.lastProcessedOrder = pedido;
+                    window.lastProcessedOrder = { ...pedido, id: docRef.id };
 
                     // Mostrar modal de éxito
                     const successOverlay = document.getElementById('success-overlay');
@@ -327,7 +368,8 @@ const CartManager = {
                         const textEl = successOverlay.querySelector('.success-text');
                         if(textEl) {
                             if (isSalesPOS) {
-                                textEl.innerHTML = `El pedido fue enviado directamente a la cocina.<br>En breves momentos comenzará su preparación.<br>¡Buen provecho!`;
+                                const displayNum = pedido.num_pedido ? `#${pedido.num_pedido}` : `#${docRef.id.slice(-5).toUpperCase()}`;
+                                textEl.innerHTML = `El pedido fue enviado directamente a la cocina con la comanda <strong>${displayNum}</strong>.<br>En breves momentos comenzará su preparación.<br>¡Buen provecho!`;
                             } else {
                                 textEl.innerHTML = `Tu pedido fue guardado y enviado por WhatsApp.<br>Espera la aprobación por parte de la caja.<br>¡Gracias por preferir a Sr. & Sra. Pinto!`;
                             }
@@ -359,7 +401,9 @@ const CartManager = {
             }
         } catch (error) {
             console.error("Error al guardar en Firebase:", error);
-            alert("Error al procesar el pedido. Revisa tu conexión a internet.");
+            if (error.message !== "turno_cerrado") {
+                alert("Error al procesar el pedido. Revisa tu conexión a internet.");
+            }
         } finally {
             btn.innerHTML = originalText;
             btn.style.pointerEvents = 'auto';

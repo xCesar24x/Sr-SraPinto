@@ -1827,7 +1827,9 @@ const SalesDashboard = {
             return `
                 <div class="dashboard-ticket returned-ticket">
                     <div class="ticket-top-row">
-                        <span class="ticket-client-name" style="color: #ff4444;"><i class="fas fa-exclamation-circle"></i> ${order.cliente}</span>
+                        <span class="ticket-client-name" style="color: #ff4444;">
+                            <i class="fas fa-exclamation-circle"></i> [#${order.num_pedido || order.id.slice(-5).toUpperCase()}] ${order.cliente}
+                        </span>
                         <span class="ticket-date-time">${timeStr}</span>
                     </div>
                     ${allergiesHtml}
@@ -1839,7 +1841,7 @@ const SalesDashboard = {
                         <span class="ticket-total-price">₡${order.total.toLocaleString()}</span>
                     </div>
                     <div class="ticket-actions-row">
-                        <button onclick="SalesDashboard.iniciarModificacion('${order.id}', '${order.cliente}', '${order.alergias || ''}', '${order.metodoPago}', ${itemsJson})" class="ticket-btn-edit">
+                        <button onclick="SalesDashboard.iniciarModificacion('${order.id}', '${order.cliente}', '${order.alergias || ''}', '${order.metodoPago}', ${itemsJson}, ${order.num_pedido || 0})" class="ticket-btn-edit">
                             <i class="fas fa-edit"></i> Modificar Comanda
                         </button>
                         <button onclick="CartManager.imprimirTiquete(${JSON.stringify(order).replace(/"/g, '&quot;')})" class="ticket-btn-reject" style="flex: 0 0 50px; display: flex; align-items: center; justify-content: center; background: rgba(247, 183, 49, 0.15); border-color: #f7b731; color: #f7b731; padding: 12px; border-radius: 10px;" title="Imprimir Ticket">
@@ -1854,15 +1856,64 @@ const SalesDashboard = {
     async aprobarPedido(id) {
         try {
             const db = window.FirebaseDB;
+            let numPedido = null;
+            
+            // Transacción atómica para obtener comanda secuencial
+            try {
+                const turnoRef = db.collection('config').doc('turno');
+                await db.runTransaction(async (transaction) => {
+                    const turnoDoc = await transaction.get(turnoRef);
+                    if (!turnoDoc.exists) {
+                        transaction.set(turnoRef, { activo: true, siguiente_numero: 2, fecha: new Date().toISOString() });
+                        numPedido = 1;
+                    } else {
+                        const data = turnoDoc.data();
+                        if (data.activo) {
+                            numPedido = data.siguiente_numero || 1;
+                            transaction.update(turnoRef, { 
+                                siguiente_numero: numPedido + 1,
+                                fechaActualizacion: new Date().toISOString()
+                            });
+                        } else {
+                            throw new Error("turno_cerrado");
+                        }
+                    }
+                });
+            } catch (e) {
+                if (e.message === "turno_cerrado") {
+                    alert("⚠️ EL TURNO ESTÁ CERRADO.\n\nPor favor, ve al panel de Administración e inicia el Turno del Día para poder aprobar comandas (esto reseteará el contador a la número #1).");
+                } else {
+                    console.error("Error en transacción de turno:", e);
+                    alert("Hubo un error de conexión al verificar el turno. Intenta de nuevo.");
+                }
+                return; // Cancelar flujo de aprobación
+            }
+
             await db.collection("pedidos").doc(id).update({
                 estado: "pendiente",
+                num_pedido: numPedido,
                 fechaAprobacion: new Date().toISOString()
             });
-            console.log("✅ Pedido web aprobado:", id);
+            
+            console.log("✅ Pedido web aprobado con número secuencial:", numPedido);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         } catch (error) {
             console.error("Error al aprobar pedido:", error);
             alert("No se pudo aprobar el pedido.");
+        }
+    },
+
+    async aprobarPedidoDirectoSinCorte(id) {
+        // Fallback original si se ocupa bypass
+        try {
+            const db = window.FirebaseDB;
+            await db.collection("pedidos").doc(id).update({
+                estado: "pendiente",
+                fechaAprobacion: new Date().toISOString()
+            });
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        } catch (error) {
+            console.error("Error al aprobar pedido:", error);
         }
     },
 
@@ -1881,7 +1932,7 @@ const SalesDashboard = {
         }
     },
 
-    iniciarModificacion(id, cliente, alergias, metodoPago, items) {
+    iniciarModificacion(id, cliente, alergias, metodoPago, items, numPedido = 0) {
         CartManager.editingOrderId = id;
         CartManager.customerName = cliente;
         CartManager.selectedPaymentMethod = metodoPago;
@@ -1937,7 +1988,8 @@ const SalesDashboard = {
         const banner = document.getElementById('editing-order-banner');
         const bannerName = document.getElementById('editing-customer-name');
         if (banner && bannerName) {
-            bannerName.innerText = `${cliente} (#${id.slice(-5).toUpperCase()})`;
+            const displayId = numPedido ? `#${numPedido}` : `#${id.slice(-5).toUpperCase()}`;
+            bannerName.innerText = `${cliente} (${displayId})`;
             banner.style.display = 'flex';
         }
 
