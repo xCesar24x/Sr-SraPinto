@@ -1,8 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // ─── CHEQUEAR ROTACIÓN FORZADA (Por URL ?rotate=true / ?rotate=counter) ───
+    // ─── CHEQUEAR ROTACIÓN FORZADA (Por URL o localStorage guardado) ───
     const urlParams = new URLSearchParams(window.location.search);
-    const rotationType = urlParams.get('rotate') || urlParams.get('rotar');
+    let rotationType = urlParams.get('rotate') || urlParams.get('rotar');
+    
+    // Si se especifica "none" o "reset", eliminamos la preferencia guardada
+    if (rotationType === 'none' || rotationType === 'normal' || rotationType === 'reset') {
+        localStorage.removeItem('pantalla_rotation');
+        rotationType = null;
+    } else if (rotationType) {
+        // Si viene un parámetro de rotación válido, lo recordamos en esta TV/pantalla
+        localStorage.setItem('pantalla_rotation', rotationType);
+    } else {
+        // Si no se pasó parámetro, recordamos la configuración del último uso
+        rotationType = localStorage.getItem('pantalla_rotation');
+    }
     
     if (rotationType === 'true' || rotationType === 'clockwise' || rotationType === '90') {
         document.body.classList.add('force-rotated');
