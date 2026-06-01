@@ -154,6 +154,10 @@
                                 <i class="fas fa-coins"></i> Ajustar Costos
                             </button>
 
+                            <button onclick="ReportsManager.openMaintenanceModal()" class="btn-primary" style="background: transparent; border: 1px solid var(--alerta); color: var(--blanco); padding: 10px 15px; font-size: 0.85rem;">
+                                <i class="fas fa-trash-alt"></i> Corte de Datos
+                            </button>
+
                             <select id="report-period-select" onchange="ReportsManager.handlePeriodChange()" class="report-select">
                                 <option value="hoy" selected>Hoy</option>
                                 <option value="ayer">Ayer</option>
@@ -442,6 +446,39 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="FeriaManager.closePricesModal()">Cancelar</button>
                 <button class="btn-primary" id="btn-save-feria-prices" onclick="FeriaManager.savePrices()">Guardar Precios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MANTENIMIENTO / CORTE DB -->
+    <div id="maintenance-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px; border-color: var(--alerta);">
+            <div class="modal-header" style="border-bottom-color: rgba(231, 76, 60, 0.2);">
+                <h2 style="color: var(--alerta);"><i class="fas fa-exclamation-triangle"></i> Corte de Base de Datos</h2>
+                <button onclick="ReportsManager.closeMaintenanceModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(231, 76, 60, 0.1); border: 1px solid rgba(231, 76, 60, 0.2); padding: 15px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4; color: var(--blanco);">
+                    <p style="margin-bottom: 8px;"><strong>⚠️ ATENCIÓN: ESTA ACCIÓN ES IRREVERSIBLE</strong></p>
+                    <p>Vas a vaciar por completo la colección de <strong>pedidos</strong> (ventas) registradas hasta el momento.</p>
+                    <p style="margin-top: 8px; font-weight: bold; color: #ff8b80;">¿Qué pasará?</p>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li>Se eliminarán permanentemente todas las comandas e ingresos históricos de los gráficos.</li>
+                        <li>Se reiniciará el número de comanda automáticamente a la <strong>#1</strong>.</li>
+                        <li>Las cuentas de colaboradores, los inventarios de ingredientes y costos de producción <strong>NO</strong> sufrirán cambios.</li>
+                    </ul>
+                </div>
+                
+                <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 700;">Para proceder y descargar un respaldo de seguridad, escribe la palabra clave <span style="color: var(--alerta); font-family: monospace; font-size: 1rem; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px;">CORTAR</span> abajo:</p>
+                <div class="form-group">
+                    <input type="text" id="maintenance-confirm-input" placeholder="Escribe CORTAR aquí..." style="border-color: rgba(231, 76, 60, 0.3); text-align: center; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;">
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top-color: rgba(231, 76, 60, 0.2);">
+                <button class="btn-secondary" onclick="ReportsManager.closeMaintenanceModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-execute-corte" onclick="ReportsManager.executeDatabaseCorte()" style="background: linear-gradient(135deg, var(--alerta), var(--carbon)); border: none; box-shadow: none;">
+                    <i class="fas fa-trash-alt"></i> Ejecutar Corte & Respaldo
+                </button>
             </div>
         </div>
     </div>

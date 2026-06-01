@@ -792,6 +792,116 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnSave.disabled = false;
                 btnSave.innerText = "Guardar Costos";
             }
+        },
+
+        // --- MÓDULO DE MANTENIMIENTO: CORTE DE BASE DE DATOS Y RESET DE PEDIDOS ---
+        openMaintenanceModal() {
+            document.getElementById('maintenance-confirm-input').value = "";
+            document.getElementById('maintenance-modal').classList.add('active');
+        },
+
+        closeMaintenanceModal() {
+            document.getElementById('maintenance-modal').classList.remove('active');
+        },
+
+        async executeDatabaseCorte() {
+            const confirmVal = document.getElementById('maintenance-confirm-input').value.trim();
+            if (confirmVal !== "CORTAR") {
+                alert("⚠️ Para poder ejecutar la limpieza, debes escribir exactamente 'CORTAR' en mayúsculas.");
+                return;
+            }
+
+            const btnExecute = document.getElementById('btn-execute-corte');
+            btnExecute.disabled = true;
+            btnExecute.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+            try {
+                // 1. Obtener todos los pedidos actuales para el respaldo
+                const snapshot = await db.collection("pedidos").get();
+                const totalPedidos = snapshot.size;
+
+                // 2. Generar y descargar el respaldo de seguridad en JSON si hay pedidos
+                if (totalPedidos > 0) {
+                    const backupData = [];
+                    snapshot.forEach(doc => {
+                        backupData.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // Ordenar por fecha para mejor visualización posterior
+                    backupData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+                    const jsonStr = JSON.stringify(backupData, null, 2);
+                    const blob = new Blob([jsonStr], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement("a");
+                    a.href = url;
+                    const dateStr = new Date().toISOString().split('T')[0];
+                    a.download = `respaldo_pedidos_srsrapinto_${dateStr}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Limpieza levemente retardada para asegurar descarga
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                }
+
+                // 3. Eliminar todos los pedidos de la colección 'pedidos' por lotes (batches de 500)
+                if (totalPedidos > 0) {
+                    const chunks = [];
+                    let currentBatch = db.batch();
+                    let opCount = 0;
+
+                    snapshot.forEach(doc => {
+                        currentBatch.delete(doc.ref);
+                        opCount++;
+                        if (opCount === 500) {
+                            chunks.push(currentBatch);
+                            currentBatch = db.batch();
+                            opCount = 0;
+                        }
+                    });
+
+                    if (opCount > 0) {
+                        chunks.push(currentBatch);
+                    }
+
+                    // Ejecutar todos los lotes secuencialmente
+                    for (const batch of chunks) {
+                        await batch.commit();
+                    }
+                }
+
+                // 4. Reiniciar el contador de turnos a 1 manteniendo el estado activo/inactivo actual
+                const turnoDoc = await db.collection('config').doc('turno').get();
+                let wasActive = false;
+                if (turnoDoc.exists) {
+                    wasActive = !!turnoDoc.data().activo;
+                }
+
+                await db.collection('config').doc('turno').set({
+                    activo: wasActive,
+                    siguiente_numero: 1,
+                    actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
+                    fecha: new Date().toISOString()
+                });
+
+                // 5. Limpieza visual instantánea y recarga de estadísticas
+                cachedOrders = [];
+                this.loadAnalytics();
+
+                alert(`🎉 ¡Corte de base de datos exitoso!\n\nSe procesaron ${totalPedidos} pedidos anteriores.\nSe descargó tu archivo de respaldo y la base de datos de ventas quedó vacía.\nEl contador de turnos se reinició a la #1.`);
+                this.closeMaintenanceModal();
+
+            } catch (error) {
+                console.error("Error ejecutando el corte de base de datos:", error);
+                alert("Ocurrió un error al realizar el corte de datos. Por favor revisa la consola para más detalles.");
+            } finally {
+                btnExecute.disabled = false;
+                btnExecute.innerHTML = '<i class="fas fa-trash-alt"></i> Ejecutar Corte & Respaldo';
+            }
         }
     };
 
