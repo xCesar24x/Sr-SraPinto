@@ -582,8 +582,8 @@ const CartManager = {
                     'type=text/html;' +
                     'component=ru.a402d.rawbtprinter/.activity.PrintDownloadActivity;' +
                     'package=ru.a402d.rawbtprinter;' +
-                    'S.android.intent.extra.TEXT=' + encodedContent + ';' +
-                    'end';
+                    'S.android.intent.extra.TEXT=' + encodeURIComponent(encodedContent) + ';' +
+                    'end;';
                 
                 window.location.href = intentUrl;
             } catch (error) {

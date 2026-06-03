@@ -232,9 +232,10 @@
             <label style="font-size: 0.8rem; opacity: 0.6; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 8px; color: var(--mostaza);">MÉTODO DE CONEXIÓN (SUNMI)</label>
             <select id="select-print-method" onchange="cambiarMetodoImpresion(this.value)" style="width: 100%; background: #120003; color: white; border: 1px solid rgba(233,19,80,0.4); padding: 10px; border-radius: 8px; font-family: inherit; font-size: 0.9rem; cursor: pointer; outline: none;">
                 <option value="text-plain">Método D: Texto Plano (Súper Rápido y Compatible) ⭐</option>
+                <option value="direct-text">Método E: Protocolo Directo Texto (rawbt:base64) 🚀</option>
                 <option value="intent-send">Método A: Intent Send HTML (Original)</option>
                 <option value="intent-view">Método B: Intent View Custom (Más Compatible)</option>
-                <option value="rawbt-uri">Método C: Protocolo Directo rawbt:// (Sencillo)</option>
+                <option value="rawbt-uri">Método C: Protocolo Directo HTML (rawbt://)</option>
             </select>
             <div id="method-description" style="font-size: 0.75rem; opacity: 0.7; margin-top: 8px; line-height: 1.3; color: #fff;">
                 Cargando descripción...
@@ -270,6 +271,7 @@
         // Descripciones de métodos
         const descripciones = {
             "text-plain": "Envía el tiquete en formato texto clásico (tipo POS tradicional) usando el motor de impresión ultra rápido nativo de RawBT. No usa el WebView de Android, por lo que nunca se cuelga en el Sunmi V2.",
+            "direct-text": "Envía texto plano directamente usando el protocolo rawbt:base64. Muy útil si el navegador Chrome de la terminal bloquea los Intents.",
             "intent-send": "Envía el HTML estructurado directamente a RawBT como texto enriquecido. Método nativo oficial.",
             "intent-view": "Envía el HTML usando Intent VIEW y un esquema de URI personalizado. Altamente recomendado si el Método A no responde en el Chrome del Sunmi.",
             "rawbt-uri": "Llama directamente al protocolo registrado rawbt:// en Android. El método más directo y compatible si los Intents fallan."
@@ -411,18 +413,24 @@
         function imprimirPedidoFisico(pedido) {
             const metodo = localStorage.getItem("metodoImpresion") || "text-plain";
 
-            if (metodo === "text-plain") {
+            if (metodo === "text-plain" || metodo === "direct-text") {
                 try {
                     const textContent = generarTextoPlano(pedido);
                     const encodedText = btoa(unescape(encodeURIComponent(textContent)));
+                    let intentUrl = "";
 
-                    // Intent híbrido (Bypassea cartel de Chrome + Decodifica Base64 correctamente en RawBT usando la ruta oficial intent:base64)
-                    const intentUrl = 'intent:base64,' + encodedText + '#Intent;' +
-                        'scheme=rawbt;' +
-                        'package=ru.a402d.rawbtprinter;' +
-                        'end';
+                    if (metodo === "text-plain") {
+                        // Intent híbrido (Bypassea cartel de Chrome + Decodifica Base64 correctamente en RawBT)
+                        intentUrl = 'intent:base64,' + encodeURIComponent(encodedText) + '#Intent;' +
+                            'scheme=rawbt;' +
+                            'package=ru.a402d.rawbtprinter;' +
+                            'end;';
+                    } else {
+                        // Protocolo directo rawbt:base64 (Muy compatible si los intents de Chrome están bloqueados)
+                        intentUrl = 'rawbt:base64,' + encodeURIComponent(encodedText);
+                    }
 
-                    console.log("🖨️ Despachando impresión en TEXTO PLANO (Auto-Print Híbrido):", intentUrl.substring(0, 100) + "...");
+                    console.log(`🖨️ Despachando impresión en TEXTO PLANO (${metodo}):`, intentUrl.substring(0, 100) + "...");
                     window.location.href = intentUrl;
                     actualizarHistorialPantalla(pedido);
                 } catch (error) {
@@ -539,17 +547,17 @@
                             'type=text/html;' +
                             'component=ru.a402d.rawbtprinter/.activity.PrintDownloadActivity;' +
                             'package=ru.a402d.rawbtprinter;' +
-                            'S.android.intent.extra.TEXT=' + encodedContent + ';' +
-                            'end';
+                            'S.android.intent.extra.TEXT=' + encodeURIComponent(encodedContent) + ';' +
+                            'end;';
                     } else if (metodo === "intent-view") {
                         // Método B: Intent VIEW con esquema custom (Altamente compatible)
-                        intentUrl = 'intent://data:text/html;base64,' + encodedContent + '#Intent;' +
+                        intentUrl = 'intent://data:text/html;base64,' + encodeURIComponent(encodedContent) + '#Intent;' +
                             'scheme=rawbt;' +
                             'package=ru.a402d.rawbtprinter;' +
-                            'end';
+                            'end;';
                     } else {
                         // Método C: Protocolo directo rawbt://
-                        intentUrl = 'rawbt:data:text/html;base64,' + encodedContent;
+                        intentUrl = 'rawbt:data:text/html;base64,' + encodeURIComponent(encodedContent);
                     }
 
                     console.log(`🖨️ Despachando impresión con Método [${metodo}]:`, intentUrl.substring(0, 100) + "...");
