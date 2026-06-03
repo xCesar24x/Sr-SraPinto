@@ -1,4 +1,29 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+    // ─── AUTOMATIZACIONES Y SOPORTE DE CONEXIÓN KDS (Cocina) ───
+    // 1. Recarga de seguridad cada 15 minutos para asegurar reconexión
+    setTimeout(() => {
+        window.location.reload();
+    }, 15 * 60 * 1000);
+
+    // 2. Watchdog de suspensión (para tablets o TVs que entran en ahorro de energía)
+    let lastTime = Date.now();
+    setInterval(() => {
+        const currentTime = Date.now();
+        if (currentTime - lastTime > 25000) {
+            console.log("🔄 KDS Cocina despertado de suspensión. Recargando...");
+            window.location.reload();
+        }
+        lastTime = currentTime;
+    }, 10000);
+
+    // 3. Recargar al volver a estar online
+    window.addEventListener("online", () => window.location.reload());
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            window.location.reload();
+        }
+    });
     // 1. Iniciar reloj
     const clockEl = document.getElementById('clock');
     setInterval(() => {

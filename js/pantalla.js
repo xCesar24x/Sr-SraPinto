@@ -1,5 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    // ─── AUTOMATIZACIONES Y SOPORTE SMART TV (Sankey, etc.) ───
+    // 1. Evitar la desconexión por reposo de la TV: forzar recarga cada 15 minutos
+    setTimeout(() => {
+        window.location.reload();
+    }, 15 * 60 * 1000);
+
+    // 2. Watchdog de suspensión (detecta si el navegador de la TV entra en suspensión/ahorro y se reactiva)
+    let lastTime = Date.now();
+    setInterval(() => {
+        const currentTime = Date.now();
+        if (currentTime - lastTime > 25000) { // Si el intervalo de 10s tarda más de 25s, el navegador estuvo congelado/suspendido
+            console.log("🔄 TV despertada de suspensión. Recargando para reconectar base de datos...");
+            window.location.reload();
+        }
+        lastTime = currentTime;
+    }, 10000);
+
+    // 3. Forzar refresco si el dispositivo recupera conexión a Internet o se enfoca de nuevo la pantalla
+    window.addEventListener("online", () => window.location.reload());
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            window.location.reload();
+        }
+    });
+
     // ─── CHEQUEAR ROTACIÓN FORZADA (Por URL o localStorage guardado) ───
     const urlParams = new URLSearchParams(window.location.search);
     let rotationType = urlParams.get('rotate') || urlParams.get('rotar');
