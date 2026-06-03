@@ -300,11 +300,11 @@ body {
 }
 
 .card-body {
-    padding: 22px;
+    padding: 12px 20px;
 }
 
 .card-customer {
-    font-size: 1.8rem; /* Mayor visibilidad para el cliente */
+    font-size: 1.5rem; /* Mayor visibilidad para el cliente */
     font-weight: 900;
     margin-bottom: 12px;
     display: flex;
@@ -423,7 +423,7 @@ html {
         gap: 10px;
     }
     .card-customer {
-        font-size: 2rem; /* Tamaño masivo para excelente lectura */
+        font-size: 1.6rem; /* Tamaño masivo para excelente lectura */
     }
     .card-items li {
         font-size: 1.2rem;
@@ -507,7 +507,7 @@ body.force-rotated-counter .column-header {
 }
 body.force-rotated .card-customer,
 body.force-rotated-counter .card-customer {
-    font-size: 2rem;
+    font-size: 1.6rem;
 }
 body.force-rotated .card-items li,
 body.force-rotated-counter .card-items li {

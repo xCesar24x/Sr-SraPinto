@@ -135,8 +135,8 @@ document.addEventListener("DOMContentLoaded", () => {
         emptyDisplay.style.display = 'none';
         displayColumns.style.display = 'grid';
 
-        const preparingOrders = orders.filter(o => o.estado === 'pendiente');
-        const readyOrders = orders.filter(o => o.estado === 'listo');
+        const preparingOrders = orders.filter(o => o.estado === 'pendiente').slice(0, 4);
+        const readyOrders = orders.filter(o => o.estado === 'listo').slice(0, 4);
 
         // 1. Renderizar Columna: EN PREPARACIÓN
         if (preparingOrders.length === 0) {
@@ -172,12 +172,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return `
             <div class="order-card ${cardClass}">
                 <div class="card-status-bar"></div>
-                <div class="card-body" style="padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+                <div class="card-body" style="padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
                     <div class="card-customer" style="margin-bottom: 0; display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                         <i class="fas fa-user-circle"></i> 
                         <span style="font-weight: 900; letter-spacing: 0.5px;">${order.cliente}</span>
                     </div>
-                    <div class="card-order-id" style="font-size: 2rem; font-weight: 900; color: var(--mostaza); font-family: 'Rotio', sans-serif; background: rgba(255,255,255,0.06); padding: 8px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px; flex-shrink: 0;">
+                    <div class="card-order-id" style="font-size: 1.5rem; font-weight: 900; color: var(--mostaza); font-family: 'Rotio', sans-serif; background: rgba(255,255,255,0.06); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px; flex-shrink: 0;">
                         ${ticketId}
                     </div>
                 </div>
