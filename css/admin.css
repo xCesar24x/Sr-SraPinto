@@ -512,3 +512,74 @@ body { background: var(--negro); color: var(--blanco); min-height: 100vh; }
     transform: translateX(40px);
     box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
 }
+
+/* ==============================
+   ESTILOS DE COSTOS RESPONSIVOS
+   ============================== */
+.cost-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    gap: 15px;
+    transition: background 0.3s ease;
+    margin-bottom: 12px;
+}
+.cost-item:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+.cost-item-label {
+    text-transform: capitalize;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--blanco);
+    word-break: break-word;
+    margin: 0;
+}
+.cost-item-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.cost-item-input {
+    width: 100px;
+    padding: 8px;
+    text-align: right;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    color: var(--mostaza);
+    border-radius: 6px;
+    font-weight: 900;
+    font-size: 0.95rem;
+}
+.cost-item-input:focus {
+    outline: none;
+    border-color: var(--rojo);
+    box-shadow: 0 0 5px rgba(233, 19, 80, 0.5);
+}
+
+@media (max-width: 576px) {
+    .modal-content {
+        width: 92%;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .cost-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .cost-item-input-wrapper {
+        justify-content: flex-end;
+    }
+    .cost-item-input {
+        width: 100%;
+    }
+}

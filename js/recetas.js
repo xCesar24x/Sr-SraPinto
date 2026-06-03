@@ -38,9 +38,6 @@ window.RECETAS = {
     'p-empanada-queso': [
         { id: 'masa_empanada', cant: 1 }, { id: 'queso_mozzarella', cant: 1 }
     ],
-    'p-empanada-birria': [
-        { id: 'masa_empanada', cant: 1 }, { id: 'carne_birria', cant: 1 }
-    ],
     'p-sra-empanada-m2': [
         { id: 'masa_empanada', cant: 1 }, { id: 'ensalada', cant: 1 }
     ],

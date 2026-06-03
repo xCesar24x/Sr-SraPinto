@@ -16,7 +16,6 @@ let COSTOS_PRODUCTOS = {
     'p-empanada-carne': 800,
     'p-empanada-queso': 750,
     'p-empanada-carne-queso': 850,
-    'p-empanada-birria': 900,
     'p-sra-empanada-m2': 1050,
     'c-empanada-cafe': 1100,
     'p-cono-salchipapa': 950,
@@ -26,7 +25,18 @@ let COSTOS_PRODUCTOS = {
     'b-cafe-premium': 300,
     'b-agua': 200,
     'b-gaseosas': 450,
-    'b-hidratante': 500
+    'b-hidratante': 500,
+
+    // ADICIONALES MODO FERIA
+    'p-patacon-caribeno': 1400,
+    'c-queso-pinto-cafe': 1300,
+    'b-cafe-8oz': 250,
+
+    // COMBOS ESTUDIANTILES
+    'ce-empanada-fresco': 750,
+    'ce-salchipapa-fresco': 1000,
+    'ce-hamburguesa-jr-fresco': 1200,
+    'ce-hotdog-fresco': 900
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -716,31 +726,144 @@ document.addEventListener("DOMContentLoaded", () => {
             }).join('');
         },
 
+        // --- DICCIONARIO DE NOMBRES OFICIALES ---
+        NOMBRES_PRODUCTOS: {
+            // Pintos
+            'p-senor-pinto': 'Señor Pinto',
+            'c-senor-pinto-cafe': 'Combo: Señor Pinto + Café',
+            'p-burrote': 'Burrote de Pinto',
+            'c-burrote-cafe': 'Combo: Burrote de Pinto + Café',
+            'p-empanada-pinto': 'Empanada de Pinto',
+            'p-sra-empanada-m1': 'Sra. Empanada Arreglada',
+            'p-queso-pinto': 'Queso Pinto',
+            
+            // Snacks
+            'p-sr-patacon': 'Sr. Patacón',
+            'p-sra-quesadilla': 'Sra. Quesadilla',
+            'p-sra-hamburguesa': 'Sra. Hamburguesa con Papas',
+            'p-empanada-carne': 'Empanada de Carne',
+            'p-empanada-queso': 'Empanada de Queso Mozzarella',
+            'p-empanada-carne-queso': 'Empanada de Carne y Queso Mozzarella',
+            'p-sra-empanada-m2': 'Sra. Empanada Arreglada (Opciones)',
+            'c-empanada-cafe': 'Combo: Empanada + Café',
+            'p-cono-salchipapa': 'Sr. Cono de SalchiPapas',
+            'p-sr-papi-carne': 'Sr. Papi Carne',
+
+            // Bebidas
+            'b-cafe-premium': 'Café Premium Grande (12 onzas)',
+            'b-agua': 'Agua',
+            'b-gaseosas': 'Gaseosas',
+            'b-hidratante': 'Bebidas Hidratantes',
+
+            // Feria
+            'p-patacon-caribeno': 'Patacón Caribeño',
+            'c-queso-pinto-cafe': 'Combo: Queso Pinto + Café',
+            'b-cafe-8oz': 'Café (8 onzas)',
+
+            // Combos Estudiantiles
+            'ce-empanada-fresco': 'Estudiantil: Empanada + Té Frío',
+            'ce-salchipapa-fresco': 'Estudiantil: Salchipapa + Té Frío',
+            'ce-hamburguesa-jr-fresco': 'Estudiantil: Burguer Jr + Té Frío',
+            'ce-hotdog-fresco': 'Estudiantil: Hot Dog + Té Frío'
+        },
+
         // --- GESTIÓN DINÁMICA DE COSTOS EN FIRESTORE ---
         openCostsModal() {
             const container = document.getElementById('costs-inputs-container');
             const costsModal = document.getElementById('costs-modal');
             
-            // Construir array con nombres legibles para ordenar correctamente
-            const formattedCosts = Object.entries(COSTOS_PRODUCTOS).map(([id, cost]) => {
-                let name = id.replace(/^(p|c|b)-/, '').replace(/_/g, ' ').replace(/-/g, ' ');
-                let prefix = '';
-                if (id.startsWith('p-')) prefix = '🍳 ';
-                else if (id.startsWith('c-')) prefix = '✨ ';
-                else if (id.startsWith('b-')) prefix = '☕ ';
+            // Determinar productos activos según el estado del modo feria y combos estudiantiles
+            const feriaActivo = window.FeriaManager ? !!window.FeriaManager.feriaActive : false;
+            const combosActivo = window.FeriaManager ? !!window.FeriaManager.combosActive : false;
+            
+            let activeProductIds = [];
+            
+            if (feriaActivo) {
+                // Productos en Modo Feria
+                const baseFeriaIds = [
+                    'p-senor-pinto',
+                    'c-senor-pinto-cafe',
+                    'c-burrote-cafe',
+                    'p-sr-patacon',
+                    'p-sra-quesadilla',
+                    'p-sra-hamburguesa',
+                    'p-empanada-carne',
+                    'p-empanada-queso',
+                    'p-empanada-carne-queso',
+                    'p-sra-empanada-m1',
+                    'p-sra-empanada-m2',
+                    'p-cono-salchipapa',
+                    'p-sr-papi-carne',
+                    'b-cafe-premium',
+                    'b-agua',
+                    'b-gaseosas',
+                    'b-hidratante',
+                    
+                    // Adicionales Feria
+                    'p-patacon-caribeno',
+                    'c-queso-pinto-cafe',
+                    'b-cafe-8oz'
+                ];
                 
-                return { id, cost, name, prefix };
-            });
+                if (combosActivo) {
+                    baseFeriaIds.push(
+                        'ce-empanada-fresco',
+                        'ce-salchipapa-fresco',
+                        'ce-hamburguesa-jr-fresco',
+                        'ce-hotdog-fresco'
+                    );
+                }
+                activeProductIds = baseFeriaIds;
+            } else {
+                // Productos en Modo Normal
+                activeProductIds = [
+                    'p-senor-pinto',
+                    'c-senor-pinto-cafe',
+                    'p-burrote',
+                    'c-burrote-cafe',
+                    'p-empanada-pinto',
+                    'p-sra-empanada-m1',
+                    'p-queso-pinto',
+                    'p-sr-patacon',
+                    'p-sra-quesadilla',
+                    'p-sra-hamburguesa',
+                    'p-empanada-carne',
+                    'p-empanada-queso',
+                    'p-empanada-carne-queso',
+                    'p-sra-empanada-m2',
+                    'c-empanada-cafe',
+                    'p-cono-salchipapa',
+                    'p-sr-papi-carne',
+                    'b-cafe-premium',
+                    'b-agua',
+                    'b-gaseosas',
+                    'b-hidratante'
+                ];
+            }
+
+            // Construir array con nombres legibles para ordenar correctamente
+            const formattedCosts = Object.entries(COSTOS_PRODUCTOS)
+                .filter(([id]) => activeProductIds.includes(id))
+                .map(([id, cost]) => {
+                    let name = this.NOMBRES_PRODUCTOS[id] || id.replace(/^(p|c|b|ce)-/, '').replace(/_/g, ' ').replace(/-/g, ' ');
+                    let prefix = '';
+                    if (id.startsWith('p-')) prefix = '🍳 ';
+                    else if (id.startsWith('c-')) prefix = '✨ ';
+                    else if (id.startsWith('b-')) prefix = '☕ ';
+                    else if (id.startsWith('ce-')) prefix = '🎓 ';
+                    
+                    return { id, cost, name, prefix };
+                });
 
             // Ordenar alfabéticamente de la A a la Z según el nombre legible del producto
             formattedCosts.sort((a, b) => a.name.localeCompare(b.name));
 
             container.innerHTML = formattedCosts.map(item => `
-                <div class="form-group" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
-                    <label style="text-transform: capitalize; font-size: 0.85rem; font-weight: 700; margin: 0; color: var(--blanco);">${item.prefix}${item.name}</label>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="cost-item">
+                    <label class="cost-item-label">${item.prefix}${item.name}</label>
+                    <div class="cost-item-input-wrapper">
                         <span style="font-size: 0.9rem; opacity: 0.5; color: var(--mostaza);">₡</span>
-                        <input type="number" data-id="${item.id}" value="${item.cost}" style="width: 100px; padding: 6px; text-align: right; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--mostaza); border-radius: 6px; font-weight: 900;" min="0">
+                        <input type="number" class="cost-item-input" data-id="${item.id}" value="${item.cost}" min="0">
                     </div>
                 </div>
             `).join('');
@@ -777,11 +900,14 @@ document.addEventListener("DOMContentLoaded", () => {
             btnSave.innerText = "Guardando...";
 
             try {
+                // Mezclar los nuevos costos con los costos existentes de productos ocultos para no perderlos
+                const updatedCosts = { ...COSTOS_PRODUCTOS, ...newCosts };
+
                 // Guardar en la base de datos Firestore de forma persistente
-                await db.collection('config').doc('costos').set(newCosts);
+                await db.collection('config').doc('costos').set(updatedCosts);
                 
                 // Actualizar nuestra variable local para el recálculo
-                COSTOS_PRODUCTOS = newCosts;
+                COSTOS_PRODUCTOS = updatedCosts;
                 
                 this.closeCostsModal();
                 this.loadAnalytics(); // Recargar analíticas al instante con los nuevos costos
