@@ -99,14 +99,14 @@ body {
 }
 
 .display-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    display: flex;
     height: 100%;
     align-items: stretch;
 }
 
 .display-column {
+    flex: 1;
+    width: 50%;
     background: rgba(18, 0, 3, 0.45);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
@@ -116,6 +116,14 @@ body {
     flex-direction: column;
     height: 100%;
     transition: all 0.3s ease;
+}
+
+.display-column:first-child {
+    margin-right: 15px;
+}
+
+.display-column:last-child {
+    margin-left: 15px;
 }
 
 .prep-column {
@@ -368,6 +376,10 @@ body {
     to { opacity: 0; transform: scale(0.8) translateY(-20px); }
 }
 
+html {
+    overflow: hidden;
+}
+
 /* ─── OPTIMIZACIONES PARA PANTALLAS VERTICALES / PORTRAIT ─── */
 @media (orientation: portrait) {
     .display-header {
@@ -387,13 +399,17 @@ body {
     .display-main {
         padding: 20px 20px;
     }
-    .display-columns {
-        gap: 20px;
-        /* El alto ya se calcula al 100% del flex container */
-    }
     .display-column {
         padding: 20px 15px;
         border-radius: 20px;
+    }
+    .display-column:first-child {
+        margin-right: 10px;
+        margin-left: 0;
+    }
+    .display-column:last-child {
+        margin-left: 10px;
+        margin-right: 0;
     }
     .column-header {
         font-size: 1.6rem;
@@ -413,11 +429,11 @@ body {
 
 /* Opción A: Rotación Horaria (TV rotada hacia la derecha) */
 body.force-rotated {
-    width: 100vh !important;
-    height: 100vw !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 100vw !important;
+    width: 100vh;
+    height: 100vw;
+    position: absolute;
+    top: 0;
+    left: 100vw;
     transform: rotate(90deg) !important;
     transform-origin: top left !important;
     overflow: hidden !important;
@@ -425,11 +441,11 @@ body.force-rotated {
 
 /* Opción B: Rotación Antihoraria (TV rotada hacia la izquierda - el caso más común) */
 body.force-rotated-counter {
-    width: 100vh !important;
-    height: 100vw !important;
-    position: absolute !important;
-    top: 100vh !important;
-    left: 0 !important;
+    width: 100vh;
+    height: 100vw;
+    position: absolute;
+    top: 100vh;
+    left: 0;
     transform: rotate(-90deg) !important;
     transform-origin: top left !important;
     overflow: hidden !important;
@@ -457,14 +473,20 @@ body.force-rotated .display-main,
 body.force-rotated-counter .display-main {
     padding: 20px 20px;
 }
-body.force-rotated .display-columns,
-body.force-rotated-counter .display-columns {
-    gap: 20px;
-}
 body.force-rotated .display-column,
 body.force-rotated-counter .display-column {
     padding: 20px 15px;
     border-radius: 20px;
+}
+body.force-rotated .display-column:first-child,
+body.force-rotated-counter .display-column:first-child {
+    margin-right: 10px;
+    margin-left: 0;
+}
+body.force-rotated .display-column:last-child,
+body.force-rotated-counter .display-column:last-child {
+    margin-left: 10px;
+    margin-right: 0;
 }
 body.force-rotated .column-header,
 body.force-rotated-counter .column-header {

@@ -22,6 +22,32 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add('force-rotated-counter');
     }
 
+    // ─── AJUSTE DINÁMICO DE ROTACIÓN (Evita recortes en pantallas con barras de navegador) ───
+    function adjustRotationDimensions() {
+        if (document.body.classList.contains('force-rotated')) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            document.body.style.width = h + "px";
+            document.body.style.height = w + "px";
+            document.body.style.left = w + "px";
+            document.body.style.top = "0px";
+        } else if (document.body.classList.contains('force-rotated-counter')) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            document.body.style.width = h + "px";
+            document.body.style.height = w + "px";
+            document.body.style.left = "0px";
+            document.body.style.top = h + "px";
+        } else {
+            document.body.style.width = "";
+            document.body.style.height = "";
+            document.body.style.left = "";
+            document.body.style.top = "";
+        }
+    }
+    adjustRotationDimensions();
+    window.addEventListener("resize", adjustRotationDimensions);
+
     // ─── RELOJ ───
     const clockEl = document.getElementById('clock');
     function updateClock() {
