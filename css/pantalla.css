@@ -245,6 +245,7 @@ body {
 
 /* ─── TARJETA DE PEDIDO ─── */
 .order-card {
+    width: 100%;
     background: rgba(10, 0, 2, 0.7);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -399,17 +400,21 @@ html {
     .display-main {
         padding: 20px 20px;
     }
+    .display-columns {
+        flex-direction: column;
+    }
     .display-column {
+        width: 100%;
         padding: 20px 15px;
         border-radius: 20px;
     }
     .display-column:first-child {
-        margin-right: 10px;
-        margin-left: 0;
+        margin-bottom: 10px;
+        margin-right: 0;
     }
     .display-column:last-child {
-        margin-left: 10px;
-        margin-right: 0;
+        margin-top: 10px;
+        margin-left: 0;
     }
     .column-header {
         font-size: 1.6rem;
@@ -473,20 +478,25 @@ body.force-rotated .display-main,
 body.force-rotated-counter .display-main {
     padding: 20px 20px;
 }
+body.force-rotated .display-columns,
+body.force-rotated-counter .display-columns {
+    flex-direction: column;
+}
 body.force-rotated .display-column,
 body.force-rotated-counter .display-column {
+    width: 100%;
     padding: 20px 15px;
     border-radius: 20px;
 }
 body.force-rotated .display-column:first-child,
 body.force-rotated-counter .display-column:first-child {
-    margin-right: 10px;
-    margin-left: 0;
+    margin-bottom: 10px;
+    margin-right: 0;
 }
 body.force-rotated .display-column:last-child,
 body.force-rotated-counter .display-column:last-child {
-    margin-left: 10px;
-    margin-right: 0;
+    margin-top: 10px;
+    margin-left: 0;
 }
 body.force-rotated .column-header,
 body.force-rotated-counter .column-header {
