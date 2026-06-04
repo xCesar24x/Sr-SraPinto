@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin | Sr. & Sra. Pinto</title>
     <script>
+        if (window.location.search.includes('test=true')) {
+            window.confirm = () => true;
+            window.alert = () => true;
+        }
         if (localStorage.getItem('srsrapinto_auth') !== 'admin') {
-            window.location.href = 'login.html?r=admin';
+            window.location.href = 'login.html?r=admin' + (window.location.search.includes('test=true') ? '&test=true' : '');
         }
         function logout() { localStorage.removeItem('srsrapinto_auth'); window.location.href = 'index.html'; }
     </script>
@@ -14,6 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <!-- Chart.js CDN for premium analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Recipes for ingredients consumption metrics -->
     <script src="js/recetas.js"></script>
     <style>
@@ -158,6 +163,10 @@
                                 <i class="fas fa-trash-alt"></i> Corte de Datos
                             </button>
 
+                            <button onclick="ReportsManager.exportPDFReport(true)" class="btn-primary" style="background: transparent; border: 1px solid var(--mostaza); color: var(--blanco); padding: 10px 15px; font-size: 0.85rem;">
+                                <i class="fas fa-file-pdf"></i> Exportar PDF
+                            </button>
+
                             <select id="report-period-select" onchange="ReportsManager.handlePeriodChange()" class="report-select">
                                 <option value="hoy" selected>Hoy</option>
                                 <option value="ayer">Ayer</option>
@@ -176,6 +185,17 @@
                         </div>
                     </div>
                 </header>
+
+                <!-- Banner de filtro de producto -->
+                <div id="product-filter-banner" style="display: none; align-items: center; justify-content: space-between; background: rgba(233, 19, 80, 0.15); border: 1px solid var(--rojo); padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; width: 100%;">
+                    <span style="font-size: 0.9rem; font-weight: bold; color: var(--blanco); display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-filter" style="color: var(--rojo);"></i>
+                        Filtrando métricas por: <strong id="filtered-product-name" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1); padding: 2px 8px; border-radius: 4px;">[Producto]</strong>
+                    </span>
+                    <button onclick="ReportsManager.clearProductFilter()" class="btn-secondary" style="padding: 6px 12px; font-size: 0.75rem; border: none; background: var(--rojo); color: var(--blanco); border-radius: 6px; cursor: pointer; font-weight: bold;">
+                        Quitar Filtro
+                    </button>
+                </div>
 
                 <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                     <div class="stat-card">
@@ -218,6 +238,27 @@
                         <div class="stat-info">
                             <h3>Ticket Promedio</h3>
                             <p id="stat-avg-ticket">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(155, 89, 182, 0.2);">
+                        <div class="stat-icon" style="color: #9b59b6; background: rgba(155, 89, 182, 0.1);"><i class="fas fa-user-tag"></i></div>
+                        <div class="stat-info">
+                            <h3>Dieta Bryan</h3>
+                            <p id="stat-dieta-bryan">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(155, 89, 182, 0.2);">
+                        <div class="stat-icon" style="color: #9b59b6; background: rgba(155, 89, 182, 0.1);"><i class="fas fa-user-tag"></i></div>
+                        <div class="stat-info">
+                            <h3>Dieta Maic</h3>
+                            <p id="stat-dieta-maic">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(230, 126, 34, 0.2);">
+                        <div class="stat-icon" style="color: #e67e22; background: rgba(230, 126, 34, 0.1);"><i class="fas fa-gift"></i></div>
+                        <div class="stat-info">
+                            <h3>Regalías</h3>
+                            <p id="stat-regalias">₡0</p>
                         </div>
                     </div>
                 </div>

@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ventas POS | Sr. & Sra. Pinto</title>
     <script>
+        if (window.location.search.includes('test=true')) {
+            window.confirm = () => true;
+            window.alert = () => true;
+        }
         const r = localStorage.getItem('srsrapinto_auth');
         if (r !== 'ventas' && r !== 'admin') {
-            window.location.href = 'login.html?r=ventas';
+            window.location.href = 'login.html?r=ventas' + (window.location.search.includes('test=true') ? '&test=true' : '');
         }
         function logout() { localStorage.removeItem('srsrapinto_auth'); window.location.href = 'index.html'; }
     </script>
@@ -1364,6 +1368,15 @@
                 </div>
                 <div class="pay-chip" data-method="SINPE Móvil" data-method-alias="SINPE" onclick="CartManager.setPaymentMethod('SINPE Móvil')">
                     <i class="fas fa-mobile-alt"></i> SINPE
+                </div>
+                <div class="pay-chip" data-method="Dieta Bryan" onclick="CartManager.setPaymentMethod('Dieta Bryan')">
+                    <i class="fas fa-user-tag"></i> Dieta Bryan
+                </div>
+                <div class="pay-chip" data-method="Dieta Maic" onclick="CartManager.setPaymentMethod('Dieta Maic')">
+                    <i class="fas fa-user-tag"></i> Dieta Maic
+                </div>
+                <div class="pay-chip" data-method="Regalía" onclick="CartManager.setPaymentMethod('Regalía')">
+                    <i class="fas fa-gift"></i> Regalía
                 </div>
             </div>
         </div>

@@ -53,7 +53,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     // Redireccionar al módulo correspondiente o al que solicitó
                     const modulo = targetRole || userData.rol;
-                    window.location.href = `${modulo}.html`;
+                    const hasTest = window.location.search.includes('test=true');
+                    window.location.href = `${modulo}.html` + (hasTest ? '?test=true' : '');
                 }
             } catch (error) {
                 console.error("Error validando:", error);

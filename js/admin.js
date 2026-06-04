@@ -258,6 +258,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
                     fecha: new Date().toISOString()
                 });
+
+                if (!newActiveState) {
+                    // Generar PDF y abrir mailto al cerrar el turno
+                    await ReportsManager.exportPDFReport(true);
+                }
             } catch (error) {
                 console.error("Error al cambiar estado del turno:", error);
                 alert("No se pudo cambiar el estado del turno.");
@@ -399,6 +404,32 @@ document.addEventListener("DOMContentLoaded", () => {
             this.loadAnalytics();
         },
 
+        selectedProductFilter: null,
+
+        setProductFilter(productName) {
+            this.selectedProductFilter = productName;
+            
+            const banner = document.getElementById('product-filter-banner');
+            const label = document.getElementById('filtered-product-name');
+            if (banner && label) {
+                label.innerText = productName;
+                banner.style.display = 'flex';
+            }
+            
+            this.loadAnalytics();
+        },
+
+        clearProductFilter() {
+            this.selectedProductFilter = null;
+            
+            const banner = document.getElementById('product-filter-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+            
+            this.loadAnalytics();
+        },
+
         loadAnalytics() {
             const period = document.getElementById('report-period-select').value;
             const now = new Date();
@@ -470,18 +501,61 @@ document.addEventListener("DOMContentLoaded", () => {
             // Calcular Métricas Financieras (Ventas, Costos y Rentabilidad)
             let totalRevenue = 0;
             let totalCogs = 0;
-            let ordersCount = filteredOrders.length;
+            let cashOrdersCount = 0;
+            let dietaBryanTotal = 0;
+            let dietaMaicTotal = 0;
+            let regaliaTotal = 0;
             
-            filteredOrders.forEach(order => {
-                totalRevenue += (order.total || 0);
+            const selectedProduct = this.selectedProductFilter;
 
-                // Calcular costo estimado de este pedido (COGS)
+            filteredOrders.forEach(order => {
+                const method = order.metodoPago || 'Efectivo';
+                const isSpecial = (method === 'Dieta Bryan' || method === 'Dieta Maic' || method === 'Regalía');
+                
+                let orderHasProduct = false;
+                let productRevenue = 0;
+                let productCogs = 0;
+                
                 if (order.items) {
                     order.items.forEach(item => {
                         const cleanId = item.id.split('-')[0];
                         const costPerUnit = COSTOS_PRODUCTOS[cleanId] || COSTOS_PRODUCTOS[item.id] || (item.precio * 0.4);
-                        totalCogs += (costPerUnit * (item.cantidad || 0));
+                        const qty = item.cantidad || 0;
+                        const cogsVal = costPerUnit * qty;
+                        
+                        if (selectedProduct) {
+                            if (item.nombre === selectedProduct) {
+                                orderHasProduct = true;
+                                productRevenue += (item.precio * qty);
+                                productCogs += cogsVal;
+                            }
+                        } else {
+                            totalCogs += cogsVal;
+                        }
                     });
+                }
+                
+                if (selectedProduct) {
+                    if (orderHasProduct) {
+                        if (!isSpecial) {
+                            totalRevenue += productRevenue;
+                            cashOrdersCount += 1;
+                        } else {
+                            if (method === 'Dieta Bryan') dietaBryanTotal += productRevenue;
+                            else if (method === 'Dieta Maic') dietaMaicTotal += productRevenue;
+                            else if (method === 'Regalía') regaliaTotal += productRevenue;
+                        }
+                        totalCogs += productCogs;
+                    }
+                } else {
+                    if (!isSpecial) {
+                        totalRevenue += (order.total || 0);
+                        cashOrdersCount += 1;
+                    } else {
+                        if (method === 'Dieta Bryan') dietaBryanTotal += (order.total || 0);
+                        else if (method === 'Dieta Maic') dietaMaicTotal += (order.total || 0);
+                        else if (method === 'Regalía') regaliaTotal += (order.total || 0);
+                    }
                 }
             });
 
@@ -489,15 +563,19 @@ document.addEventListener("DOMContentLoaded", () => {
             totalCogs = Math.round(totalCogs);
             const totalProfit = Math.max(0, totalRevenue - totalCogs);
             const profitMargin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0;
-            const avgTicket = ordersCount > 0 ? Math.round(totalRevenue / ordersCount) : 0;
+            const avgTicket = cashOrdersCount > 0 ? Math.round(totalRevenue / cashOrdersCount) : 0;
 
             // Renderizar métricas en pantalla
             document.getElementById('stat-revenue').innerText = `₡${totalRevenue.toLocaleString()}`;
             document.getElementById('stat-cogs').innerText = `₡${totalCogs.toLocaleString()}`;
             document.getElementById('stat-profit').innerText = `₡${totalProfit.toLocaleString()}`;
             document.getElementById('stat-margin').innerText = `${profitMargin}%`;
-            document.getElementById('stat-orders-count').innerText = ordersCount;
+            document.getElementById('stat-orders-count').innerText = cashOrdersCount;
             document.getElementById('stat-avg-ticket').innerText = `₡${avgTicket.toLocaleString()}`;
+            
+            document.getElementById('stat-dieta-bryan').innerText = `₡${dietaBryanTotal.toLocaleString()}`;
+            document.getElementById('stat-dieta-maic').innerText = `₡${dietaMaicTotal.toLocaleString()}`;
+            document.getElementById('stat-regalias').innerText = `₡${regaliaTotal.toLocaleString()}`;
 
             // Procesar Gráficos e Ingredientes
             this.processBestsellers(filteredOrders);
@@ -541,6 +619,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            const selectedProduct = this.selectedProductFilter;
+            // Colores dinámicos para resaltar la barra seleccionada
+            const backgroundColors = labels.map(label => {
+                if (selectedProduct) {
+                    return label === selectedProduct ? 'rgba(233, 19, 80, 0.9)' : 'rgba(233, 19, 80, 0.2)';
+                }
+                return 'rgba(233, 19, 80, 0.7)';
+            });
+            const borderColors = labels.map(label => {
+                if (selectedProduct) {
+                    return label === selectedProduct ? '#E91350' : 'rgba(233, 19, 80, 0.3)';
+                }
+                return '#E91350';
+            });
+
             window.bestsellersChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -548,8 +641,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     datasets: [{
                         label: 'Unidades Vendidas',
                         data: data,
-                        backgroundColor: 'rgba(233, 19, 80, 0.7)',
-                        borderColor: '#E91350',
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
                         borderWidth: 1,
                         borderRadius: 5
                     }]
@@ -558,6 +651,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
+                    onClick: (event, elements) => {
+                        if (elements && elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = window.bestsellersChartInstance.data.labels[index];
+                            window.ReportsManager.setProductFilter(label);
+                        } else {
+                            window.ReportsManager.clearProductFilter();
+                        }
+                    },
                     plugins: {
                         legend: { display: false }
                     },
@@ -576,15 +678,40 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         processPaymentMethods(orders) {
-            const paymentTotals = { 'Efectivo': 0, 'SINPE Móvil': 0, 'Tarjeta': 0 };
+            const selectedProduct = this.selectedProductFilter;
+            const paymentTotals = { 
+                'Efectivo': 0, 
+                'SINPE Móvil': 0, 
+                'Tarjeta': 0,
+                'Dieta Bryan': 0,
+                'Dieta Maic': 0,
+                'Regalía': 0
+            };
 
             orders.forEach(order => {
                 const method = order.metodoPago || 'Efectivo';
-                paymentTotals[method] = (paymentTotals[method] || 0) + (order.total || 0);
+                if (paymentTotals[method] === undefined) {
+                    paymentTotals[method] = 0;
+                }
+                
+                if (selectedProduct) {
+                    if (order.items) {
+                        order.items.forEach(item => {
+                            if (item.nombre === selectedProduct) {
+                                paymentTotals[method] += (item.precio * (item.cantidad || 0));
+                            }
+                        });
+                    }
+                } else {
+                    paymentTotals[method] += (order.total || 0);
+                }
             });
 
-            const labels = Object.keys(paymentTotals);
-            const data = Object.values(paymentTotals);
+            // Solo mostrar métodos de pago que tengan montos > 0
+            const activePayments = Object.entries(paymentTotals).filter(([_, val]) => val > 0);
+            
+            const labels = activePayments.map(([label, _]) => label);
+            const data = activePayments.map(([_, val]) => val);
 
             if (window.paymentsChartInstance) {
                 window.paymentsChartInstance.destroy();
@@ -602,22 +729,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            // Definir colores fijos según método
+            const colorMap = {
+                'Efectivo': { bg: 'rgba(46, 204, 113, 0.7)', border: '#2ecc71' },
+                'SINPE Móvil': { bg: 'rgba(241, 196, 15, 0.7)', border: '#f1c40f' },
+                'Tarjeta': { bg: 'rgba(52, 152, 219, 0.7)', border: '#3498db' },
+                'Dieta Bryan': { bg: 'rgba(155, 89, 182, 0.7)', border: '#9b59b6' },
+                'Dieta Maic': { bg: 'rgba(155, 89, 182, 0.7)', border: '#9b59b6' },
+                'Regalía': { bg: 'rgba(230, 126, 34, 0.7)', border: '#e67e22' }
+            };
+
+            const bgColors = labels.map(lbl => colorMap[lbl]?.bg || 'rgba(150, 150, 150, 0.7)');
+            const borderColors = labels.map(lbl => colorMap[lbl]?.border || '#999');
+
             window.paymentsChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: data,
-                        backgroundColor: [
-                            'rgba(46, 204, 113, 0.7)',  // Efectivo (Verde)
-                            'rgba(241, 196, 15, 0.7)',  // SINPE Móvil (Mostaza)
-                            'rgba(52, 152, 219, 0.7)'   // Tarjeta (Celeste)
-                        ],
-                        borderColor: [
-                            '#2ecc71',
-                            '#f1c40f',
-                            '#3498db'
-                        ],
+                        backgroundColor: bgColors,
+                        borderColor: borderColors,
                         borderWidth: 1
                     }]
                 },
@@ -645,6 +777,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         processIngredientsConsumption(orders) {
+            const selectedProduct = this.selectedProductFilter;
             const ingredientConsumption = {};
 
             orders.forEach(order => {
@@ -652,6 +785,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (order.items) {
                     order.items.forEach(item => {
+                        if (selectedProduct && item.nombre !== selectedProduct) return;
+                        
                         const receta = window.RECETAS ? window.RECETAS[item.id] : null;
                         if (receta) {
                             receta.forEach(ing => {
@@ -696,13 +831,19 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         renderAuditLog(orders) {
+            const selectedProduct = this.selectedProductFilter;
             const container = document.getElementById('audit-orders-list');
-            if (orders.length === 0) {
+            
+            const ordersToShow = selectedProduct
+                ? orders.filter(order => order.items && order.items.some(item => item.nombre === selectedProduct))
+                : orders;
+
+            if (ordersToShow.length === 0) {
                 container.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; opacity: 0.5;">No hay pedidos registrados en este período.</td></tr>`;
                 return;
             }
 
-            container.innerHTML = orders.map(order => {
+            container.innerHTML = ordersToShow.map(order => {
                 const dateObj = new Date(order.fecha);
                 const dateStr = dateObj.toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit' }) + ' ' + 
                                 dateObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
@@ -714,16 +855,255 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (order.estado === 'pendiente') statusBadge = '<span style="color:#f1c40f; margin-left:5px;"><i class="fas fa-fire"></i></span>';
                 else if (order.estado === 'listo' || order.estado === 'retirado') statusBadge = '<span style="color:#2ecc71; margin-left:5px;"><i class="fas fa-check-double"></i></span>';
 
+                const payMethod = order.metodoPago || 'Efectivo';
+                let methodClass = payMethod.toLowerCase().replace(/\s/g, '');
+
                 return `
                     <tr>
                         <td style="font-size: 0.8rem;">${dateStr}</td>
                         <td style="font-weight:700;">[#${order.num_pedido || order.id.slice(-5).toUpperCase()}] ${order.cliente} ${statusBadge}</td>
                         <td style="font-weight:900;">₡${(order.total || 0).toLocaleString()}</td>
-                        <td><span class="user-badge badge-${(order.metodoPago || 'Efectivo').toLowerCase().replace(/\s/g, '')}">${order.metodoPago || 'Efectivo'}</span></td>
+                        <td><span class="user-badge badge-${methodClass}">${payMethod}</span></td>
                         <td style="font-size: 0.8rem; opacity: 0.8;" title="${order.items.map(i => `${i.cantidad}x ${i.nombre}`).join('\n')}">${detailsText}</td>
                     </tr>
                 `;
             }).join('');
+        },
+
+        async exportPDFReport(autoSendEmail = true) {
+            const revenue = document.getElementById('stat-revenue')?.innerText || '₡0';
+            const cogs = document.getElementById('stat-cogs')?.innerText || '₡0';
+            const profit = document.getElementById('stat-profit')?.innerText || '₡0';
+            const margin = document.getElementById('stat-margin')?.innerText || '0%';
+            const orders = document.getElementById('stat-orders-count')?.innerText || '0';
+            const avgTicket = document.getElementById('stat-avg-ticket')?.innerText || '₡0';
+            
+            const dietaBryan = document.getElementById('stat-dieta-bryan')?.innerText || '₡0';
+            const dietaMaic = document.getElementById('stat-dieta-maic')?.innerText || '₡0';
+            const regalias = document.getElementById('stat-regalias')?.innerText || '₡0';
+
+            const periodSelect = document.getElementById('report-period-select');
+            const periodText = periodSelect ? periodSelect.options[periodSelect.selectedIndex]?.text : 'Hoy';
+            
+            let shiftText = 'Todo el Día';
+            if (this.currentShift === 'morning') shiftText = 'Mañana (Corte 12pm)';
+            else if (this.currentShift === 'afternoon') shiftText = 'Tarde (Corte 6pm)';
+            else if (this.currentShift === 'night') shiftText = 'Noche (Cierre)';
+
+            const filterText = this.selectedProductFilter ? `Filtrado por: ${this.selectedProductFilter}` : 'Sin filtro de producto';
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('es-CR') + ' ' + now.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+
+            // Obtener el top de productos más vendidos del gráfico actual
+            let bestsellersHTML = '';
+            if (window.bestsellersChartInstance && window.bestsellersChartInstance.data) {
+                const labels = window.bestsellersChartInstance.data.labels || [];
+                const data = window.bestsellersChartInstance.data.datasets[0].data || [];
+                bestsellersHTML = labels.map((label, idx) => {
+                    return `<tr><td style="padding: 6px; border-bottom: 1px solid #eee;">${label}</td><td style="padding: 6px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">${data[idx]} uds</td></tr>`;
+                }).join('');
+            } else {
+                bestsellersHTML = `<tr><td colspan="2" style="padding: 10px; text-align: center; opacity: 0.5;">No hay datos en este período.</td></tr>`;
+            }
+
+            // Obtener consumo de ingredientes
+            const consumptionList = document.getElementById('consumption-list');
+            let ingredientsHTML = '';
+            if (consumptionList && consumptionList.children.length > 0 && !consumptionList.innerHTML.includes('No hay')) {
+                const items = Array.from(consumptionList.querySelectorAll('.consumption-item'));
+                ingredientsHTML = items.map(item => {
+                    const name = item.querySelector('.consumption-info span:first-child')?.innerText || '';
+                    const val = item.querySelector('.consumption-info span:last-child')?.innerText || '';
+                    return `<tr><td style="text-transform: capitalize; padding: 6px; border-bottom: 1px solid #eee;">${name}</td><td style="padding: 6px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">${val}</td></tr>`;
+                }).join('');
+            } else {
+                ingredientsHTML = `<tr><td colspan="2" style="padding: 10px; text-align: center; opacity: 0.5;">No hay consumo estimado.</td></tr>`;
+            }
+
+            // Crear el elemento temporal
+            const element = document.createElement('div');
+            element.style.padding = '30px';
+            element.style.background = '#ffffff';
+            element.style.color = '#333333';
+            element.style.fontFamily = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+            element.style.fontSize = '12px';
+            element.style.lineHeight = '1.5';
+            
+            element.innerHTML = `
+                <div style="border-bottom: 2px solid #E91350; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h1 style="color: #E91350; margin: 0 0 5px 0; font-size: 24px; font-weight: bold; text-transform: uppercase;">Sr. & Sra. Pinto</h1>
+                        <h2 style="margin: 0; font-size: 14px; color: #666; font-weight: normal;">Reporte de Rendimiento y Cierre</h2>
+                    </div>
+                    <div style="text-align: right; color: #666; font-size: 11px;">
+                        <div><strong>Generado:</strong> ${dateStr}</div>
+                        <div><strong>Período:</strong> ${periodText}</div>
+                        <div><strong>Turno:</strong> ${shiftText}</div>
+                        ${this.selectedProductFilter ? `<div style="color: #E91350; font-weight: bold; margin-top: 3px;">${filterText}</div>` : ''}
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="background: #fcf1f4; color: #E91350; padding: 6px 10px; margin: 0 0 15px 0; font-size: 13px; border-left: 4px solid #E91350; font-weight: bold;">
+                        INDICADORES FINANCIEROS PRINCIPALES
+                    </h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                        <thead>
+                            <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                                <th style="text-align: left; padding: 8px; font-weight: bold; width: 50%;">Indicador</th>
+                                <th style="text-align: right; padding: 8px; font-weight: bold; width: 50%;">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;"><strong>Ventas Totales (Ingreso Neto)</strong></td>
+                                <td style="padding: 8px; text-align: right; color: #2ecc71; font-weight: bold; font-size: 14px;">${revenue}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;">Costo de Ventas (COGS)</td>
+                                <td style="padding: 8px; text-align: right; color: #e74c3c; font-weight: bold;">${cogs}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee; background: #fafafa;">
+                                <td style="padding: 8px;"><strong>Utilidad Bruta</strong></td>
+                                <td style="padding: 8px; text-align: right; color: #2ecc71; font-weight: bold; font-size: 14px;">${profit}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;">Margen de Utilidad</td>
+                                <td style="padding: 8px; text-align: right; font-weight: bold;">${margin}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;">Pedidos Facturados</td>
+                                <td style="padding: 8px; text-align: right;">${orders}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;">Ticket Promedio</td>
+                                <td style="padding: 8px; text-align: right;">${avgTicket}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="background: #f3f3f3; color: #333; padding: 6px 10px; margin: 0 0 15px 0; font-size: 13px; border-left: 4px solid #666; font-weight: bold;">
+                        CONSUMOS INTERNOS (DIETAS Y REGALÍAS)
+                    </h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                        <thead>
+                            <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                                <th style="text-align: left; padding: 8px; font-weight: bold; width: 50%;">Categoría</th>
+                                <th style="text-align: right; padding: 8px; font-weight: bold; width: 50%;">Valor Consumido</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;">Dieta Bryan</td>
+                                <td style="padding: 8px; text-align: right; font-weight: bold; color: #9b59b6;">${dietaBryan}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;">Dieta Maic</td>
+                                <td style="padding: 8px; text-align: right; font-weight: bold; color: #9b59b6;">${dietaMaic}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px;">Regalías (Comunidad)</td>
+                                <td style="padding: 8px; text-align: right; font-weight: bold; color: #e67e22;">${regalias}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="display: flex; gap: 20px; margin-bottom: 25px;">
+                    <div style="flex: 1;">
+                        <h3 style="background: #fcf1f4; color: #E91350; padding: 6px 10px; margin: 0 0 15px 0; font-size: 13px; border-left: 4px solid #E91350; font-weight: bold;">
+                            PRODUCTOS MÁS VENDIDOS
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <thead>
+                                <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd; text-align: left;">
+                                    <th style="padding: 6px;">Producto</th>
+                                    <th style="padding: 6px; text-align: right;">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${bestsellersHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <h3 style="background: #fcf1f4; color: #E91350; padding: 6px 10px; margin: 0 0 15px 0; font-size: 13px; border-left: 4px solid #E91350; font-weight: bold;">
+                            INGREDIENTES ESTIMADOS
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <thead>
+                                <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd; text-align: left;">
+                                    <th style="padding: 6px;">Ingrediente</th>
+                                    <th style="padding: 6px; text-align: right;">Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ingredientsHTML}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 30px; text-align: center; color: #999; font-size: 10px;">
+                    Este reporte fue generado automáticamente por el sistema de administración de Sr. & Sra. Pinto.
+                </div>
+            `;
+
+            const filename = `cierre_${shiftText.toLowerCase().replace(/[\s()]+/g, '_')}_${now.toISOString().split('T')[0]}.pdf`;
+            const opt = {
+                margin:       10,
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+                console.log("✅ PDF de Cierre descargado.");
+            } catch (err) {
+                console.error("Error al generar PDF:", err);
+            }
+
+            if (autoSendEmail) {
+                const mailtoDest = "bryan@srsrapinto.com,maic@srsrapinto.com";
+                const subject = `Cierre de Caja - Sr. & Sra. Pinto - ${dateStr}`;
+                
+                let body = `Hola Bryan y Maic,\n\n`;
+                body += `Se ha realizado un cierre de turno en el sistema. A continuación se presentan los resultados correspondientes:\n\n`;
+                body += `----------------------------------------\n`;
+                body += `RESUMEN DE RENDIMIENTO (${shiftText.toUpperCase()})\n`;
+                body += `----------------------------------------\n`;
+                body += `Fecha: ${dateStr}\n`;
+                body += `Período: ${periodText}\n`;
+                if (this.selectedProductFilter) {
+                    body += `Filtro de Producto: ${this.selectedProductFilter}\n`;
+                }
+                body += `\n`;
+                body += `💰 Ventas Totales: ${revenue}\n`;
+                body += `🏷️ Costo de Ventas (COGS): ${cogs}\n`;
+                body += `📈 Utilidad Bruta: ${profit}\n`;
+                body += `📊 Margen de Utilidad: ${margin}\n`;
+                body += `🧾 Pedidos Facturados: ${orders}\n`;
+                body += `💳 Ticket Promedio: ${avgTicket}\n`;
+                body += `\n`;
+                body += `----------------------------------------\n`;
+                body += `CONSUMOS INTERNOS\n`;
+                body += `----------------------------------------\n`;
+                body += `👤 Dieta Bryan: ${dietaBryan}\n`;
+                body += `👤 Dieta Maic: ${dietaMaic}\n`;
+                body += `🎁 Regalías: ${regalias}\n\n`;
+                body += `El PDF detallado con el consumo de ingredientes y productos más vendidos ha sido descargado automáticamente a su dispositivo.\n\n`;
+                body += `Saludos,\n`;
+                body += `Sistema POS Sr. & Sra. Pinto\n`;
+
+                const mailtoUrl = `mailto:${encodeURIComponent(mailtoDest)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                window.location.href = mailtoUrl;
+            }
         },
 
         // --- DICCIONARIO DE NOMBRES OFICIALES ---
