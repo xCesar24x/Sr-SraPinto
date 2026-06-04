@@ -6,18 +6,20 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.reload();
     }, 15 * 60 * 1000);
 
-    // 2. Watchdog de suspensión (detecta si el navegador de la TV entra en suspensión/ahorro y se reactiva)
+    // 2. Watchdog de suspensión mejorado: umbral reducido a 15s para TVs de bajo procesador
+    //    Si el intervalo de 8s tarda más de 15s, el navegador estuvo congelado/suspendido
     let lastTime = Date.now();
     setInterval(() => {
         const currentTime = Date.now();
-        if (currentTime - lastTime > 25000) { // Si el intervalo de 10s tarda más de 25s, el navegador estuvo congelado/suspendido
+        if (currentTime - lastTime > 15000) {
             console.log("🔄 TV despertada de suspensión. Recargando para reconectar base de datos...");
             window.location.reload();
         }
         lastTime = currentTime;
-    }, 10000);
+    }, 8000);
 
     // 3. Forzar refresco si el dispositivo recupera conexión a Internet o se enfoca de nuevo la pantalla
+    //    (muchas TVs Sankey no implementan visibilitychange, pero se deja por compatibilidad)
     window.addEventListener("online", () => window.location.reload());
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
@@ -116,10 +118,38 @@ document.addEventListener("DOMContentLoaded", () => {
     // Map para rastrear pedidos completados y removerlos después de un rato
     const completedTimers = new Map();
 
+    // ─── HEARTBEAT: Ping liviano a Firestore cada 2 minutos ───
+    // Mantiene viva la conexión WebSocket en TVs con navegadores de bajo recurso
+    // que tienden a cortar conexiones inactivas silenciosamente
+    let lastSnapshotReceived = Date.now();
+    setInterval(async () => {
+        try {
+            // Lectura liviana: solo 1 documento para hacer ping a Firestore
+            await db.collection("pedidos").limit(1).get();
+            console.log("💓 Heartbeat Firestore OK");
+
+            // ─── LISTENER HEALTH CHECK ───
+            // Si el onSnapshot lleva más de 90 segundos sin recibir ningún evento
+            // (ni cambios ni el pulso inicial), significa que el WebSocket está muerto.
+            // En ese caso recargamos para reconectar limpiamente.
+            const silentMs = Date.now() - lastSnapshotReceived;
+            if (silentMs > 90000) {
+                console.warn("⚠️ Listener de Firebase silencioso por " + Math.round(silentMs/1000) + "s. Recargando...");
+                window.location.reload();
+            }
+        } catch(e) {
+            console.error("❌ Heartbeat falló. Sin conexión a Firestore:", e);
+            window.location.reload();
+        }
+    }, 2 * 60 * 1000); // cada 2 minutos
+
     // Escuchar pedidos pendientes (en proceso) e inyectar en tiempo real
     db.collection("pedidos")
         .where("estado", "in", ["pendiente", "listo"])
         .onSnapshot((snapshot) => {
+
+            // Registrar el momento del último evento recibido (para el health check)
+            lastSnapshotReceived = Date.now();
             
             const orders = [];
             snapshot.forEach(doc => {
@@ -148,6 +178,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     }, 210000)); // Desaparece después de 3.5 minutos (210,000 ms)
                 }
             });
+        }, (error) => {
+            // Manejar errores del listener explícitamente (ej. pérdida de permisos o conexión)
+            console.error("❌ Error en listener de Firestore:", error);
+            setTimeout(() => window.location.reload(), 3000); // Reconectar tras 3 segundos
         });
 
     function renderOrders(orders) {
