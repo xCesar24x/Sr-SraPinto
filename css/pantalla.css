@@ -535,3 +535,18 @@ body.force-rotated-counter .card-items li {
     height: 100%;
     object-fit: contain; /* Asegura que el video se vea completo sin recortar los bordes */
 }
+
+/* Rotar el video 90 grados para que quede de pie en pantallas verticales */
+body.force-rotated .video-screensaver,
+body.force-rotated-counter .video-screensaver {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body.force-rotated .video-screensaver video,
+body.force-rotated-counter .video-screensaver video {
+    width: 100vw; /* Se invierten las dimensiones para que al rotarlo encaje perfecto */
+    height: 100vh;
+    transform: rotate(90deg);
+}
