@@ -196,6 +196,11 @@ const CartManager = {
 
     updateName(name) {
         this.customerName = name;
+        const nameInput = document.getElementById('order-name');
+        if (nameInput && name.trim() !== '') {
+            nameInput.style.borderColor = '';
+            nameInput.style.boxShadow = '';
+        }
     },
 
     toggleAllergies(checked) {
@@ -256,6 +261,17 @@ const CartManager = {
 
     async procesarPedido() {
         if (this.items.length === 0) return;
+
+        if (!this.customerName || this.customerName.trim() === '') {
+            alert("⚠️ Por favor, ingresá el nombre del cliente para continuar con el pedido.");
+            const nameInput = document.getElementById('order-name');
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.style.borderColor = 'var(--rojo)';
+                nameInput.style.boxShadow = '0 0 10px rgba(233, 19, 80, 0.5)';
+            }
+            return;
+        }
 
         const btn = document.getElementById('btn-checkout');
         const originalText = btn.innerHTML;
