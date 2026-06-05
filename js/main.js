@@ -791,7 +791,7 @@ const MenuController = {
             precio: 1200,
             img: '<img src="images-catalogo/gaseosas.jpg" alt="Gaseosas" class="img-fit">',
             requiresOptions: true,
-            options: ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero']
+            options: ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero', 'Té Blanco']
         },
         {
             id: 'b-hidratante',
