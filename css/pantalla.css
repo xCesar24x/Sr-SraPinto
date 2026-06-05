@@ -513,3 +513,25 @@ body.force-rotated .card-items li,
 body.force-rotated-counter .card-items li {
     font-size: 1.2rem;
 }
+
+/* ─── VIDEO SALVAPANTALLAS ─── */
+.video-screensaver {
+    position: fixed;
+    inset: 0;
+    z-index: 5; /* Por debajo del header y los textos, pero encima del slideshow base */
+    background: var(--negro);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+
+.video-screensaver.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.video-screensaver video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

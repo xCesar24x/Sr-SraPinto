@@ -184,15 +184,19 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => window.location.reload(), 3000); // Reconectar tras 3 segundos
         });
 
+    const videoScreensaver = document.getElementById('video-screensaver');
+
     function renderOrders(orders) {
         if (orders.length === 0) {
             emptyDisplay.style.display = 'flex';
             displayColumns.style.display = 'none';
+            if (videoScreensaver) videoScreensaver.classList.add('active');
             return;
         }
 
         emptyDisplay.style.display = 'none';
         displayColumns.style.display = 'grid';
+        if (videoScreensaver) videoScreensaver.classList.remove('active');
 
         const preparingOrders = orders.filter(o => o.estado === 'pendiente').slice(0, 4);
         const readyOrders = orders.filter(o => o.estado === 'listo').slice(0, 4);
