@@ -243,4 +243,39 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `;
     }
+
+    // ─── MENSAJES PROMOCIONALES ROTATIVOS (Cada 2 minutos) ───
+    const promoMessages = [
+        { title: "¡Qué rico un pinto con huevo!", subtitle: "Pedí el tuyo y mirá acá cuándo está listo" },
+        { title: "¡Tome pal pinto!", subtitle: "Aprovechá y pedí algo delicioso para acompañar" },
+        { title: "¡El gallo pinto te está esperando!", subtitle: "Hacé tu pedido y disfrutá del mejor sabor" },
+        { title: "¡Tome pal pinto!", subtitle: "¿Ya pediste tu cafecito o prefieres algo más?" },
+        { title: "¿Antojo de pinto?", subtitle: "¡Nosotros te lo preparamos! Pedí ya tu combo" },
+        { title: "¡Soy más que un pinto!", subtitle: "¿Ya probaste mi burrote?" },
+        { title: "¡Tome pal pinto!", subtitle: "Pedí en la caja y mirá acá cuándo está listo" },
+        { title: "¡Un cafecito con pinto es ideal!", subtitle: "Hacé tu pedido y mirá acá cuándo está listo" }
+    ];
+    let currentPromoIndex = 0;
+
+    setInterval(() => {
+        // Solo actualizamos si el empty display está visible y no es un error de conexión
+        if (emptyDisplay && emptyDisplay.style.display !== 'none' && !emptyDisplay.innerHTML.includes('fa-exclamation-triangle')) {
+            currentPromoIndex = (currentPromoIndex + 1) % promoMessages.length;
+            const msg = promoMessages[currentPromoIndex];
+            const pElement = emptyDisplay.querySelector('p');
+            const spanElement = emptyDisplay.querySelector('span');
+            
+            if (pElement && spanElement) {
+                pElement.style.opacity = 0;
+                spanElement.style.opacity = 0;
+                
+                setTimeout(() => {
+                    pElement.innerText = msg.title;
+                    spanElement.innerText = msg.subtitle;
+                    pElement.style.opacity = 1;
+                    spanElement.style.opacity = 1;
+                }, 500);
+            }
+        }
+    }, 2 * 60 * 1000); // Cada 2 minutos
 });

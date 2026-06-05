@@ -223,8 +223,8 @@ body {
     color: rgba(255,255,255,0.25);
 }
 .empty-display i { font-size: 6rem; margin-bottom: 25px; color: rgba(253,245,230,0.1); }
-.empty-display p { font-size: 2.2rem; font-weight: 900; color: var(--mostaza); }
-.empty-display span { font-size: 1.1rem; margin-top: 10px; }
+.empty-display p { font-size: 2.2rem; font-weight: 900; color: var(--mostaza); transition: opacity 0.5s ease; }
+.empty-display span { font-size: 1.1rem; margin-top: 10px; transition: opacity 0.5s ease; }
 
 /* ANIMACIONES DE ICONOS */
 .pulse-orange {
