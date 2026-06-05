@@ -518,7 +518,7 @@ body.force-rotated-counter .card-items li {
 .video-screensaver {
     position: fixed;
     inset: 0;
-    z-index: 5; /* Por debajo del header y los textos, pero encima del slideshow base */
+    z-index: 1000; /* Cubre todo el módulo de pantalla y el texto por completo */
     background: var(--negro);
     opacity: 0;
     visibility: hidden;
