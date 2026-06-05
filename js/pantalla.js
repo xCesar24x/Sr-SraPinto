@@ -6,12 +6,12 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.reload();
     }, 15 * 60 * 1000);
 
-    // 2. Watchdog de suspensión mejorado: umbral reducido a 15s para TVs de bajo procesador
-    //    Si el intervalo de 8s tarda más de 15s, el navegador estuvo congelado/suspendido
+    // 2. Watchdog de suspensión mejorado: umbral ajustado a 35s para evitar falsos positivos por lag de reproducción de video en TVs de bajo procesador
+    //    Si el intervalo de 8s tarda más de 35s, el navegador estuvo congelado/suspendido
     let lastTime = Date.now();
     setInterval(() => {
         const currentTime = Date.now();
-        if (currentTime - lastTime > 15000) {
+        if (currentTime - lastTime > 35000) {
             console.log("🔄 TV despertada de suspensión. Recargando para reconectar base de datos...");
             window.location.reload();
         }
@@ -185,18 +185,38 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
     const videoScreensaver = document.getElementById('video-screensaver');
+    const videoEl = videoScreensaver ? videoScreensaver.querySelector('video') : null;
+
+    if (videoEl) {
+        // Bucle manual para solventar fallas del atributo 'loop' nativo en Smart TVs
+        videoEl.addEventListener('ended', () => {
+            console.log("🎬 Video finalizado. Reiniciando bucle de reproducción...");
+            videoEl.currentTime = 0;
+            videoEl.play().catch(err => console.error("Error al reiniciar video:", err));
+        });
+    }
 
     function renderOrders(orders) {
         if (orders.length === 0) {
             emptyDisplay.style.display = 'flex';
             displayColumns.style.display = 'none';
-            if (videoScreensaver) videoScreensaver.classList.add('active');
+            if (videoScreensaver) {
+                videoScreensaver.classList.add('active');
+                if (videoEl && videoEl.paused) {
+                    videoEl.play().catch(err => console.error("Error al reproducir video:", err));
+                }
+            }
             return;
         }
 
         emptyDisplay.style.display = 'none';
         displayColumns.style.display = 'grid';
-        if (videoScreensaver) videoScreensaver.classList.remove('active');
+        if (videoScreensaver) {
+            videoScreensaver.classList.remove('active');
+            if (videoEl && !videoEl.paused) {
+                videoEl.pause();
+            }
+        }
 
         const preparingOrders = orders.filter(o => o.estado === 'pendiente').slice(0, 4);
         const readyOrders = orders.filter(o => o.estado === 'listo').slice(0, 4);
