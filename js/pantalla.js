@@ -191,9 +191,45 @@ document.addEventListener("DOMContentLoaded", () => {
         // Bucle manual para solventar fallas del atributo 'loop' nativo en Smart TVs
         videoEl.addEventListener('ended', () => {
             console.log("🎬 Video finalizado. Reiniciando bucle de reproducción...");
-            videoEl.currentTime = 0;
+            videoEl.load(); // Forzar recarga completa del decodificador en la TV
             videoEl.play().catch(err => console.error("Error al reiniciar video:", err));
         });
+
+        // Watchdog de reproducción específico para evitar congelamiento al final o a mitad en TVs lentas
+        let lastVideoTime = -1;
+        let freezeCounter = 0;
+
+        setInterval(() => {
+            // Solo evaluar si el salvapantallas está activo y visible
+            if (videoScreensaver && videoScreensaver.classList.contains('active')) {
+                const currentTime = videoEl.currentTime;
+
+                // Si se supone que está reproduciéndose pero el tiempo se congela
+                if (!videoEl.paused) {
+                    if (currentTime === lastVideoTime) {
+                        freezeCounter++;
+                        // Si el tiempo no cambia durante 3 segundos, forzamos recarga
+                        if (freezeCounter >= 3) {
+                            console.warn("⚠️ Reproducción congelada detectada. Forzando recarga de video...");
+                            videoEl.load();
+                            videoEl.play().catch(err => console.error(err));
+                            freezeCounter = 0;
+                        }
+                    } else {
+                        freezeCounter = 0;
+                    }
+                }
+
+                // Si llega al puro final (menos de 0.8s para terminar) y la TV se traba sin disparar 'ended'
+                if (videoEl.duration && (videoEl.duration - currentTime < 0.8)) {
+                    console.log("🎬 Video cerca del final. Forzando ciclo de reinicio de stream...");
+                    videoEl.load();
+                    videoEl.play().catch(err => console.error(err));
+                }
+
+                lastVideoTime = currentTime;
+            }
+        }, 1000);
     }
 
     function renderOrders(orders) {
