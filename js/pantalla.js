@@ -151,33 +151,79 @@ document.addEventListener("DOMContentLoaded", () => {
             // Registrar el momento del último evento recibido (para el health check)
             lastSnapshotReceived = Date.now();
             
-            const orders = [];
+            const activeOrders = [];
+            const expiredOrdersToRetire = [];
+            const nowTime = Date.now();
+
             snapshot.forEach(doc => {
                 const data = doc.data();
                 data.id = doc.id;
                 // Solo mostrar pedidos de hoy
                 if (data.fecha >= todayISO) {
-                    orders.push(data);
+                    if (data.estado === 'listo') {
+                        // Si no tiene fechaListo (pedidos viejos/actuales), usamos su fecha de creación como fallback
+                        const readyTime = data.fechaListo ? new Date(data.fechaListo) : new Date(data.fecha);
+                        const elapsed = nowTime - readyTime.getTime();
+                        if (elapsed >= 210000) { // 3.5 minutos = 210,000 ms
+                            expiredOrdersToRetire.push(data);
+                        } else {
+                            activeOrders.push(data);
+                        }
+                    } else {
+                        // Estado "pendiente"
+                        activeOrders.push(data);
+                    }
                 }
             });
 
             // Ordenar: por fecha ascendente para que los más antiguos queden arriba
-            orders.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            activeOrders.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
-            renderOrders(orders);
+            renderOrders(activeOrders);
 
-            // Programar auto-desaparición de los pedidos listos/completados
-            orders.forEach(order => {
+            // Identificar qué IDs de pedidos listos están activos en este snapshot
+            const currentReadyIds = new Set();
+            activeOrders.forEach(order => {
+                if (order.estado === 'listo') {
+                    currentReadyIds.add(order.id);
+                }
+            });
+
+            // Cancelar y limpiar temporizadores de pedidos que ya no están "listos"
+            for (const [id, timeoutId] of completedTimers.entries()) {
+                if (!currentReadyIds.has(id)) {
+                    clearTimeout(timeoutId);
+                    completedTimers.delete(id);
+                }
+            }
+
+            // Programar auto-desaparición para los nuevos pedidos listos activos
+            activeOrders.forEach(order => {
                 if (order.estado === 'listo' && !completedTimers.has(order.id)) {
+                    const readyTime = order.fechaListo ? new Date(order.fechaListo) : new Date(order.fecha);
+                    const elapsed = Date.now() - readyTime.getTime();
+                    const remainingTime = Math.max(0, 210000 - elapsed);
+
                     completedTimers.set(order.id, setTimeout(async () => {
                         // Cambiar estado a "retirado" para que desaparezca de la pantalla
                         try {
                             await db.collection("pedidos").doc(order.id).update({ estado: "retirado" });
-                        } catch(e) { console.error(e); }
+                        } catch(e) { console.error("Error al auto-retirar pedido:", e); }
                         completedTimers.delete(order.id);
-                    }, 210000)); // Desaparece después de 3.5 minutos (210,000 ms)
+                    }, remainingTime));
                 }
             });
+
+            // Retirar en Firestore en segundo plano los pedidos que ya expiraron
+            expiredOrdersToRetire.forEach(async (order) => {
+                try {
+                    await db.collection("pedidos").doc(order.id).update({ estado: "retirado" });
+                    console.log(`🧹 Pedido expirado auto-retirado en la base de datos: ${order.id}`);
+                } catch(e) {
+                    console.error(`❌ Error al auto-retirar pedido expirado ${order.id}:`, e);
+                }
+            });
+
         }, (error) => {
             // Manejar errores del listener explícitamente (ej. pérdida de permisos o conexión)
             console.error("❌ Error en listener de Firestore:", error);

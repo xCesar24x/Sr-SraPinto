@@ -237,7 +237,10 @@ window.CocinaManager = {
             }
 
             // 3. Actualizar el estado en Firebase a listo
-            await docRef.update({ estado: "listo" });
+            await docRef.update({ 
+                estado: "listo",
+                fechaListo: new Date().toISOString()
+            });
             
             // Animación de salida
             if(ticketEl) {
