@@ -190,12 +190,14 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             // Cancelar y limpiar temporizadores de pedidos que ya no están "listos"
-            for (const [id, timeoutId] of completedTimers.entries()) {
+            const timersToRemove = [];
+            completedTimers.forEach((timeoutId, id) => {
                 if (!currentReadyIds.has(id)) {
                     clearTimeout(timeoutId);
-                    completedTimers.delete(id);
+                    timersToRemove.push(id);
                 }
-            }
+            });
+            timersToRemove.forEach(id => completedTimers.delete(id));
 
             // Programar auto-desaparición para los nuevos pedidos listos activos
             activeOrders.forEach(order => {
