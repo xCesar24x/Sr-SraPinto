@@ -40,10 +40,16 @@
 
     <div class="admin-layout">
         <!-- SIDEBAR -->
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="admin-sidebar">
+            <script>
+                if (localStorage.getItem('admin_sidebar_collapsed') === 'true') {
+                    document.getElementById('admin-sidebar').classList.add('collapsed');
+                }
+            </script>
             <div class="brand">
                 <img src="logo-brand/PNG/Logo Blanco Horizontal.png" alt="Logo">
                 <h2>Admin</h2>
+                <button id="sidebar-toggle" onclick="toggleSidebar()" style="background: none; border: none; color: var(--blanco); cursor: pointer; margin-left: auto; font-size: 1.2rem; transition: transform 0.3s; display: flex; align-items: center; justify-content: center;"><i class="fas fa-chevron-left"></i></button>
             </div>
             <nav class="sidebar-nav">
                 <a href="#" id="nav-inventory" class="active" onclick="AdminManager.switchTab('inventory', event)"><i class="fas fa-boxes"></i> Inventario</a>

@@ -866,7 +866,7 @@
         .cart-drawer {
             position: fixed; top: 0; right: 0; width: 400px; max-width: 100%; height: 100%;
             background: rgba(20, 5, 8, 0.98); border-left: 1px solid rgba(253, 185, 19, 0.2);
-            z-index: 2000; box-shadow: -10px 0 40px rgba(0,0,0,0.8);
+            z-index: 10005; box-shadow: -10px 0 40px rgba(0,0,0,0.8);
             display: flex; flex-direction: column; transition: 0.5s cubic-bezier(0.65, 0, 0.35, 1);
             backdrop-filter: blur(15px);
         }
@@ -937,11 +937,21 @@
         /* ─── PASARELA DE PAGO (CHIPS) ─── */
         .payment-section { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
         .payment-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: rgba(255,255,255,0.5); letter-spacing: 1px; margin-bottom: 10px; }
-        .payment-options { display: flex; gap: 8px; flex-wrap: wrap; }
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
         .pay-chip {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 10px 14px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px 6px;
             border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.3s;
-            display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.6);
+            display: flex; align-items: center; justify-content: center; gap: 6px; color: rgba(255,255,255,0.6);
+            text-align: center;
+        }
+        @media (max-width: 360px) {
+            .payment-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         .pay-chip i { font-size: 1rem; }
         .pay-chip.active {
@@ -963,7 +973,7 @@
         .success-overlay {
             position: fixed; inset: 0; background: rgba(59, 5, 11, 0.95);
             display: flex; align-items: center; justify-content: center;
-            z-index: 9999; opacity: 0; pointer-events: none; transition: 0.4s;
+            z-index: 10010; opacity: 0; pointer-events: none; transition: 0.4s;
             backdrop-filter: blur(10px);
         }
         .success-overlay.active { opacity: 1; pointer-events: auto; }
@@ -1412,6 +1422,11 @@
     <div class="cart-header">
         <h2>Mi Pedido</h2>
         <button id="cart-close-btn" class="chat-close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <!-- BANNER DE EDICIÓN INTERNO -->
+    <div id="cart-edit-banner" style="display: none; background: rgba(230, 126, 34, 0.15); border-bottom: 2px solid #e67e22; padding: 10px 20px; font-size: 0.85rem; font-weight: bold; color: #ff9f43; align-items: center; gap: 8px;">
+        <i class="fas fa-edit"></i> <span id="cart-edit-banner-text">Modificando Comanda</span>
     </div>
     
     <div id="cart-items-container" class="cart-items">

@@ -1786,3 +1786,11 @@ document.addEventListener("DOMContentLoaded", () => {
     FeriaManager.init();
 
 });
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('admin-sidebar');
+    if (!sidebar) return;
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    localStorage.setItem('admin_sidebar_collapsed', isCollapsed);
+}
+

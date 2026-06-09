@@ -119,6 +119,21 @@ const CartManager = {
         const totalDisplay = document.getElementById('cart-total');
         const cartContent = document.getElementById('cart-items-container');
         
+        // Update editing banner in cart drawer
+        const editBanner = document.getElementById('cart-edit-banner');
+        const editBannerText = document.getElementById('cart-edit-banner-text');
+        if (editBanner) {
+            if (this.editingOrderId) {
+                editBanner.style.display = 'flex';
+                const bannerName = document.getElementById('editing-customer-name');
+                if (editBannerText) {
+                    editBannerText.innerText = bannerName ? `Modificando Comanda: ${bannerName.innerText}` : 'Modificando Comanda';
+                }
+            } else {
+                editBanner.style.display = 'none';
+            }
+        }
+        
         if (countBadge) countBadge.textContent = this.getCount();
         if (drawerCount) drawerCount.textContent = this.getCount();
         if (totalDisplay) totalDisplay.textContent = `₡${this.getTotal().toLocaleString()}`;
