@@ -1148,7 +1148,8 @@
             text-transform: uppercase; color: rgba(255,255,255,0.5); border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         .inventory-table td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 500; font-size: 0.85rem; }
-        .inventory-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+        .inventory-table tbody tr { cursor: pointer; transition: background 0.2s; }
+        .inventory-table tbody tr:hover { background: rgba(255,255,255,0.06); }
 
         .audit-table-container {
             max-height: 60vh;
@@ -1659,6 +1660,18 @@ if(slides.length > 0) {
     </div>
 </div>
 
+<div id="sale-details-modal" class="dashboard-modal" style="z-index: 1100;">
+    <div class="dashboard-modal-content" style="max-width: 500px; width: 95%;">
+        <div class="dashboard-modal-header">
+            <h3 class="dashboard-modal-title"><i class="fas fa-receipt" style="color: #3498db;"></i> Detalle de Venta</h3>
+            <button onclick="SalesDashboard.closeSaleDetails()" class="dashboard-modal-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="sale-details-body" class="dashboard-modal-body" style="padding: 15px; color: white;">
+            <!-- Se llena dinámicamente -->
+        </div>
+    </div>
+</div>
+
 <!-- ENGINE DEL DASHBOARD DE VENTAS -->
 <script>
 const SalesDashboard = {
@@ -1803,6 +1816,91 @@ const SalesDashboard = {
         document.getElementById('sales-history-modal').classList.remove('active');
     },
 
+    selectedOrderDetailOrder: null,
+
+    openSaleDetails(orderId) {
+        const order = this.allOrders.find(o => o.id === orderId);
+        if (!order) return;
+        
+        this.selectedOrderDetailOrder = order;
+        
+        const dateObj = new Date(order.fecha);
+        const dateStr = dateObj.toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + 
+                        dateObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        const itemsHtml = order.items.map(item => `
+            <li style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 6px;">
+                <span><strong style="color: var(--mostaza); font-weight: 800;">${item.cantidad}x</strong> ${item.nombre}</span>
+                <span style="font-weight: 800;">₡${(item.precio * item.cantidad).toLocaleString()}</span>
+            </li>
+        `).join('');
+        
+        let allergiesHtml = '';
+        if (order.alergias && order.alergias.trim() !== '') {
+            allergiesHtml = `
+                <div style="background: rgba(231, 76, 60, 0.15); border-left: 3px solid #e74c3c; padding: 10px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 700; color: #ff6b6b; margin-top: 15px; margin-bottom: 15px;">
+                    <i class="fas fa-exclamation-triangle"></i> Alergias/Notas: ${order.alergias}
+                </div>
+            `;
+        }
+
+        let statusText = 'Pendiente';
+        let statusColor = '#f1c40f';
+        if (order.estado === 'listo' || order.estado === 'retirado') {
+            statusText = 'Listo / Entregado';
+            statusColor = '#2ecc71';
+        } else if (order.estado === 'regresado') {
+            statusText = 'Devuelto';
+            statusColor = '#e74c3c';
+        } else if (order.estado === 'cancelado') {
+            statusText = 'Cancelado';
+            statusColor = '#95a5a6';
+        }
+        
+        const body = document.getElementById('sale-details-body');
+        body.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
+                    <span style="font-size: 1.15rem; font-weight: 900; color: var(--mostaza);">Comanda #${order.num_pedido || order.id.slice(-5).toUpperCase()}</span>
+                    <span style="font-size: 0.8rem; opacity: 0.7;">${dateStr}</span>
+                </div>
+                <div style="font-size: 0.95rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <span><strong>Cliente:</strong> ${order.cliente}</span>
+                    <span style="background: ${statusColor}; color: #000; font-size: 0.75rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">${statusText}</span>
+                </div>
+                
+                <h4 style="margin: 15px 0 8px 0; font-size: 0.85rem; text-transform: uppercase; color: rgba(255,255,255,0.5); letter-spacing: 1px;">Productos</h4>
+                <ul style="list-style: none; padding-left: 0; margin: 0;">
+                    ${itemsHtml}
+                </ul>
+                
+                ${allergiesHtml}
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid rgba(255,255,255,0.15);">
+                    <span style="font-size: 0.9rem; opacity: 0.8;">Método de Pago: <strong>${order.metodoPago || 'Efectivo'}</strong></span>
+                    <span style="font-size: 1.35rem; font-weight: 900; color: #2ecc71;">₡${(order.total || 0).toLocaleString()}</span>
+                </div>
+                
+                <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="CartManager.imprimirTiquete(SalesDashboard.selectedOrderDetailOrder)" class="success-btn" style="padding: 10px 15px; font-size: 0.85rem; background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-print"></i> Reimprimir Tiquete
+                    </button>
+                    <button onclick="SalesDashboard.closeSaleDetails()" class="success-btn" style="padding: 10px 15px; font-size: 0.85rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer;">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('sale-details-modal').classList.add('active');
+        if (navigator.vibrate) navigator.vibrate(50);
+    },
+
+    closeSaleDetails() {
+        document.getElementById('sale-details-modal').classList.remove('active');
+        this.selectedOrderDetailOrder = null;
+    },
+
     renderSalesHistory() {
         const container = document.getElementById('sales-history-list');
         if (!container) return;
@@ -1848,7 +1946,7 @@ const SalesDashboard = {
             let methodClass = payMethod.toLowerCase().replace(/\s/g, '');
 
             return `
-                <tr>
+                <tr onclick="SalesDashboard.openSaleDetails('${order.id}')" style="cursor: pointer;">
                     <td style="font-size: 0.8rem;">${dateStr}</td>
                     <td style="font-weight:700;">[#${order.num_pedido || order.id.slice(-5).toUpperCase()}] ${order.cliente} ${statusBadge}</td>
                     <td style="font-weight:900; color: var(--mostaza);">₡${(order.total || 0).toLocaleString()}</td>
