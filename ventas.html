@@ -1663,7 +1663,7 @@ if(slides.length > 0) {
 <div id="sale-details-modal" class="dashboard-modal" style="z-index: 1100;">
     <div class="dashboard-modal-content" style="max-width: 500px; width: 95%;">
         <div class="dashboard-modal-header">
-            <h3 class="dashboard-modal-title"><i class="fas fa-receipt" style="color: #3498db;"></i> Detalle de Venta</h3>
+            <h3 class="dashboard-modal-title" style="font-family: 'Gotham', sans-serif; font-size: 1.35rem; font-weight: 800; text-transform: uppercase; color: var(--mostaza);"><i class="fas fa-receipt" style="color: #3498db; font-size: 1.25rem;"></i> Detalle de Venta</h3>
             <button onclick="SalesDashboard.closeSaleDetails()" class="dashboard-modal-close"><i class="fas fa-times"></i></button>
         </div>
         <div id="sale-details-body" class="dashboard-modal-body" style="padding: 15px; color: white;">
@@ -1881,11 +1881,11 @@ const SalesDashboard = {
                     <span style="font-size: 1.35rem; font-weight: 900; color: #2ecc71;">₡${(order.total || 0).toLocaleString()}</span>
                 </div>
                 
-                <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
-                    <button onclick="CartManager.imprimirTiquete(SalesDashboard.selectedOrderDetailOrder)" class="success-btn" style="padding: 10px 15px; font-size: 0.85rem; background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-print"></i> Reimprimir Tiquete
+                <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; width: 100%;">
+                    <button onclick="CartManager.imprimirTiquete(SalesDashboard.selectedOrderDetailOrder)" style="flex: 1; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
+                        <i class="fas fa-print"></i> Reimprimir
                     </button>
-                    <button onclick="SalesDashboard.closeSaleDetails()" class="success-btn" style="padding: 10px 15px; font-size: 0.85rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer;">
+                    <button onclick="SalesDashboard.closeSaleDetails()" style="flex: 1; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); color: white; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
                         Cerrar
                     </button>
                 </div>
