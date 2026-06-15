@@ -1039,12 +1039,12 @@ const MenuController = {
         container.style.transform = 'none';
         
         setTimeout(() => {
-            container.innerHTML = filtered.map(product => {
+            container.innerHTML = filtered.map((product, index) => {
                 const isAgotado = this.inventario[product.id] === false;
                 const cartItem = CartManager.items.find(i => i.id === product.id);
                 const btnContent = cartItem ? `<span style="font-weight: bold; font-size: 1.2rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
                 return `
-                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" ${isAgotado ? 'style="opacity: 0.5; filter: grayscale(1); pointer-events: none;"' : ''}>
+                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" style="--index: ${index}; ${isAgotado ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
                     <div class="mch-img">${product.img}</div>
                     <div class="mch-info">
                         <div class="mch-title">${product.nombre} ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''} ${isAgotado ? '<span style="color: #ff3b30; font-weight: 900; font-size: 0.75rem; margin-left: 6px; padding: 2px 6px; border: 1px solid #ff3b30; border-radius: 4px;">AGOTADO</span>' : ''}</div>
@@ -1059,14 +1059,11 @@ const MenuController = {
                 </div>
             `}).join('');
 
-            // Stagger animation: aparecen una tras otra
+            // Stagger animation trigger
             const cards = container.querySelectorAll('.menu-card-h');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.transition = `opacity 0.3s ease ${index * 0.07}s, transform 0.3s ease ${index * 0.07}s`;
-                    card.classList.add('card-visible');
-                }, 50);
-            });
+            setTimeout(() => {
+                cards.forEach(card => card.classList.add('card-visible'));
+            }, 50);
         }, 100);
     }
 };

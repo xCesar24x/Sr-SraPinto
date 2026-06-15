@@ -825,7 +825,9 @@
         .menu-card-h {
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
             border-radius: 15px; display: flex; align-items: stretch; gap: 15px; padding: 15px;
-            transition: 0.3s; position: relative; overflow: hidden;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition-delay: calc(var(--index, 0) * 0.07s);
+            position: relative; overflow: hidden;
             opacity: 0; transform: translateY(15px);
         }
         .menu-card-h.card-visible { opacity: 1; transform: translateY(0); }
