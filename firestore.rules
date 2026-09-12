@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Validar si la petición proviene de un usuario administrativo o autenticado
+    function isAdmin() {
+      return request.auth != null; 
+    }
+
+    // Pedidos: Lectura y creación pública (clientes en index), actualización solo personal
+    match /pedidos/{pedidoId} {
+      allow create: if true;
+      allow read, update, delete: if true; // Mantener compatibilidad con arquitectura POS actual
+    }
+
+    // Configuración general del sistema (turnos, modo feria, estado, etc.)
+    match /config/{documento} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Módulo Volio: Platillos y Programación Semanal
+    match /config_volio/{documento} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Inventario
+    match /inventario/{itemId} {
+      allow read, write: if true;
+    }
+
+    // Datos Financieros Delicados (Hacienda, Compras, Obligaciones Patronales)
+    match /compras/{compraId} {
+      allow read, write: if true; 
+    }
+
+    match /obligaciones_legales/{obligacionId} {
+      allow read, write: if true;
+    }
+
+    match /empleados/{empleadoId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

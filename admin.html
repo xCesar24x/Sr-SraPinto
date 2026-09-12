@@ -53,6 +53,8 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="#" id="nav-inventory" class="active" onclick="AdminManager.switchTab('inventory', event)"><i class="fas fa-boxes"></i> Inventario</a>
+                <a href="#" id="nav-volio" onclick="AdminManager.switchTab('volio', event)"><i class="fas fa-calendar-alt"></i> Modo Volio</a>
+                <a href="#" id="nav-finances" onclick="AdminManager.switchTab('finances', event)"><i class="fas fa-file-invoice-dollar"></i> Finanzas & Hacienda</a>
                 <a href="#" id="nav-reports" onclick="AdminManager.switchTab('reports', event)"><i class="fas fa-chart-line"></i> Reportes</a>
                 <a href="#" id="nav-users" onclick="AdminManager.switchTab('users', event)"><i class="fas fa-users"></i> Usuarios</a>
                 <a href="#" id="nav-feria" onclick="AdminManager.switchTab('feria', event)"><i class="fas fa-store-slash"></i> Modo Feria</a>
@@ -388,6 +390,205 @@
                     </button>
                 </div>
             </section>
+
+            <!-- SECTION: MODO VOLIO -->
+            <section id="section-volio" class="admin-section">
+                <header class="top-bar">
+                    <div>
+                        <h1 class="page-title">Gestión Modo Volio & Ingeniería de Menú</h1>
+                        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 4px;">Configura platillos con costeo unitario y programa el menú semanal (Lunes a Viernes).</p>
+                    </div>
+                    <button class="btn-primary" onclick="VolioManager.openDishModal()"><i class="fas fa-plus"></i> Nuevo Platillo / Receta</button>
+                </header>
+
+                <!-- TOGGLE ACTIVAR MODO VOLIO -->
+                <div class="store-toggle-card" id="volio-toggle-card" style="margin-bottom: 25px;">
+                    <div class="toggle-info">
+                        <div class="toggle-icon" id="volio-toggle-icon" style="background: rgba(233, 19, 80, 0.15); color: var(--rojo);">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div>
+                            <h3>Servicio Modo Volio</h3>
+                            <p id="volio-toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Al activarlo, el menú de clientes y ventas operará con las categorías de Volio.</p>
+                        </div>
+                    </div>
+                    <button class="toggle-btn closed" id="volio-toggle-btn" onclick="VolioManager.toggleVolioMode()">
+                        <span class="toggle-knob"></span>
+                    </button>
+                </div>
+
+                <!-- SELECTOR DE DÍAS (LUNES A VIERNES) -->
+                <div style="background: var(--tarjeta); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <h2 style="font-size: 1.15rem; color: var(--mostaza);"><i class="fas fa-calendar-check" style="color: var(--rojo); margin-right: 8px;"></i> Programación de Menú por Día</h2>
+                        <span style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Selecciona los platillos que estarán disponibles cada día de la semana.</span>
+                    </div>
+
+                    <div class="day-tabs-container">
+                        <button class="day-tab-btn active" onclick="VolioManager.switchDay('lunes', event)"><i class="fas fa-calendar-day"></i> Lunes</button>
+                        <button class="day-tab-btn" onclick="VolioManager.switchDay('martes', event)"><i class="fas fa-calendar-day"></i> Martes</button>
+                        <button class="day-tab-btn" onclick="VolioManager.switchDay('miercoles', event)"><i class="fas fa-calendar-day"></i> Miércoles</button>
+                        <button class="day-tab-btn" onclick="VolioManager.switchDay('jueves', event)"><i class="fas fa-calendar-day"></i> Jueves</button>
+                        <button class="day-tab-btn" onclick="VolioManager.switchDay('viernes', event)"><i class="fas fa-calendar-day"></i> Viernes</button>
+                    </div>
+
+                    <div id="volio-day-schedule-content" style="margin-top: 15px;">
+                        <!-- Se llena dinámicamente con selector de platillos por categoría -->
+                        <div style="text-align: center; padding: 20px; opacity: 0.6;">Cargando programación...</div>
+                    </div>
+                </div>
+
+                <!-- BASE DE DATOS DE PLATILLOS & COSTEO F&B -->
+                <div style="background: var(--tarjeta); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <h2 style="font-size: 1.15rem; color: var(--mostaza);"><i class="fas fa-book-open" style="color: #f1c40f; margin-right: 8px;"></i> Catálogo Maestro & Costeo Unitario (F&B)</h2>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="volio-search-dish" oninput="VolioManager.renderDishesTable()" placeholder="Buscar platillo..." style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">
+                            <select id="volio-filter-cat" onchange="VolioManager.renderDishesTable()" class="report-select" style="padding: 6px 10px; font-size: 0.85rem;">
+                                <option value="todas">Todas las Categorías</option>
+                                <option value="desayuno">Desayunos</option>
+                                <option value="almuerzo">Almuerzos</option>
+                                <option value="snacks">Snacks</option>
+                                <option value="bebidas">Bebidas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="audit-table-container">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Platillo</th>
+                                    <th>Categoría</th>
+                                    <th>Precio Venta</th>
+                                    <th>Costo (Materia Prima)</th>
+                                    <th>Margen Bruto</th>
+                                    <th>Food Cost %</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="volio-dishes-list">
+                                <tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.6;">Cargando platillos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: FINANZAS & HACIENDA CR -->
+            <section id="section-finances" class="admin-section">
+                <header class="top-bar">
+                    <div>
+                        <h1 class="page-title">Contabilidad & Régimen Simplificado (Costa Rica) 🇨🇷</h1>
+                        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 4px;">Libro de compras tributario para declaración D-105, estado de resultados en vivo y semáforo de obligaciones.</p>
+                    </div>
+                    <button class="btn-primary" onclick="FinancesManager.openAddPurchaseModal()"><i class="fas fa-receipt"></i> Registrar Compra / Factura</button>
+                </header>
+
+                <!-- RESUMEN CONTABLE EN VIVO (P&L REAL) -->
+                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 25px;">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.1);"><i class="fas fa-cash-register"></i></div>
+                        <div class="stat-info">
+                            <h3>Ingresos por Ventas</h3>
+                            <p id="fin-stat-income">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #e74c3c; background: rgba(231, 76, 60, 0.1);"><i class="fas fa-shopping-cart"></i></div>
+                        <div class="stat-info">
+                            <h3>Compras Registradas</h3>
+                            <p id="fin-stat-purchases">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #3498db; background: rgba(52, 152, 219, 0.1);"><i class="fas fa-balance-scale"></i></div>
+                        <div class="stat-info">
+                            <h3>Utilidad Operativa Real</h3>
+                            <p id="fin-stat-profit">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-percentage"></i></div>
+                        <div class="stat-info">
+                            <h3>Rentabilidad Neta</h3>
+                            <p id="fin-stat-margin">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEMÁFORO DE OBLIGACIONES PATRONALES & TRIBUTARIAS -->
+                <div style="background: var(--tarjeta); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <h2 style="font-size: 1.15rem; color: var(--mostaza);"><i class="fas fa-bell" style="color: #e67e22; margin-right: 8px;"></i> Alertas de Pagos & Obligaciones Legales (CR)</h2>
+                        <button class="btn-primary" onclick="FinancesManager.openLegalModal()" style="padding: 6px 12px; font-size: 0.8rem; background: transparent; border: 1px solid var(--border);"><i class="fas fa-plus"></i> Nueva Obligación</button>
+                    </div>
+                    <div id="finances-legal-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                        <!-- Se llena dinámicamente con las obligaciones (CCSS, INS, Patente, D-105) -->
+                        <div style="text-align: center; padding: 20px; opacity: 0.6;">Cargando calendario de obligaciones...</div>
+                    </div>
+                </div>
+
+                <!-- LIBRO DE COMPRAS & REPORTE PARA DECLARACIÓN HACIENDA -->
+                <div style="background: var(--tarjeta); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="font-size: 1.15rem; color: var(--mostaza);"><i class="fas fa-file-invoice" style="color: #2ecc71; margin-right: 8px;"></i> Reporte de Compras para Hacienda (D-105 Simplificado)</h2>
+                            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 3px;">Filtra por período exacto para trasladar los números a tu declaración de Tributación.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <select id="fin-period-select" onchange="FinancesManager.loadPurchasesReport()" class="report-select">
+                                <option value="trimestre_actual" selected>Trimestre Fiscal Actual (Hacienda)</option>
+                                <option value="mes_actual">Este Mes</option>
+                                <option value="semana_actual">Esta Semana</option>
+                                <option value="hoy">Hoy</option>
+                                <option value="todos">Histórico Completo</option>
+                            </select>
+                            <button class="btn-primary" onclick="FinancesManager.exportPurchasesCSV()" style="padding: 8px 14px; font-size: 0.8rem; background: #27ae60; border: none;"><i class="fas fa-file-excel"></i> Exportar CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- Resumen rápido para Hacienda -->
+                    <div id="hacienda-summary-banner" style="background: rgba(46, 204, 113, 0.1); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); text-transform: uppercase;">Total Compras para Declaración</span>
+                            <h3 id="hacienda-total-purchases" style="color: #2ecc71; font-size: 1.4rem;">₡0</h3>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); text-transform: uppercase;">Materia Prima Alimenticia</span>
+                            <h3 id="hacienda-food-purchases" style="color: var(--mostaza); font-size: 1.4rem;">₡0</h3>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); text-transform: uppercase;">Empaques & Operación</span>
+                            <h3 id="hacienda-oper-purchases" style="color: #3498db; font-size: 1.4rem;">₡0</h3>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.7); text-transform: uppercase;">Facturas Registradas</span>
+                            <h3 id="hacienda-invoices-count" style="color: #f1c40f; font-size: 1.4rem;">0</h3>
+                        </div>
+                    </div>
+
+                    <!-- Tabla del Libro de Compras -->
+                    <div class="audit-table-container">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Proveedor</th>
+                                    <th>N° Factura / Tiquete</th>
+                                    <th>Categoría</th>
+                                    <th>Monto Total (₡)</th>
+                                    <th>Registrado Por</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fin-purchases-list">
+                                <tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.6;">Cargando libro de compras...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -526,6 +727,154 @@
                 <button class="btn-primary" id="btn-execute-corte" onclick="ReportsManager.executeDatabaseCorte()" style="background: linear-gradient(135deg, var(--alerta), var(--carbon)); border: none; box-shadow: none;">
                     <i class="fas fa-trash-alt"></i> Ejecutar Corte & Respaldo
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO/EDITAR PLATILLO VOLIO -->
+    <div id="volio-dish-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h2 id="volio-dish-modal-title"><i class="fas fa-utensils"></i> Platillo Modo Volio</h2>
+                <button onclick="VolioManager.closeDishModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="volio-dish-id">
+                <div class="form-group">
+                    <label>Nombre del Platillo</label>
+                    <input type="text" id="volio-dish-name" placeholder="Ej: Casado Volio con Pollo Mechado">
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="volio-dish-category">
+                        <option value="desayuno">🍳 Desayuno</option>
+                        <option value="almuerzo">🍲 Almuerzo</option>
+                        <option value="snacks">🥟 Snacks & Antojos</option>
+                        <option value="bebidas">☕ Bebidas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descripción / Acompañamientos</label>
+                    <input type="text" id="volio-dish-desc" placeholder="Ej: Arroz, frijoles, plátano maduro, ensalada y picadillo">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Precio de Venta al Cliente (₡)</label>
+                        <input type="number" id="volio-dish-price" oninput="VolioManager.calcCostMetrics()" placeholder="Ej: 3500">
+                    </div>
+                    <div class="form-group">
+                        <label>Costo de Materia Prima (₡)</label>
+                        <input type="number" id="volio-dish-cost" oninput="VolioManager.calcCostMetrics()" placeholder="Ej: 1200">
+                    </div>
+                </div>
+                <!-- Vista en tiempo real de ingeniería de menú -->
+                <div id="volio-cost-preview" style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 5px; display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <span>Margen Bruto: <strong id="preview-margin-colones" style="color: #2ecc71;">₡0</strong></span>
+                    <span>Margen %: <strong id="preview-margin-pct" style="color: #2ecc71;">0%</strong></span>
+                    <span>Food Cost: <strong id="preview-food-cost" style="color: #f1c40f;">0%</strong></span>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Ruta de Imagen (Opcional)</label>
+                    <input type="text" id="volio-dish-img" placeholder="images-catalogo/Señor Pinto.jpeg">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="VolioManager.closeDishModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-save-volio-dish" onclick="VolioManager.saveDish()">Guardar Platillo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR COMPRA / FACTURA TRIBUTARIA -->
+    <div id="finance-purchase-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-receipt" style="color: #2ecc71;"></i> Registrar Compra / Gasto Tributario</h2>
+                <button onclick="FinancesManager.closeAddPurchaseModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Fecha de la Compra</label>
+                        <input type="date" id="fin-purchase-date">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="fin-purchase-cat">
+                            <option value="Carnes y Embutidos">🥩 Carnes y Embutidos</option>
+                            <option value="Lácteos y Huevos">🧀 Lácteos y Huevos</option>
+                            <option value="Abarrotes y Granos">🌾 Abarrotes y Granos</option>
+                            <option value="Verduras y Frutas">🥑 Verduras y Frutas</option>
+                            <option value="Bebidas y Café">☕ Bebidas y Café</option>
+                            <option value="Empaques y Desechables">📦 Empaques y Desechables</option>
+                            <option value="Artículos de Limpieza">🧼 Artículos de Limpieza</option>
+                            <option value="Servicios y Otros">⚡ Servicios / Otros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Proveedor / Establecimiento</label>
+                    <input type="text" id="fin-purchase-supplier" placeholder="Ej: Mayca, Carnicería Hermanos, Auto Mercado, El Rey...">
+                </div>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>N° de Factura Electrónica / Tiquete</label>
+                        <input type="text" id="fin-purchase-invoice" placeholder="Ej: 00100001010000012345 o Tiquete #89">
+                    </div>
+                    <div class="form-group">
+                        <label>Monto Total (₡)</label>
+                        <input type="number" id="fin-purchase-total" placeholder="Ej: 45000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notas / Detalle de Insumos (Opcional)</label>
+                    <input type="text" id="fin-purchase-notes" placeholder="Ej: 10kg queso semiduro, 2 cajas manteca, servilletas">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="FinancesManager.closeAddPurchaseModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-save-purchase" onclick="FinancesManager.savePurchase()">Guardar Compra</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVA OBLIGACIÓN LEGAL / TRIBUTARIA -->
+    <div id="finance-legal-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-bell" style="color: #e67e22;"></i> Nueva Obligación / Recordatorio</h2>
+                <button onclick="FinancesManager.closeLegalModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tipo de Obligación</label>
+                    <select id="fin-legal-type">
+                        <option value="CCSS">🏥 CCSS (Caja - Planilla Mensual)</option>
+                        <option value="INS">🛡️ Póliza de Riesgos de Trabajo (INS)</option>
+                        <option value="Patente">🏛️ Patente Municipal (Trimestral)</option>
+                        <option value="Hacienda D-105">📋 Hacienda D-105 (Régimen Simplificado)</option>
+                        <option value="Permiso Salud">🩺 Permiso Sanitario de Funcionamiento</option>
+                        <option value="Otro">📌 Otro Compromiso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="fin-legal-title" placeholder="Ej: Pago cuota CCSS mes en curso">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Fecha de Vencimiento</label>
+                        <input type="date" id="fin-legal-duedate">
+                    </div>
+                    <div class="form-group">
+                        <label>Monto Estimado (₡)</label>
+                        <input type="number" id="fin-legal-amount" placeholder="Ej: 35000">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="FinancesManager.closeLegalModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-save-legal" onclick="FinancesManager.saveLegalObligation()">Guardar Recordatorio</button>
             </div>
         </div>
     </div>

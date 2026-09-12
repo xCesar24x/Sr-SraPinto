@@ -832,6 +832,9 @@ const MenuController = {
     customPrices: {},
     feriaConfig: { active: false, combos_active: false },
     feriaCustomPrices: null,
+    volioConfig: { active: false },
+    volioDishes: [],
+    volioSchedule: { lunes: [], martes: [], miercoles: [], jueves: [], viernes: [] },
 
     init() {
         this.ORIGINAL_MENU_DATA = JSON.parse(JSON.stringify(this.MENU_DATA));
@@ -876,6 +879,31 @@ const MenuController = {
                     this.feriaCustomPrices = doc.data();
                 } else {
                     this.feriaCustomPrices = null;
+                }
+                this.applyStateAndRender();
+            });
+
+            // Escuchar Modo Volio en tiempo real
+            window.FirebaseDB.collection('config').doc('volio').onSnapshot((doc) => {
+                if (doc.exists) {
+                    this.volioConfig = doc.data();
+                } else {
+                    this.volioConfig = { active: false };
+                }
+                this.applyStateAndRender();
+            });
+
+            // Escuchar Catálogo de Platillos Volio
+            window.FirebaseDB.collection('volio_platillos').onSnapshot((snapshot) => {
+                this.volioDishes = [];
+                snapshot.forEach(d => this.volioDishes.push({ id: d.id, ...d.data() }));
+                this.applyStateAndRender();
+            });
+
+            // Escuchar Programación Semanal de Volio
+            window.FirebaseDB.collection('config_volio').doc('programacion_semanal').onSnapshot((doc) => {
+                if (doc.exists) {
+                    this.volioSchedule = doc.data();
                 }
                 this.applyStateAndRender();
             });
@@ -964,6 +992,52 @@ const MenuController = {
                     desc: 'Clásico hot dog con papas tostadas, salsas y té frío.',
                     precio: activeFeriaPrices['ce-hotdog-fresco'] || 2000, img: '<img src="images-catalogo/hotdog.jpeg" alt="Hot Dog + Té Frío" class="img-fit">'
                 });
+            }
+        }
+
+        // 3.5. APLICAR MODO VOLIO SI ESTÁ ACTIVO
+        if (this.volioConfig && this.volioConfig.active) {
+            // Categorías oficiales de Modo Volio
+            this.CATEGORIAS = [
+                { id: 'desayuno', nombre: 'Desayunos', icon: '🍳', subtitle: 'Deliciosos desayunos tradicionales para arrancar el día' },
+                { id: 'almuerzo',  nombre: 'Almuerzos',  icon: '🍲', subtitle: 'Casados completos y platillos del día preparados con amor casero' },
+                { id: 'snacks',    nombre: 'Snacks',    icon: '🥟', subtitle: 'Empanadas arregladas, patacones y antojos irresistibles' },
+                { id: 'bebidas',   nombre: 'Bebidas',   icon: '☕', subtitle: 'Café chorreado, frescos naturales y bebidas frías' }
+            ];
+
+            // Identificar día actual de la semana en Costa Rica (0: Domingo, 1: Lunes, ..., 5: Viernes, 6: Sábado)
+            const dayMap = { 1: 'lunes', 2: 'martes', 3: 'miercoles', 4: 'jueves', 5: 'viernes' };
+            const currentDayNum = new Date().getDay();
+            const currentDayKey = dayMap[currentDayNum] || 'lunes'; // Fallback a lunes si es fin de semana
+
+            // Obtener IDs de platillos programados para el día actual
+            const scheduledIds = (this.volioSchedule && this.volioSchedule[currentDayKey]) ? this.volioSchedule[currentDayKey] : [];
+
+            // Filtrar del catálogo de platillos Volio los que están programados para hoy
+            let activeVolioDishes = [];
+            if (this.volioDishes && this.volioDishes.length > 0) {
+                if (scheduledIds.length > 0) {
+                    activeVolioDishes = this.volioDishes.filter(d => scheduledIds.includes(d.id));
+                } else {
+                    // Si no hay programación específica aún, mostrar todos los platillos activos
+                    activeVolioDishes = this.volioDishes;
+                }
+            }
+
+            // Convertir al formato estándar MENU_DATA
+            this.MENU_DATA = activeVolioDishes.map(d => ({
+                id: d.id,
+                categoria: d.categoria,
+                nombre: d.nombre,
+                desc: d.desc || '',
+                precio: d.precio || 0,
+                costo: d.costo || 0,
+                img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${d.nombre}" class="img-fit">`
+            }));
+
+            // Si la categoría actual no existe en Volio, resetear a desayuno
+            if (!['desayuno', 'almuerzo', 'snacks', 'bebidas'].includes(StateManager.currentCategory)) {
+                StateManager.setCategory('desayuno');
             }
         }
 

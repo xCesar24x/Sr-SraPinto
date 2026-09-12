@@ -650,6 +650,129 @@ body { background: var(--negro); color: var(--blanco); min-height: 100vh; }
     box-shadow: 0 0 5px rgba(233, 19, 80, 0.5);
 }
 
+/* ==========================================================================
+   ESTILOS PREMIUM: MODO VOLIO & FINANZAS HACIENDA CR
+   ========================================================================== */
+
+/* Sub-pestañas / Selectores de Día */
+.day-tabs-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+.day-tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--blanco);
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.day-tab-btn:hover {
+    background: rgba(233, 19, 80, 0.15);
+    border-color: var(--rojo);
+}
+.day-tab-btn.active {
+    background: linear-gradient(135deg, var(--rojo), var(--carbon));
+    border-color: var(--rojo);
+    color: var(--blanco);
+    box-shadow: 0 4px 15px rgba(233, 19, 80, 0.3);
+}
+
+/* Tarjetas de F&B y Costeo */
+.dish-card {
+    background: var(--tarjeta);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+.dish-card:hover {
+    border-color: rgba(233, 19, 80, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+}
+.dish-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 5px;
+    font-size: 0.85rem;
+}
+.dish-margin-badge {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 0.75rem;
+}
+.dish-margin-high {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+.dish-margin-mid {
+    background: rgba(241, 196, 15, 0.2);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.3);
+}
+.dish-margin-low {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+/* Semáforo de Obligaciones Legales y Tributarias */
+.legal-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    transition: transform 0.2s ease;
+}
+.legal-card:hover {
+    transform: translateY(-2px);
+}
+.legal-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+.status-aldia {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+}
+.status-porvencer {
+    background: rgba(243, 156, 18, 0.15);
+    color: #f39c12;
+    border: 1px solid rgba(243, 156, 18, 0.4);
+}
+.status-vencido {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
 @media (max-width: 576px) {
     .modal-content {
         width: 92%;
@@ -670,3 +793,4 @@ body { background: var(--negro); color: var(--blanco); min-height: 100vh; }
         width: 100%;
     }
 }
+

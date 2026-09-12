@@ -177,6 +177,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 ReportsManager.init();
             } else if (tabId === 'users') {
                 UsersManager.init();
+            } else if (tabId === 'volio') {
+                VolioManager.init();
+            } else if (tabId === 'finances') {
+                FinancesManager.init();
             }
         },
 
@@ -1785,6 +1789,793 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize Feria Manager
     FeriaManager.init();
 
+    // ==========================================================================
+    // MÓDULO: VOLIO MANAGER (Ingeniería de Menú & Programación Semanal)
+    // ==========================================================================
+    window.VolioManager = {
+        active: false,
+        dishes: [],
+        schedule: {
+            lunes: [],
+            martes: [],
+            miercoles: [],
+            jueves: [],
+            viernes: []
+        },
+        currentDay: 'lunes',
+        initialized: false,
+
+        // Sanitización contra inyecciones XSS
+        sanitize(str) {
+            if (!str) return '';
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        },
+
+        init() {
+            if (this.initialized) return;
+            this.initialized = true;
+            const db = window.FirebaseDB;
+            if (!db) return;
+
+            // 1. Escuchar estado del Modo Volio (On / Off)
+            db.collection('config').doc('volio').onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    this.active = !!data.active;
+                } else {
+                    this.active = false;
+                    db.collection('config').doc('volio').set({ active: false });
+                }
+                this.updateModeUI();
+            });
+
+            // 2. Escuchar catálogo de platillos y recetas
+            db.collection('volio_platillos').onSnapshot(snapshot => {
+                this.dishes = [];
+                snapshot.forEach(doc => {
+                    this.dishes.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Si la colección está vacía por ser la primera vez, sembrar platillos base
+                if (this.dishes.length === 0) {
+                    this.seedInitialDishes();
+                } else {
+                    this.dishes.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+                    this.renderDishesTable();
+                    this.renderDaySchedule();
+                }
+            });
+
+            // 3. Escuchar programación semanal
+            db.collection('config_volio').doc('programacion_semanal').onSnapshot(doc => {
+                if (doc.exists) {
+                    this.schedule = { ...this.schedule, ...doc.data() };
+                } else {
+                    // Inicializar programación vacía
+                    db.collection('config_volio').doc('programacion_semanal').set(this.schedule);
+                }
+                this.renderDaySchedule();
+            });
+        },
+
+        async seedInitialDishes() {
+            const db = window.FirebaseDB;
+            const batch = db.batch();
+            const initial = [
+                { id: 'v-pinto-clasico', nombre: 'Gallo Pinto Tradicional Volio', categoria: 'desayuno', desc: 'Con huevo, queso frito, maduro y natilla', precio: 3000, costo: 950, img: 'images-catalogo/Señor Pinto.jpeg' },
+                { id: 'v-burrote-volio', nombre: 'Burrote Mañanero Volio', categoria: 'desayuno', desc: 'Tortilla de harina con pinto, queso y huevo', precio: 3500, costo: 1100, img: 'images-catalogo/BurrotedePinto.jpg' },
+                { id: 'v-casado-carne', nombre: 'Casado con Carne Mechada en Salsa', categoria: 'almuerzo', desc: 'Arroz, frijoles, ensalada rusa, maduro y picadillo de papa', precio: 4000, costo: 1400, img: 'images-catalogo/Señor Pinto.jpeg' },
+                { id: 'v-casado-pollo', nombre: 'Casado con Pollo Caribeño', categoria: 'almuerzo', desc: 'Arroz, frijoles, plátano maduro, ensalada verde y picadillo', precio: 4000, costo: 1300, img: 'images-catalogo/Señor Pinto.jpeg' },
+                { id: 'v-casado-chuleta', nombre: 'Casado con Chuleta Ahumada', categoria: 'almuerzo', desc: 'Arroz, frijoles, maduros, ensalada y picadillo', precio: 4200, costo: 1550, img: 'images-catalogo/Señor Pinto.jpeg' },
+                { id: 'v-empanada-volio', nombre: 'Empanada Arreglada Volio', categoria: 'snacks', desc: 'Empanada crujiente con ensalada y salsas de la casa', precio: 2500, costo: 850, img: 'images-catalogo/Sra. Empanada Arreglada .jpeg' },
+                { id: 'v-patacon-volio', nombre: 'Orden de Patacones con Molidos', categoria: 'snacks', desc: 'Patacones crujientes con frijoles molidos y queso', precio: 3000, costo: 900, img: 'images-catalogo/Sr. Patacón.jpeg' },
+                { id: 'v-cafe-volio', nombre: 'Café Chorreado Especial', categoria: 'bebidas', desc: 'Café de especialidad tico', precio: 1000, costo: 250, img: 'images-catalogo/12onzas.jpg' },
+                { id: 'v-fresco-natural', nombre: 'Fresco Natural del Día (16oz)', categoria: 'bebidas', desc: 'Frutas de temporada (Cas, Maracuyá, Guanábana)', precio: 1500, costo: 350, img: 'images-catalogo/hidratantes.jpg' }
+            ];
+
+            initial.forEach(p => {
+                const ref = db.collection('volio_platillos').doc(p.id);
+                batch.set(ref, p);
+            });
+            await batch.commit();
+        },
+
+        updateModeUI() {
+            const toggleBtn = document.getElementById('volio-toggle-btn');
+            const toggleCard = document.getElementById('volio-toggle-card');
+            const subtitle = document.getElementById('volio-toggle-subtitle');
+
+            if (toggleBtn && toggleCard) {
+                if (this.active) {
+                    toggleBtn.classList.add('open');
+                    toggleBtn.classList.remove('closed');
+                    toggleCard.classList.add('open');
+                    if (subtitle) subtitle.innerText = "Modo Volio ACTIVO • El menú público y POS muestran la selección de comidas Volio.";
+                } else {
+                    toggleBtn.classList.remove('open');
+                    toggleBtn.classList.add('closed');
+                    toggleCard.classList.remove('open');
+                    if (subtitle) subtitle.innerText = "Modo Volio DESACTIVADO • Se muestra el menú tradicional de Sr. & Sra. Pinto.";
+                }
+            }
+        },
+
+        async toggleVolioMode() {
+            const newState = !this.active;
+            try {
+                await window.FirebaseDB.collection('config').doc('volio').set({
+                    active: newState,
+                    actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
+                    fecha: new Date().toISOString()
+                });
+            } catch (err) {
+                console.error("Error al cambiar estado de Modo Volio:", err);
+                alert("No se pudo cambiar el estado de Modo Volio.");
+            }
+        },
+
+        switchDay(day, event) {
+            if (event) event.preventDefault();
+            this.currentDay = day;
+            document.querySelectorAll('.day-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+            this.renderDaySchedule();
+        },
+
+        renderDaySchedule() {
+            const container = document.getElementById('volio-day-schedule-content');
+            if (!container) return;
+
+            const currentDayDishes = this.schedule[this.currentDay] || [];
+            const categories = [
+                { id: 'desayuno', label: '🍳 Desayunos' },
+                { id: 'almuerzo', label: '🍲 Almuerzos' },
+                { id: 'snacks', label: '🥟 Snacks & Antojos' },
+                { id: 'bebidas', label: '☕ Bebidas' }
+            ];
+
+            let html = '';
+
+            categories.forEach(cat => {
+                const catDishes = this.dishes.filter(d => d.categoria === cat.id);
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: var(--mostaza); font-size: 0.95rem; margin-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                            ${cat.label} (${catDishes.length} en catálogo)
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+                `;
+
+                if (catDishes.length === 0) {
+                    html += `<p style="font-size: 0.8rem; color: rgba(255,255,255,0.4);">No hay platillos creados en esta categoría.</p>`;
+                } else {
+                    catDishes.forEach(dish => {
+                        const isScheduled = currentDayDishes.includes(dish.id);
+                        html += `
+                            <div style="background: ${isScheduled ? 'rgba(233, 19, 80, 0.12)' : 'rgba(0,0,0,0.3)'}; border: 1px solid ${isScheduled ? 'var(--rojo)' : 'var(--border)'}; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
+                                <div>
+                                    <strong style="color: white; font-size: 0.9rem; display: block;">${this.sanitize(dish.nombre)}</strong>
+                                    <span style="font-size: 0.8rem; color: var(--mostaza);">₡${(dish.precio || 0).toLocaleString()} • Costo: ₡${(dish.costo || 0).toLocaleString()}</span>
+                                </div>
+                                <label class="switch-toggle" style="cursor: pointer;">
+                                    <input type="checkbox" ${isScheduled ? 'checked' : ''} onchange="VolioManager.toggleDishInDay('${dish.id}', this.checked)" style="accent-color: var(--rojo); width: 18px; height: 18px; cursor: pointer;">
+                                </label>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+        },
+
+        async toggleDishInDay(dishId, isChecked) {
+            let dayList = [...(this.schedule[this.currentDay] || [])];
+            if (isChecked) {
+                if (!dayList.includes(dishId)) dayList.push(dishId);
+            } else {
+                dayList = dayList.filter(id => id !== dishId);
+            }
+
+            this.schedule[this.currentDay] = dayList;
+
+            try {
+                await window.FirebaseDB.collection('config_volio').doc('programacion_semanal').update({
+                    [this.currentDay]: dayList
+                });
+                this.renderDaySchedule();
+            } catch (err) {
+                console.error("Error al guardar programación semanal:", err);
+                alert("No se pudo actualizar la programación.");
+            }
+        },
+
+        renderDishesTable() {
+            const container = document.getElementById('volio-dishes-list');
+            if (!container) return;
+
+            const search = (document.getElementById('volio-search-dish')?.value || '').toLowerCase();
+            const filterCat = document.getElementById('volio-filter-cat')?.value || 'todas';
+
+            const filtered = this.dishes.filter(d => {
+                const matchSearch = (d.nombre || '').toLowerCase().includes(search) || (d.desc || '').toLowerCase().includes(search);
+                const matchCat = filterCat === 'todas' || d.categoria === filterCat;
+                return matchSearch && matchCat;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">No se encontraron platillos.</td></tr>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(dish => {
+                const precio = dish.precio || 0;
+                const costo = dish.costo || 0;
+                const margen = precio - costo;
+                const margenPct = precio > 0 ? Math.round((margen / precio) * 100) : 0;
+                const foodCostPct = precio > 0 ? Math.round((costo / precio) * 100) : 0;
+
+                let marginBadgeClass = 'dish-margin-high';
+                if (margenPct < 50) marginBadgeClass = 'dish-margin-low';
+                else if (margenPct <= 65) marginBadgeClass = 'dish-margin-mid';
+
+                const catLabels = { desayuno: '🍳 Desayuno', almuerzo: '🍲 Almuerzo', snacks: '🥟 Snacks', bebidas: '☕ Bebidas' };
+
+                return `
+                    <tr>
+                        <td>
+                            <strong>${this.sanitize(dish.nombre)}</strong>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${this.sanitize(dish.desc || '')}</div>
+                        </td>
+                        <td style="font-size: 0.85rem;">${catLabels[dish.categoria] || dish.categoria}</td>
+                        <td style="font-weight: 800; color: var(--mostaza);">₡${precio.toLocaleString()}</td>
+                        <td style="font-weight: 700; color: #e74c3c;">₡${costo.toLocaleString()}</td>
+                        <td style="font-weight: 700; color: #2ecc71;">₡${margen.toLocaleString()}</td>
+                        <td>
+                            <span class="dish-margin-badge ${marginBadgeClass}">
+                                ${margenPct}% util / ${foodCostPct}% FC
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="action-btn" onclick="VolioManager.openDishModal('${dish.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn" onclick="VolioManager.deleteDish('${dish.id}', '${this.sanitize(dish.nombre)}')" style="color: var(--alerta);" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        openDishModal(id = null) {
+            const modal = document.getElementById('volio-dish-modal');
+            const title = document.getElementById('volio-dish-modal-title');
+            document.getElementById('volio-dish-id').value = id || '';
+
+            if (id) {
+                const dish = this.dishes.find(d => d.id === id);
+                if (dish) {
+                    title.innerHTML = `<i class="fas fa-edit"></i> Editar Platillo: ${this.sanitize(dish.nombre)}`;
+                    document.getElementById('volio-dish-name').value = dish.nombre || '';
+                    document.getElementById('volio-dish-category').value = dish.categoria || 'desayuno';
+                    document.getElementById('volio-dish-desc').value = dish.desc || '';
+                    document.getElementById('volio-dish-price').value = dish.precio || '';
+                    document.getElementById('volio-dish-cost').value = dish.costo || '';
+                    document.getElementById('volio-dish-img').value = dish.img || '';
+                }
+            } else {
+                title.innerHTML = `<i class="fas fa-plus"></i> Nuevo Platillo / Receta`;
+                document.getElementById('volio-dish-name').value = '';
+                document.getElementById('volio-dish-category').value = 'desayuno';
+                document.getElementById('volio-dish-desc').value = '';
+                document.getElementById('volio-dish-price').value = '';
+                document.getElementById('volio-dish-cost').value = '';
+                document.getElementById('volio-dish-img').value = '';
+            }
+
+            this.calcCostMetrics();
+            modal.classList.add('active');
+        },
+
+        closeDishModal() {
+            document.getElementById('volio-dish-modal').classList.remove('active');
+        },
+
+        calcCostMetrics() {
+            const price = parseFloat(document.getElementById('volio-dish-price').value) || 0;
+            const cost = parseFloat(document.getElementById('volio-dish-cost').value) || 0;
+            const margin = price - cost;
+            const marginPct = price > 0 ? Math.round((margin / price) * 100) : 0;
+            const foodCostPct = price > 0 ? Math.round((cost / price) * 100) : 0;
+
+            const marginColones = document.getElementById('preview-margin-colones');
+            const marginPctEl = document.getElementById('preview-margin-pct');
+            const fcEl = document.getElementById('preview-food-cost');
+
+            if (marginColones) marginColones.innerText = `₡${margin.toLocaleString()}`;
+            if (marginPctEl) {
+                marginPctEl.innerText = `${marginPct}%`;
+                marginPctEl.style.color = marginPct >= 65 ? '#2ecc71' : (marginPct >= 50 ? '#f1c40f' : '#e74c3c');
+            }
+            if (fcEl) {
+                fcEl.innerText = `${foodCostPct}%`;
+                fcEl.style.color = foodCostPct <= 35 ? '#2ecc71' : '#e74c3c';
+            }
+        },
+
+        async saveDish() {
+            const id = document.getElementById('volio-dish-id').value;
+            const nombre = document.getElementById('volio-dish-name').value.trim();
+            const categoria = document.getElementById('volio-dish-category').value;
+            const desc = document.getElementById('volio-dish-desc').value.trim();
+            const precio = parseFloat(document.getElementById('volio-dish-price').value);
+            const costo = parseFloat(document.getElementById('volio-dish-cost').value) || 0;
+            const img = document.getElementById('volio-dish-img').value.trim();
+
+            if (!nombre || isNaN(precio) || precio <= 0) {
+                alert("Por favor ingresa un nombre válido y un precio de venta mayor a 0.");
+                return;
+            }
+
+            const dishData = {
+                nombre,
+                categoria,
+                desc,
+                precio,
+                costo,
+                img: img || 'images-catalogo/Señor Pinto.jpeg',
+                actualizadoEn: new Date().toISOString()
+            };
+
+            const btn = document.getElementById('btn-save-volio-dish');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                const db = window.FirebaseDB;
+                if (id) {
+                    await db.collection('volio_platillos').doc(id).update(dishData);
+                } else {
+                    const newId = 'v-' + Date.now();
+                    await db.collection('volio_platillos').doc(newId).set(dishData);
+                }
+                this.closeDishModal();
+            } catch (err) {
+                console.error("Error al guardar platillo Volio:", err);
+                alert("Hubo un error al guardar el platillo.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar Platillo';
+            }
+        },
+
+        async deleteDish(id, nombre) {
+            if (!confirm(`¿Deseas eliminar el platillo "${nombre}" del catálogo Volio?`)) return;
+            try {
+                await window.FirebaseDB.collection('volio_platillos').doc(id).delete();
+            } catch (err) {
+                console.error("Error al eliminar platillo:", err);
+                alert("No se pudo eliminar el platillo.");
+            }
+        }
+    };
+
+    // ==========================================================================
+    // MÓDULO: FINANCES MANAGER (Régimen Simplificado Hacienda CR & Contabilidad)
+    // ==========================================================================
+    window.FinancesManager = {
+        purchases: [],
+        legalObligations: [],
+        orders: [],
+        initialized: false,
+
+        sanitize(str) {
+            if (!str) return '';
+            const temp = document.createElement('div');
+            temp.textContent = str;
+            return temp.innerHTML;
+        },
+
+        init() {
+            if (this.initialized) return;
+            this.initialized = true;
+            const db = window.FirebaseDB;
+            if (!db) return;
+
+            // 1. Escuchar compras registradas
+            db.collection('compras').onSnapshot(snapshot => {
+                this.purchases = [];
+                snapshot.forEach(doc => {
+                    this.purchases.push({ id: doc.id, ...doc.data() });
+                });
+                this.purchases.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                this.loadPurchasesReport();
+                this.recalculatePL();
+            });
+
+            // 2. Escuchar obligaciones legales
+            db.collection('obligaciones_legales').onSnapshot(snapshot => {
+                this.legalObligations = [];
+                snapshot.forEach(doc => {
+                    this.legalObligations.push({ id: doc.id, ...doc.data() });
+                });
+                if (this.legalObligations.length === 0) {
+                    this.seedInitialObligations();
+                } else {
+                    this.renderLegalObligations();
+                }
+            });
+
+            // 3. Escuchar pedidos para P&L
+            db.collection('pedidos').onSnapshot(snapshot => {
+                this.orders = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.estado !== 'pendiente_aprobacion' && data.estado !== 'cancelado') {
+                        this.orders.push(data);
+                    }
+                });
+                this.recalculatePL();
+            });
+        },
+
+        async seedInitialObligations() {
+            const db = window.FirebaseDB;
+            const batch = db.batch();
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth();
+
+            const defaults = [
+                {
+                    tipo: 'CCSS',
+                    titulo: 'Planilla Mensual CCSS',
+                    fechaVencimiento: new Date(y, m, 20).toISOString().split('T')[0],
+                    monto: 35000,
+                    pagado: false
+                },
+                {
+                    tipo: 'INS',
+                    titulo: 'Póliza Riesgos del Trabajo INS',
+                    fechaVencimiento: new Date(y, m + 1, 10).toISOString().split('T')[0],
+                    monto: 18000,
+                    pagado: false
+                },
+                {
+                    tipo: 'Patente',
+                    titulo: 'Patente Municipal Comercial',
+                    fechaVencimiento: new Date(y, Math.floor(m / 3) * 3 + 3, 15).toISOString().split('T')[0],
+                    monto: 45000,
+                    pagado: false
+                },
+                {
+                    tipo: 'Hacienda D-105',
+                    titulo: 'Declaración Trimestral Tributación (D-105)',
+                    fechaVencimiento: new Date(y, Math.floor(m / 3) * 3 + 3, 15).toISOString().split('T')[0],
+                    monto: 0,
+                    pagado: false
+                }
+            ];
+
+            defaults.forEach((ob, idx) => {
+                const ref = db.collection('obligaciones_legales').doc('ob-' + idx);
+                batch.set(ref, ob);
+            });
+            await batch.commit();
+        },
+
+        recalculatePL() {
+            // Ingresos totales por ventas
+            const totalIncome = this.orders.reduce((sum, o) => sum + (o.total || 0), 0);
+            // Total compras
+            const totalPurchases = this.purchases.reduce((sum, p) => sum + (p.total || 0), 0);
+            const netProfit = totalIncome - totalPurchases;
+            const marginPct = totalIncome > 0 ? Math.round((netProfit / totalIncome) * 100) : 0;
+
+            const elIncome = document.getElementById('fin-stat-income');
+            const elPurchases = document.getElementById('fin-stat-purchases');
+            const elProfit = document.getElementById('fin-stat-profit');
+            const elMargin = document.getElementById('fin-stat-margin');
+
+            if (elIncome) elIncome.innerText = `₡${totalIncome.toLocaleString()}`;
+            if (elPurchases) elPurchases.innerText = `₡${totalPurchases.toLocaleString()}`;
+            if (elProfit) {
+                elProfit.innerText = `₡${netProfit.toLocaleString()}`;
+                elProfit.style.color = netProfit >= 0 ? '#2ecc71' : '#e74c3c';
+            }
+            if (elMargin) {
+                elMargin.innerText = `${marginPct}%`;
+                elMargin.style.color = marginPct >= 0 ? '#f1c40f' : '#e74c3c';
+            }
+        },
+
+        renderLegalObligations() {
+            const container = document.getElementById('finances-legal-container');
+            if (!container) return;
+
+            if (this.legalObligations.length === 0) {
+                container.innerHTML = `<p style="opacity: 0.5; font-size: 0.85rem;">No hay obligaciones registradas.</p>`;
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            container.innerHTML = this.legalObligations.map(item => {
+                const dueDate = new Date(item.fechaVencimiento + 'T00:00:00');
+                const diffTime = dueDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                let statusClass = 'status-aldia';
+                let statusLabel = `${diffDays} días restantes`;
+
+                if (item.pagado) {
+                    statusClass = 'status-aldia';
+                    statusLabel = '<i class="fas fa-check"></i> Pagado';
+                } else if (diffDays < 0) {
+                    statusClass = 'status-vencido';
+                    statusLabel = `<i class="fas fa-exclamation-triangle"></i> Vencido hace ${Math.abs(diffDays)}d`;
+                } else if (diffDays <= 5) {
+                    statusClass = 'status-porvencer';
+                    statusLabel = `<i class="fas fa-clock"></i> Vence en ${diffDays}d`;
+                }
+
+                return `
+                    <div class="legal-card">
+                        <div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: bold;">
+                                ${this.sanitize(item.tipo)}
+                            </div>
+                            <strong style="font-size: 0.95rem; color: white; display: block; margin-top: 2px;">
+                                ${this.sanitize(item.titulo)}
+                            </strong>
+                            <div style="font-size: 0.8rem; color: var(--mostaza); margin-top: 4px;">
+                                Vence: <strong>${item.fechaVencimiento}</strong> • ₡${(item.monto || 0).toLocaleString()}
+                            </div>
+                        </div>
+                        <div style="text-align: right; display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                            <span class="legal-status-pill ${statusClass}">${statusLabel}</span>
+                            <button onclick="FinancesManager.toggleLegalPaid('${item.id}', ${!item.pagado})" style="background: transparent; border: 1px solid var(--border); color: rgba(255,255,255,0.8); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                                ${item.pagado ? 'Marcar Pendiente' : 'Marcar Pagado'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        },
+
+        async toggleLegalPaid(id, newState) {
+            try {
+                await window.FirebaseDB.collection('obligaciones_legales').doc(id).update({
+                    pagado: newState,
+                    fechaPago: newState ? new Date().toISOString() : null
+                });
+            } catch (err) {
+                console.error("Error al actualizar estado de obligación:", err);
+            }
+        },
+
+        openLegalModal() {
+            document.getElementById('finance-legal-modal').classList.add('active');
+            document.getElementById('fin-legal-duedate').value = new Date().toISOString().split('T')[0];
+        },
+
+        closeLegalModal() {
+            document.getElementById('finance-legal-modal').classList.remove('active');
+        },
+
+        async saveLegalObligation() {
+            const tipo = document.getElementById('fin-legal-type').value;
+            const titulo = document.getElementById('fin-legal-title').value.trim();
+            const fechaVencimiento = document.getElementById('fin-legal-duedate').value;
+            const monto = parseFloat(document.getElementById('fin-legal-amount').value) || 0;
+
+            if (!titulo || !fechaVencimiento) {
+                alert("Por favor completa la descripción y fecha de vencimiento.");
+                return;
+            }
+
+            try {
+                await window.FirebaseDB.collection('obligaciones_legales').add({
+                    tipo,
+                    titulo,
+                    fechaVencimiento,
+                    monto,
+                    pagado: false,
+                    creadoEn: new Date().toISOString()
+                });
+                this.closeLegalModal();
+            } catch (err) {
+                console.error("Error al registrar obligación:", err);
+                alert("No se pudo registrar la obligación.");
+            }
+        },
+
+        loadPurchasesReport() {
+            const period = document.getElementById('fin-period-select')?.value || 'trimestre_actual';
+            const now = new Date();
+            let startDate = new Date();
+            let endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            let filterActive = true;
+
+            if (period === 'hoy') {
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'semana_actual') {
+                const day = now.getDay() || 7;
+                startDate.setDate(now.getDate() - day + 1);
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'mes_actual') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+            } else if (period === 'trimestre_actual') {
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                startDate = new Date(now.getFullYear(), currentQuarter * 3, 1, 0, 0, 0);
+            } else {
+                filterActive = false;
+            }
+
+            const filtered = this.purchases.filter(p => {
+                if (!filterActive) return true;
+                const pDate = new Date(p.fecha + 'T12:00:00');
+                return pDate >= startDate && pDate <= endDate;
+            });
+
+            this.renderPurchasesTable(filtered);
+            this.updateHaciendaSummary(filtered);
+        },
+
+        updateHaciendaSummary(filtered) {
+            const total = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
+            const foodCats = ['Carnes y Embutidos', 'Lácteos y Huevos', 'Abarrotes y Granos', 'Verduras y Frutas', 'Bebidas y Café'];
+            const foodTotal = filtered.filter(p => foodCats.includes(p.categoria)).reduce((sum, p) => sum + (p.total || 0), 0);
+            const operTotal = total - foodTotal;
+
+            const elTotal = document.getElementById('hacienda-total-purchases');
+            const elFood = document.getElementById('hacienda-food-purchases');
+            const elOper = document.getElementById('hacienda-oper-purchases');
+            const elCount = document.getElementById('hacienda-invoices-count');
+
+            if (elTotal) elTotal.innerText = `₡${total.toLocaleString()}`;
+            if (elFood) elFood.innerText = `₡${foodTotal.toLocaleString()}`;
+            if (elOper) elOper.innerText = `₡${operTotal.toLocaleString()}`;
+            if (elCount) elCount.innerText = filtered.length;
+        },
+
+        renderPurchasesTable(list) {
+            const container = document.getElementById('fin-purchases-list');
+            if (!container) return;
+
+            if (list.length === 0) {
+                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">No hay compras en el período seleccionado.</td></tr>`;
+                return;
+            }
+
+            container.innerHTML = list.map(p => {
+                return `
+                    <tr>
+                        <td style="font-size: 0.85rem; font-weight: 700;">${p.fecha}</td>
+                        <td>
+                            <strong>${this.sanitize(p.proveedor)}</strong>
+                            ${p.notas ? `<div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${this.sanitize(p.notas)}</div>` : ''}
+                        </td>
+                        <td style="font-family: monospace; font-size: 0.85rem; color: var(--mostaza);">${this.sanitize(p.factura || 'N/A')}</td>
+                        <td><span style="background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem;">${this.sanitize(p.categoria)}</span></td>
+                        <td style="font-weight: 900; color: #2ecc71;">₡${(p.total || 0).toLocaleString()}</td>
+                        <td style="font-size: 0.8rem; opacity: 0.7;">${this.sanitize(p.registradoPor || 'admin')}</td>
+                        <td>
+                            <button class="action-btn" onclick="FinancesManager.deletePurchase('${p.id}', '${this.sanitize(p.proveedor)}', ${p.total})" style="color: var(--alerta);" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        openAddPurchaseModal() {
+            document.getElementById('finance-purchase-modal').classList.add('active');
+            document.getElementById('fin-purchase-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fin-purchase-supplier').value = '';
+            document.getElementById('fin-purchase-invoice').value = '';
+            document.getElementById('fin-purchase-total').value = '';
+            document.getElementById('fin-purchase-notes').value = '';
+        },
+
+        closeAddPurchaseModal() {
+            document.getElementById('finance-purchase-modal').classList.remove('active');
+        },
+
+        async savePurchase() {
+            const fecha = document.getElementById('fin-purchase-date').value;
+            const categoria = document.getElementById('fin-purchase-cat').value;
+            const proveedor = document.getElementById('fin-purchase-supplier').value.trim();
+            const factura = document.getElementById('fin-purchase-invoice').value.trim();
+            const total = parseFloat(document.getElementById('fin-purchase-total').value);
+            const notas = document.getElementById('fin-purchase-notes').value.trim();
+
+            if (!fecha || !proveedor || isNaN(total) || total <= 0) {
+                alert("Por favor completa la fecha, proveedor y un monto total válido.");
+                return;
+            }
+
+            const purchaseData = {
+                fecha,
+                categoria,
+                proveedor,
+                factura: factura || 'S/N',
+                total,
+                notas,
+                registradoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
+                creadoEn: new Date().toISOString()
+            };
+
+            const btn = document.getElementById('btn-save-purchase');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                await window.FirebaseDB.collection('compras').add(purchaseData);
+                this.closeAddPurchaseModal();
+            } catch (err) {
+                console.error("Error al registrar compra:", err);
+                alert("Hubo un error al guardar la compra.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar Compra';
+            }
+        },
+
+        async deletePurchase(id, proveedor, monto) {
+            if (!confirm(`¿Deseas eliminar la compra de "${proveedor}" por ₡${(monto || 0).toLocaleString()}?`)) return;
+            try {
+                await window.FirebaseDB.collection('compras').doc(id).delete();
+            } catch (err) {
+                console.error("Error al eliminar compra:", err);
+                alert("No se pudo eliminar la compra.");
+            }
+        },
+
+        exportPurchasesCSV() {
+            if (this.purchases.length === 0) {
+                alert("No hay compras registradas para exportar.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Fecha,Proveedor,Factura,Categoria,Monto (CRC),Registrado Por,Notas\n";
+
+            this.purchases.forEach(p => {
+                const row = [
+                    `"${p.fecha}"`,
+                    `"${(p.proveedor || '').replace(/"/g, '""')}"`,
+                    `"${(p.factura || '').replace(/"/g, '""')}"`,
+                    `"${(p.categoria || '').replace(/"/g, '""')}"`,
+                    p.total || 0,
+                    `"${(p.registradoPor || '').replace(/"/g, '""')}"`,
+                    `"${(p.notas || '').replace(/"/g, '""')}"`
+                ];
+                csvContent += row.join(",") + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Libro_Compras_Hacienda_CR_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
 });
 
 function toggleSidebar() {
@@ -1793,4 +2584,5 @@ function toggleSidebar() {
     const isCollapsed = sidebar.classList.toggle('collapsed');
     localStorage.setItem('admin_sidebar_collapsed', isCollapsed);
 }
+
 
