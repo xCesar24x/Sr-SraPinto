@@ -708,6 +708,37 @@
                         </div>
                     </div>
 
+                    <!-- GUÍA RÁPIDA: CRITERIO DE HACIENDA PARA COMPRAS D-105 (ACTIVIDAD 5610.0) -->
+                    <div style="background: rgba(0,0,0,0.35); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="const el = document.getElementById('compras-guide-details'); el.style.display = el.style.display === 'none' ? 'grid' : 'none';">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-question-circle" style="color: #3498db; font-size: 1.1rem;"></i>
+                                <h4 style="color: var(--mostaza); font-size: 0.95rem; margin: 0;">Guía Tributaria: ¿En qué casos aplica la factura para el D-105 y en cuáles no?</h4>
+                            </div>
+                            <span style="font-size: 0.78rem; color: #3498db; font-weight: bold;"><i class="fas fa-eye"></i> Ver Criterios Oficiales</span>
+                        </div>
+                        <div id="compras-guide-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; font-size: 0.8rem; line-height: 1.5; margin-top: 14px;">
+                            <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.25); border-radius: 8px; padding: 12px;">
+                                <strong style="color: #2ecc71; display: block; margin-bottom: 6px;"><i class="fas fa-check-circle"></i> SÍ Aplica para Declaración D-105:</strong>
+                                <ul style="margin: 0 0 0 16px; padding: 0; color: rgba(255,255,255,0.85);">
+                                    <li><strong>Materia prima alimenticia:</strong> Carnes, huevos, quesos, verduras, frutas, granos, café, especies, salsas.</li>
+                                    <li><strong>Bebidas para la venta:</strong> Gaseosas, jugos, agua embotellada, cervezas/licores autorizados.</li>
+                                    <li><strong>Envases y empaques de entrega:</strong> Vasos, cajas de comida, bolsas, cubiertos desechables y servilletas.</li>
+                                    <li><strong>Requisito formal:</strong> Factura electrónica emitida a tu nombre/cédula o tiquete electrónico autorizado.</li>
+                                </ul>
+                            </div>
+                            <div style="background: rgba(231, 76, 60, 0.08); border: 1px solid rgba(231, 76, 60, 0.25); border-radius: 8px; padding: 12px;">
+                                <strong style="color: #e74c3c; display: block; margin-bottom: 6px;"><i class="fas fa-times-circle"></i> NO Aplica para D-105 (Solo Gasto Interno):</strong>
+                                <ul style="margin: 0 0 0 16px; padding: 0; color: rgba(255,255,255,0.85);">
+                                    <li><strong>Servicios fijos del negocio:</strong> Alquiler de local, luz, agua, internet, telefonía o comisiones bancarias.</li>
+                                    <li><strong>Maquinaria o activos fijos:</strong> Compra de refrigeradoras, freidoras, planchas o licuadoras (no son mercancías de reventa).</li>
+                                    <li><strong>Mantenimiento y varios:</strong> Cloro, jabón, desinfectantes, pintura o reparaciones del local.</li>
+                                    <li><em>*Consejo: Regístralas desmarcando la casilla 'Aplica Hacienda' para que se resten de tu ganancia real sin alterar Tributación.</em></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Tabla del Libro de Compras -->
                     <div class="audit-table-container">
                         <table class="inventory-table">
@@ -791,6 +822,38 @@
                             <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase;">Impuesto IVA Trimestral Estimado</span>
                             <h3 id="d105-iva-estimado" style="color: #3498db; font-size: 1.3rem; margin-top: 2px;">₡0</h3>
                             <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Débito fiscal por factor simplificado</span>
+                        </div>
+                    </div>
+
+                    <!-- GUÍA OFICIAL: EN QUÉ CASOS APLICA Y CUÁNDO NO EL D-105 (ACTIVIDAD 5610.0) -->
+                    <div style="margin-top: 15px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 10px; padding: 15px;">
+                        <div style="font-weight: bold; color: var(--mostaza); margin-bottom: 10px; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="const el = document.getElementById('d105-rules-details'); el.style.display = el.style.display === 'none' ? 'grid' : 'none';">
+                            <span style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-balance-scale" style="color: #2ecc71;"></i>
+                                Criterios Oficiales: ¿En qué casos aplica el Régimen Simplificado (D-105) y en cuáles no?
+                            </span>
+                            <span style="font-size: 0.75rem; color: #3498db;"><i class="fas fa-eye"></i> Ver Normativa Hacienda</span>
+                        </div>
+                        <div id="d105-rules-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; font-size: 0.8rem; line-height: 1.5;">
+                            <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.25); border-radius: 8px; padding: 12px;">
+                                <strong style="color: #2ecc71; display: block; margin-bottom: 6px;"><i class="fas fa-check-circle"></i> SÍ Aplica presentar la Declaración D-105:</strong>
+                                <ul style="margin: 0 0 0 16px; padding: 0; color: rgba(255,255,255,0.85);">
+                                    <li><strong>Inscripción activa:</strong> Estar registrado en Tributación en la actividad <strong>5610.0 (Servicios de comidas y bebidas)</strong> bajo Régimen Simplificado.</li>
+                                    <li><strong>Periodicidad trimestral obligatoria:</strong> Se declara y paga del 1 al 15 de enero, abril, julio y octubre.</li>
+                                    <li><strong>Incluso con compras en cero:</strong> Si en un trimestre no compraste o el negocio estuvo cerrado, se debe presentar en cero para evitar multa de ₡231,100 por omisión.</li>
+                                    <li><strong>Cálculo exclusivo sobre compras:</strong> El impuesto se liquida aplicando el factor oficial del 10% a tus compras aplicables (IVA: 1.30% y Renta: 1.00%), sin requerir calcular IVA sobre las ventas diarias.</li>
+                                </ul>
+                            </div>
+                            <div style="background: rgba(231, 76, 60, 0.08); border: 1px solid rgba(231, 76, 60, 0.25); border-radius: 8px; padding: 12px;">
+                                <strong style="color: #e74c3c; display: block; margin-bottom: 6px;"><i class="fas fa-times-circle"></i> NO Aplica el Régimen Simplificado (Casos de Exclusión):</strong>
+                                <ul style="margin: 0 0 0 16px; padding: 0; color: rgba(255,255,255,0.85);">
+                                    <li><strong>Superar compras de 186 salarios base:</strong> Si tus compras anuales exceden <strong>~₡85,969,200</strong>, Hacienda te traslada al Régimen General (D-101/D-104 con contador público).</li>
+                                    <li><strong>Más de 5 empleados:</strong> El régimen no permite operar con más de 5 colaboradores permanentes simultáneos.</li>
+                                    <li><strong>Activos fijos superiores a 350 salarios base:</strong> Si el valor de tu maquinaria o instalaciones supera los ~₡161 millones.</li>
+                                    <li><strong>Actividades no contempladas:</strong> Servicios profesionales, franquicias internacionales o eventos fuera del giro 5610.0.</li>
+                                    <li><strong>Gastos operativos excluidos del cálculo:</strong> No incluyas en las compras del D-105 facturas de luz, agua, alquiler o servicios profesionales.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1065,11 +1128,15 @@
                 <div style="background: rgba(46, 204, 113, 0.08); border: 1px dashed rgba(46, 204, 113, 0.4); border-radius: 8px; padding: 12px; margin-bottom: 15px;">
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: white; font-size: 0.85rem;">
                         <input type="checkbox" id="fin-purchase-tax-applicable" checked style="width: 18px; height: 18px; accent-color: #2ecc71;">
-                        <span><strong>Incluir en Declaración de Hacienda D-105</strong> (Compras deducibles/computables)</span>
+                        <span><strong>Incluir en Declaración de Hacienda D-105</strong> (Compras computables)</span>
                     </label>
                     <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-top: 4px; margin-left: 28px;">
-                        Marca esta casilla si cuentas con comprobante válido y deseas que sume a tu base imponible trimestral del Régimen Simplificado. Si la desmarcas, solo contará para tu contabilidad interna real.
+                        Marca esta casilla si cuentas con factura electrónica y deseas que sume a tu base imponible trimestral del Régimen Simplificado (5610.0). Si la desmarcas, solo contará para tu gasto y ganancia real interna.
                     </span>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); font-size: 0.74rem; line-height: 1.4;">
+                        <div style="color: #2ecc71;"><strong>✓ SÍ Aplica:</strong> Carnes, verduras, lácteos, abarrotes, café, bebidas y empaques desechables para entrega.</div>
+                        <div style="color: #e74c3c; margin-top: 4px;"><strong>✗ NO Aplica (Desmarcar):</strong> Alquiler, luz, agua, internet, compra de maquinaria/refrigeradoras o artículos de limpieza.</div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Notas / Detalle de Insumos (Opcional)</label>
@@ -1276,6 +1343,42 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="FinancesManager.closeCashHistoryModal()">Cerrar</button>
+            </div>
+        </div>
+    <!-- MODAL ENVIAR COMPROBANTE DE SALARIO POR CORREO -->
+    <div id="salary-email-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-paper-plane" style="color: #2ecc71;"></i> Enviar Comprobante por Correo</h2>
+                <button onclick="FinancesManager.closeEmailSalaryModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="email-salary-id">
+                <div class="form-group">
+                    <label>Correo del Colaborador / Destinatario</label>
+                    <input type="email" id="email-salary-to" placeholder="colaborador@correo.com">
+                </div>
+                <div class="form-group">
+                    <label>Copia de Respaldo Patronal (CC)</label>
+                    <input type="email" id="email-salary-cc" value="srsrapintocr@gmail.com" placeholder="tu-correo@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Asunto del Correo</label>
+                    <input type="text" id="email-salary-subject" readonly style="opacity: 0.8; background: rgba(0,0,0,0.3);">
+                </div>
+                <div class="form-group">
+                    <label>Cuerpo del Comprobante (Vista Previa)</label>
+                    <textarea id="email-salary-body" rows="7" style="background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; line-height: 1.4; resize: vertical; width: 100%;"></textarea>
+                </div>
+                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                    <i class="fas fa-shield-alt" style="color: #2ecc71;"></i> Al presionar enviar se abrirá tu gestor de correo (Gmail, Outlook, etc.) con todo listo para despachar y quedará el registro de fecha y destinatario en el sistema.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="FinancesManager.closeEmailSalaryModal()">Cancelar</button>
+                <button class="btn-primary" onclick="FinancesManager.sendSalaryEmail()" style="background: #27ae60; border: none;">
+                    <i class="fas fa-paper-plane"></i> Abrir en Correo y Enviar
+                </button>
             </div>
         </div>
     </div>

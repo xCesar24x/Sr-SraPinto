@@ -3109,6 +3109,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             <button class="action-btn" onclick="FinancesManager.printSalaryReceipt('${s.id}')" style="color: #3498db; margin-right: 6px;" title="Descargar / Imprimir Comprobante Laboral">
                                 <i class="fas fa-file-invoice-dollar"></i>
                             </button>
+                            <button class="action-btn" onclick="FinancesManager.openEmailSalaryModal('${s.id}')" style="color: #2ecc71; margin-right: 6px;" title="Enviar Comprobante por Correo (Respaldo)">
+                                <i class="fas fa-envelope"></i>
+                            </button>
                             <button class="action-btn" onclick="FinancesManager.deleteSalary('${s.id}', '${this.sanitize(s.empleado)}', ${s.monto})" style="color: var(--alerta);" title="Eliminar">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -3179,6 +3182,83 @@ document.addEventListener("DOMContentLoaded", () => {
             win.document.write(printContent);
             win.document.close();
             win.print();
+        },
+
+        openEmailSalaryModal(id) {
+            const salary = this.salaries.find(s => s.id === id);
+            if (!salary) return;
+
+            document.getElementById('email-salary-id').value = id;
+            document.getElementById('email-salary-to').value = salary.correoEnviadoA || '';
+            document.getElementById('email-salary-subject').value = `Comprobante de Pago de Salario - ${salary.empleado} (${salary.fechaPago}) - Sr. & Sra. Pinto`;
+
+            const bodyText = `Estimado(a) ${salary.empleado},
+
+Por medio del presente correo se le hace entrega formal de su comprobante de pago de salario correspondiente al período laborado en Sr. & Sra. Pinto.
+
+==================================================
+COMPROBANTE DE PAGO DE SALARIO
+==================================================
+• Empresa: Sr. & Sra. Pinto (Servicios de Alimentación)
+• Colaborador: ${salary.empleado}
+• Fecha de Pago: ${salary.fechaPago}
+• Período Laborado: ${salary.periodo}
+• Método de Pago: ${salary.metodo}
+• Detalle / Observaciones: ${salary.notas || 'Sin observaciones'}
+--------------------------------------------------
+• MONTO TOTAL NETO CANCELADO: ₡${(salary.monto || 0).toLocaleString()} CRC
+==================================================
+
+Este comprobante electrónico sirve como constancia y respaldo de pago de conformidad con el Código de Trabajo de Costa Rica (MTSS).
+
+Atentamente,
+Administración
+Sr. & Sra. Pinto - El Sabor de ser Tico`;
+
+            document.getElementById('email-salary-body').value = bodyText;
+            document.getElementById('salary-email-modal').classList.add('active');
+        },
+
+        closeEmailSalaryModal() {
+            document.getElementById('salary-email-modal').classList.remove('active');
+        },
+
+        async sendSalaryEmail() {
+            const id = document.getElementById('email-salary-id').value;
+            const to = document.getElementById('email-salary-to').value.trim();
+            const cc = document.getElementById('email-salary-cc').value.trim();
+            const subject = document.getElementById('email-salary-subject').value.trim();
+            const body = document.getElementById('email-salary-body').value;
+
+            if (!to) {
+                alert("Por favor ingresa el correo del colaborador o destinatario.");
+                return;
+            }
+
+            // Construir URL mailto
+            let mailtoUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            if (cc) {
+                mailtoUrl += `&cc=${encodeURIComponent(cc)}`;
+            }
+
+            // Abrir cliente de correo
+            window.location.href = mailtoUrl;
+
+            // Guardar registro en Firestore
+            try {
+                if (id) {
+                    await window.FirebaseDB.collection('salarios').doc(id).update({
+                        correoEnviadoA: to,
+                        ccRespaldo: cc,
+                        fechaEnvioCorreo: new Date().toISOString()
+                    });
+                }
+            } catch (err) {
+                console.error("Error al actualizar estado de correo en salario:", err);
+            }
+
+            this.closeEmailSalaryModal();
+            alert(`✅ Abriendo tu gestor de correo para enviar el comprobante a: ${to}\nSe guardó el respaldo en el sistema.`);
         },
 
         async deleteSalary(id, empleado, monto) {
