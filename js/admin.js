@@ -2740,7 +2740,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const totalPurchasesBase = applicablePurchases.reduce((sum, p) => sum + (p.total || 0), 0);
 
-            // Actividad Económica 552001 (Restaurantes y Servicios de Alimentación en Régimen Simplificado)
+            // Actividad Económica 5610.0 (Actividades de restaurantes y de servicio móvil de comidas - Régimen Simplificado)
             // Factor Compras Renta = 10%
             // Tarifa Renta aplicable = Escala o factor típico 10% sobre la base estimada (1% efectivo sobre compras)
             // Factor Compras IVA = 10%
@@ -3234,7 +3234,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px;">
                         <h2 style="margin: 0; text-transform: uppercase;">Sr. & Sra. Pinto</h2>
                         <h4 style="margin: 5px 0; color: #555;">Resumen Tributario Régimen Simplificado (Costa Rica)</h4>
-                        <p style="font-size: 12px; margin: 0;">Actividad: 552001 - Restaurantes, sodas y servicios de alimentación</p>
+                        <p style="font-size: 12px; margin: 0;">Actividad: 5610.0 - Actividades de restaurantes y de servicio móvil de comidas</p>
                         <p style="font-size: 11px; color: #777;">Generado el: ${new Date().toLocaleString('es-CR')}</p>
                     </div>
 
