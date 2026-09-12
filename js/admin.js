@@ -2176,6 +2176,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.FinancesManager = {
         purchases: [],
         legalObligations: [],
+        salaries: [],
         orders: [],
         initialized: false,
 
@@ -2201,9 +2202,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 this.purchases.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                 this.loadPurchasesReport();
                 this.recalculatePL();
+                this.calculateD105Hacienda();
             });
 
-            // 2. Escuchar obligaciones legales
+            // 2. Escuchar salarios registrados
+            db.collection('salarios').onSnapshot(snapshot => {
+                this.salaries = [];
+                snapshot.forEach(doc => {
+                    this.salaries.push({ id: doc.id, ...doc.data() });
+                });
+                this.salaries.sort((a, b) => new Date(b.fechaPago) - new Date(a.fechaPago));
+                this.renderSalariesTable();
+                this.recalculatePL();
+            });
+
+            // 3. Escuchar obligaciones legales
             db.collection('obligaciones_legales').onSnapshot(snapshot => {
                 this.legalObligations = [];
                 snapshot.forEach(doc => {
@@ -2216,7 +2229,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            // 3. Escuchar pedidos para P&L
+            // 4. Escuchar pedidos para P&L y Cuadre de Caja
             db.collection('pedidos').onSnapshot(snapshot => {
                 this.orders = [];
                 snapshot.forEach(doc => {
@@ -2226,6 +2239,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
                 this.recalculatePL();
+                this.loadCashReconciliation();
             });
         },
 
@@ -2275,20 +2289,69 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         recalculatePL() {
+            const period = document.getElementById('fin-pl-period')?.value || 'mes';
+            const now = new Date();
+            let startDate = new Date();
+            let endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            let filterActive = true;
+
+            if (period === 'hoy') {
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'semana') {
+                const day = now.getDay() || 7;
+                startDate.setDate(now.getDate() - day + 1);
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'mes') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+            } else if (period === 'trimestre') {
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                startDate = new Date(now.getFullYear(), currentQuarter * 3, 1, 0, 0, 0);
+            } else if (period === 'ano') {
+                startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+            } else {
+                filterActive = false;
+            }
+
+            // Filtrar pedidos
+            const filteredOrders = this.orders.filter(o => {
+                if (!filterActive) return true;
+                const d = new Date(o.fecha);
+                return d >= startDate && d <= endDate;
+            });
+
+            // Filtrar compras
+            const filteredPurchases = this.purchases.filter(p => {
+                if (!filterActive) return true;
+                const d = new Date(p.fecha + 'T12:00:00');
+                return d >= startDate && d <= endDate;
+            });
+
+            // Filtrar salarios
+            const filteredSalaries = this.salaries.filter(s => {
+                if (!filterActive) return true;
+                const d = new Date(s.fechaPago + 'T12:00:00');
+                return d >= startDate && d <= endDate;
+            });
+
             // Ingresos totales por ventas
-            const totalIncome = this.orders.reduce((sum, o) => sum + (o.total || 0), 0);
+            const totalIncome = filteredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
             // Total compras
-            const totalPurchases = this.purchases.reduce((sum, p) => sum + (p.total || 0), 0);
-            const netProfit = totalIncome - totalPurchases;
+            const totalPurchases = filteredPurchases.reduce((sum, p) => sum + (p.total || 0), 0);
+            // Total salarios pagados
+            const totalSalaries = filteredSalaries.reduce((sum, s) => sum + (s.monto || 0), 0);
+            // Utilidad Neta Real
+            const netProfit = totalIncome - totalPurchases - totalSalaries;
             const marginPct = totalIncome > 0 ? Math.round((netProfit / totalIncome) * 100) : 0;
 
             const elIncome = document.getElementById('fin-stat-income');
             const elPurchases = document.getElementById('fin-stat-purchases');
+            const elSalaries = document.getElementById('fin-stat-salaries');
             const elProfit = document.getElementById('fin-stat-profit');
             const elMargin = document.getElementById('fin-stat-margin');
 
             if (elIncome) elIncome.innerText = `₡${totalIncome.toLocaleString()}`;
             if (elPurchases) elPurchases.innerText = `₡${totalPurchases.toLocaleString()}`;
+            if (elSalaries) elSalaries.innerText = `₡${totalSalaries.toLocaleString()}`;
             if (elProfit) {
                 elProfit.innerText = `₡${netProfit.toLocaleString()}`;
                 elProfit.style.color = netProfit >= 0 ? '#2ecc71' : '#e74c3c';
@@ -2297,6 +2360,408 @@ document.addEventListener("DOMContentLoaded", () => {
                 elMargin.innerText = `${marginPct}%`;
                 elMargin.style.color = marginPct >= 0 ? '#f1c40f' : '#e74c3c';
             }
+
+            // --- LÍMITE ANUAL RÉGIMEN SIMPLIFICADO (186 Salarios Base = ~₡85,969,200) ---
+            const currentYear = now.getFullYear();
+            const annualPurchases = this.purchases.filter(p => {
+                const pYear = new Date(p.fecha + 'T12:00:00').getFullYear();
+                return pYear === currentYear && p.aplicaHacienda !== false;
+            }).reduce((sum, p) => sum + (p.total || 0), 0);
+
+            const annualMax = 85969200; // 186 salarios base x ₡462,200
+            const annualPct = Math.min(100, (annualPurchases / annualMax) * 100);
+            const annualRemaining = Math.max(0, annualMax - annualPurchases);
+
+            const elAnnualSum = document.getElementById('annual-purchases-sum');
+            const elAnnualFill = document.getElementById('annual-limit-progress-fill');
+            const elAnnualPct = document.getElementById('annual-limit-pct');
+            const elAnnualRem = document.getElementById('annual-limit-remaining');
+            const elAnnualBadge = document.getElementById('annual-limit-status-badge');
+
+            if (elAnnualSum) elAnnualSum.innerText = `₡${annualPurchases.toLocaleString()} / ₡${annualMax.toLocaleString()}`;
+            if (elAnnualFill) {
+                elAnnualFill.style.width = `${annualPct}%`;
+                elAnnualFill.style.background = annualPct < 70 ? 'linear-gradient(90deg, #2ecc71, #27ae60)' : (annualPct < 90 ? 'linear-gradient(90deg, #f1c40f, #e67e22)' : 'linear-gradient(90deg, #e74c3c, #c0392b)');
+            }
+            if (elAnnualPct) elAnnualPct.innerText = `${annualPct.toFixed(1)}% del tope anual utilizado`;
+            if (elAnnualRem) elAnnualRem.innerText = `₡${annualRemaining.toLocaleString()} de margen disponible`;
+            if (elAnnualBadge) {
+                if (annualPct < 70) {
+                    elAnnualBadge.innerText = '🟢 SEGURO';
+                    elAnnualBadge.style.color = '#2ecc71';
+                    elAnnualBadge.style.borderColor = '#2ecc71';
+                } else if (annualPct < 90) {
+                    elAnnualBadge.innerText = '🟡 PRECAUCIÓN';
+                    elAnnualBadge.style.color = '#f1c40f';
+                    elAnnualBadge.style.borderColor = '#f1c40f';
+                } else {
+                    elAnnualBadge.innerText = '🔴 ALERTA TOPE';
+                    elAnnualBadge.style.color = '#e74c3c';
+                    elAnnualBadge.style.borderColor = '#e74c3c';
+                }
+            }
+        },
+
+        loadCashReconciliation() {
+            const period = document.getElementById('cash-recon-period')?.value || 'hoy';
+            const now = new Date();
+            let startDate = new Date();
+            let endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+            if (period === 'hoy') {
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'ayer') {
+                startDate.setDate(startDate.getDate() - 1);
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setDate(endDate.getDate() - 1);
+                endDate.setHours(23, 59, 59, 999);
+            } else if (period === 'semana') {
+                const day = now.getDay() || 7;
+                startDate.setDate(now.getDate() - day + 1);
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'mes') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+            }
+
+            const filteredOrders = this.orders.filter(order => {
+                const oDate = new Date(order.fecha);
+                return oDate >= startDate && oDate <= endDate;
+            });
+
+            // Agrupar por método de pago
+            let cashTotal = 0, cashCount = 0;
+            let sinpeTotal = 0, sinpeCount = 0;
+            let cardTotal = 0, cardCount = 0;
+            let otherTotal = 0, otherCount = 0;
+
+            filteredOrders.forEach(o => {
+                const method = (o.metodoPago || '').toLowerCase();
+                const total = o.total || 0;
+
+                if (method.includes('efectivo')) {
+                    cashTotal += total;
+                    cashCount++;
+                } else if (method.includes('sinpe')) {
+                    sinpeTotal += total;
+                    sinpeCount++;
+                } else if (method.includes('tarjeta')) {
+                    cardTotal += total;
+                    cardCount++;
+                } else {
+                    otherTotal += total;
+                    otherCount++;
+                }
+            });
+
+            // Guardar esperados para cálculo de diferencias
+            this.expectedCash = cashTotal;
+            this.expectedSinpe = sinpeTotal;
+            this.expectedCard = cardTotal;
+            this.expectedOther = otherTotal;
+
+            // Actualizar DOM de tarjetas
+            const elCashTotal = document.getElementById('recon-cash-total');
+            const elCashCount = document.getElementById('recon-cash-count');
+            const elSinpeTotal = document.getElementById('recon-sinpe-total');
+            const elSinpeCount = document.getElementById('recon-sinpe-count');
+            const elCardTotal = document.getElementById('recon-card-total');
+            const elCardCount = document.getElementById('recon-card-count');
+            const elOtherTotal = document.getElementById('recon-other-total');
+            const elOtherCount = document.getElementById('recon-other-count');
+
+            if (elCashTotal) elCashTotal.innerText = `₡${cashTotal.toLocaleString()}`;
+            if (elCashCount) elCashCount.innerText = `${cashCount} pedidos`;
+            if (elSinpeTotal) elSinpeTotal.innerText = `₡${sinpeTotal.toLocaleString()}`;
+            if (elSinpeCount) elSinpeCount.innerText = `${sinpeCount} pedidos`;
+            if (elCardTotal) elCardTotal.innerText = `₡${cardTotal.toLocaleString()}`;
+            if (elCardCount) elCardCount.innerText = `${cardCount} pedidos`;
+            if (elOtherTotal) elOtherTotal.innerText = `₡${otherTotal.toLocaleString()}`;
+            if (elOtherCount) elOtherCount.innerText = `${otherCount} pedidos`;
+
+            // Actualizar referencias esperadas en los inputs de arqueo
+            const elExpCash = document.getElementById('recon-expected-cash');
+            const elExpSinpe = document.getElementById('recon-expected-sinpe');
+            const elExpCard = document.getElementById('recon-expected-card');
+
+            if (elExpCash) elExpCash.innerText = `Esp: ₡${cashTotal.toLocaleString()}`;
+            if (elExpSinpe) elExpSinpe.innerText = `Esp: ₡${sinpeTotal.toLocaleString()}`;
+            if (elExpCard) elExpCard.innerText = `Esp: ₡${cardTotal.toLocaleString()}`;
+
+            this.calculateCashDifferences();
+        },
+
+        calculateCashDifferences() {
+            const valCashStr = document.getElementById('recon-input-cash')?.value.trim() || '';
+            const valSinpeStr = document.getElementById('recon-input-sinpe')?.value.trim() || '';
+            const valCardStr = document.getElementById('recon-input-card')?.value.trim() || '';
+
+            const inputCash = valCashStr !== '' ? parseFloat(valCashStr) : null;
+            const inputSinpe = valSinpeStr !== '' ? parseFloat(valSinpeStr) : null;
+            const inputCard = valCardStr !== '' ? parseFloat(valCardStr) : null;
+
+            const expCash = this.expectedCash || 0;
+            const expSinpe = this.expectedSinpe || 0;
+            const expCard = this.expectedCard || 0;
+
+            const updateBadge = (badgeId, inputVal, expectedVal) => {
+                const el = document.getElementById(badgeId);
+                if (!el) return 0;
+                if (inputVal === null) {
+                    el.className = 'diff-badge diff-badge-balanced';
+                    el.innerText = `Esperado: ₡${expectedVal.toLocaleString()}`;
+                    return 0;
+                }
+                const diff = inputVal - expectedVal;
+                if (diff === 0) {
+                    el.className = 'diff-badge diff-badge-balanced';
+                    el.innerText = `Diferencia: ₡0 (Exacto)`;
+                } else if (diff > 0) {
+                    el.className = 'diff-badge diff-badge-excess';
+                    el.innerText = `Diferencia: +₡${diff.toLocaleString()} (Sobrante)`;
+                } else {
+                    el.className = 'diff-badge diff-badge-short';
+                    el.innerText = `Diferencia: -₡${Math.abs(diff).toLocaleString()} (Faltante)`;
+                }
+                return diff;
+            };
+
+            const diffCash = updateBadge('diff-cash-badge', inputCash, expCash);
+            const diffSinpe = updateBadge('diff-sinpe-badge', inputSinpe, expSinpe);
+            const diffCard = updateBadge('diff-card-badge', inputCard, expCard);
+
+            const hasAnyInput = inputCash !== null || inputSinpe !== null || inputCard !== null;
+            const totalDiff = (inputCash !== null ? diffCash : 0) + (inputSinpe !== null ? diffSinpe : 0) + (inputCard !== null ? diffCard : 0);
+
+            const elGlobalStatus = document.getElementById('recon-global-status');
+            const elGlobalDiff = document.getElementById('recon-global-diff');
+
+            if (elGlobalDiff) {
+                if (totalDiff === 0) {
+                    elGlobalDiff.innerText = `₡0`;
+                    elGlobalDiff.style.color = '#2ecc71';
+                } else if (totalDiff > 0) {
+                    elGlobalDiff.innerText = `+₡${totalDiff.toLocaleString()} (Sobrante)`;
+                    elGlobalDiff.style.color = '#f1c40f';
+                } else {
+                    elGlobalDiff.innerText = `-₡${Math.abs(totalDiff).toLocaleString()} (Faltante)`;
+                    elGlobalDiff.style.color = '#e74c3c';
+                }
+            }
+
+            if (elGlobalStatus) {
+                if (!hasAnyInput) {
+                    elGlobalStatus.className = 'diff-badge diff-badge-balanced';
+                    elGlobalStatus.innerHTML = `<i class="fas fa-info-circle"></i> Ingresa tu conteo para verificar`;
+                } else if (totalDiff === 0) {
+                    elGlobalStatus.className = 'diff-badge diff-badge-balanced';
+                    elGlobalStatus.innerHTML = `<i class="fas fa-check-circle"></i> Caja Cuadrada al Centavo`;
+                } else if (totalDiff > 0) {
+                    elGlobalStatus.className = 'diff-badge diff-badge-excess';
+                    elGlobalStatus.innerHTML = `<i class="fas fa-arrow-up"></i> Sobrante en Caja`;
+                } else {
+                    elGlobalStatus.className = 'diff-badge diff-badge-short';
+                    elGlobalStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Faltante en Caja`;
+                }
+            }
+        },
+
+        async saveCashClosing() {
+            const valCashStr = document.getElementById('recon-input-cash')?.value.trim() || '';
+            const valSinpeStr = document.getElementById('recon-input-sinpe')?.value.trim() || '';
+            const valCardStr = document.getElementById('recon-input-card')?.value.trim() || '';
+
+            if (valCashStr === '' && valSinpeStr === '' && valCardStr === '') {
+                alert("Por favor ingresa al menos un monto contado para registrar el cierre de caja.");
+                return;
+            }
+
+            const countedCash = valCashStr !== '' ? parseFloat(valCashStr) : (this.expectedCash || 0);
+            const countedSinpe = valSinpeStr !== '' ? parseFloat(valSinpeStr) : (this.expectedSinpe || 0);
+            const countedCard = valCardStr !== '' ? parseFloat(valCardStr) : (this.expectedCard || 0);
+
+            const expCash = this.expectedCash || 0;
+            const expSinpe = this.expectedSinpe || 0;
+            const expCard = this.expectedCard || 0;
+
+            const diffCash = countedCash - expCash;
+            const diffSinpe = countedSinpe - expSinpe;
+            const diffCard = countedCard - expCard;
+            const totalDiff = diffCash + diffSinpe + diffCard;
+
+            const period = document.getElementById('cash-recon-period')?.value || 'hoy';
+            const user = localStorage.getItem('srsrapinto_cedula') || 'admin';
+
+            const closingData = {
+                fechaHora: new Date().toISOString(),
+                periodo: period,
+                usuario: user,
+                esperado: {
+                    efectivo: expCash,
+                    sinpe: expSinpe,
+                    tarjeta: expCard,
+                    total: expCash + expSinpe + expCard
+                },
+                contado: {
+                    efectivo: countedCash,
+                    sinpe: countedSinpe,
+                    tarjeta: countedCard,
+                    total: countedCash + countedSinpe + countedCard
+                },
+                diferencias: {
+                    efectivo: diffCash,
+                    sinpe: diffSinpe,
+                    tarjeta: diffCard,
+                    total: totalDiff
+                },
+                estado: totalDiff === 0 ? 'Cuadrado' : (totalDiff > 0 ? 'Sobrante' : 'Faltante')
+            };
+
+            const btn = document.getElementById('btn-save-cash-closing');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                await window.FirebaseDB.collection('cierres_caja').add(closingData);
+                alert(`✅ ¡Cierre de caja guardado con éxito!\n\nEstado: ${closingData.estado}\nDiferencia: ₡${totalDiff.toLocaleString()}\nRegistrado por: ${user}`);
+                // Limpiar inputs
+                document.getElementById('recon-input-cash').value = '';
+                document.getElementById('recon-input-sinpe').value = '';
+                document.getElementById('recon-input-card').value = '';
+                this.calculateCashDifferences();
+            } catch (err) {
+                console.error("Error al guardar cierre de caja:", err);
+                alert("No se pudo guardar el cierre de caja.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Cierre de Caja';
+            }
+        },
+
+        async openCashHistoryModal() {
+            const modal = document.getElementById('cash-history-modal');
+            const list = document.getElementById('cash-history-list');
+            modal.classList.add('active');
+            list.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">Cargando historial de cierres...</td></tr>`;
+
+            try {
+                const snapshot = await window.FirebaseDB.collection('cierres_caja').orderBy('fechaHora', 'desc').limit(25).get();
+                if (snapshot.empty) {
+                    list.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">No hay cierres de caja registrados aún.</td></tr>`;
+                    return;
+                }
+
+                const rows = [];
+                snapshot.forEach(doc => {
+                    const c = doc.data();
+                    const fecha = new Date(c.fechaHora).toLocaleString('es-CR');
+                    const diffTotal = c.diferencias?.total || 0;
+                    let badgeClass = 'diff-badge-balanced';
+                    if (diffTotal > 0) badgeClass = 'diff-badge-excess';
+                    else if (diffTotal < 0) badgeClass = 'diff-badge-short';
+
+                    rows.push(`
+                        <tr>
+                            <td style="font-size: 0.8rem; font-weight: 700;">${fecha}</td>
+                            <td>${this.sanitize(c.usuario || 'admin')}</td>
+                            <td style="font-size: 0.85rem;">₡${(c.contado?.efectivo || 0).toLocaleString()} <span style="opacity: 0.5; font-size: 0.75rem;">/ ₡${(c.esperado?.efectivo || 0).toLocaleString()}</span></td>
+                            <td style="font-size: 0.85rem;">₡${(c.contado?.sinpe || 0).toLocaleString()} <span style="opacity: 0.5; font-size: 0.75rem;">/ ₡${(c.esperado?.sinpe || 0).toLocaleString()}</span></td>
+                            <td style="font-size: 0.85rem;">₡${(c.contado?.tarjeta || 0).toLocaleString()} <span style="opacity: 0.5; font-size: 0.75rem;">/ ₡${(c.esperado?.tarjeta || 0).toLocaleString()}</span></td>
+                            <td style="font-weight: 900;"><span class="diff-badge ${badgeClass}">₡${diffTotal.toLocaleString()}</span></td>
+                            <td><strong style="color: ${diffTotal === 0 ? '#2ecc71' : (diffTotal > 0 ? '#f1c40f' : '#e74c3c')};">${c.estado || 'N/A'}</strong></td>
+                        </tr>
+                    `);
+                });
+                list.innerHTML = rows.join('');
+            } catch (err) {
+                console.error("Error al cargar historial de cierres:", err);
+                list.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: #e74c3c;">Error al cargar historial.</td></tr>`;
+            }
+        },
+
+        closeCashHistoryModal() {
+            document.getElementById('cash-history-modal').classList.remove('active');
+        },
+
+        openATVGuideModal() {
+            const baseCompras = document.getElementById('d105-compras-base')?.innerText || '₡0';
+            const rentaEstimada = document.getElementById('d105-renta-estimada')?.innerText || '₡0';
+            const ivaEstimado = document.getElementById('d105-iva-estimado')?.innerText || '₡0';
+
+            const cleanNum = (str) => parseFloat(str.replace(/[^\d]/g, '')) || 0;
+            const totalPagar = cleanNum(rentaEstimada) + cleanNum(ivaEstimado);
+
+            const el101 = document.getElementById('atv-val-101');
+            const el102 = document.getElementById('atv-val-102');
+            const el202 = document.getElementById('atv-val-202');
+            const el302 = document.getElementById('atv-val-302');
+            const elTot = document.getElementById('atv-val-total');
+
+            if (el101) el101.innerText = baseCompras;
+            if (el102) el102.innerText = '₡0';
+            if (el202) el202.innerText = ivaEstimado;
+            if (el302) el302.innerText = rentaEstimada;
+            if (elTot) elTot.innerText = `₡${totalPagar.toLocaleString()}`;
+
+            document.getElementById('hacienda-atv-modal').classList.add('active');
+        },
+
+        closeATVGuideModal() {
+            document.getElementById('hacienda-atv-modal').classList.remove('active');
+        },
+
+        copyToClipboard(elementId, btnElement) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const textToCopy = el.innerText.replace(/[^\d]/g, '') || el.innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalHtml = btnElement.innerHTML;
+                btnElement.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                setTimeout(() => {
+                    btnElement.innerHTML = originalHtml;
+                }, 2000);
+            }).catch(err => {
+                console.error("Error al copiar al portapapeles:", err);
+                alert(`Copia manual: ${textToCopy}`);
+            });
+        },
+
+        calculateD105Hacienda() {
+            // Filtrar compras aplicables del trimestre fiscal actual (Costa Rica)
+            const now = new Date();
+            const currentQuarter = Math.floor(now.getMonth() / 3);
+            const startQuarter = new Date(now.getFullYear(), currentQuarter * 3, 1, 0, 0, 0);
+            const endQuarter = new Date(now.getFullYear(), (currentQuarter + 1) * 3, 0, 23, 59, 59, 999);
+
+            const applicablePurchases = this.purchases.filter(p => {
+                if (p.aplicaHacienda === false) return false;
+                const pDate = new Date(p.fecha + 'T12:00:00');
+                return pDate >= startQuarter && pDate <= endQuarter;
+            });
+
+            const totalPurchasesBase = applicablePurchases.reduce((sum, p) => sum + (p.total || 0), 0);
+
+            // Actividad Económica 552001 (Restaurantes y Servicios de Alimentación en Régimen Simplificado)
+            // Factor Compras Renta = 10%
+            // Tarifa Renta aplicable = Escala o factor típico 10% sobre la base estimada (1% efectivo sobre compras)
+            // Factor Compras IVA = 10%
+            const factorComprasRenta = 0.10;
+            const factorComprasIVA = 0.10;
+            const tarifaGeneralIVA = 0.13;
+
+            // Renta estimada: Compras x Factor (10%) x Tarifa (estimado promedio)
+            const baseImponibleRenta = totalPurchasesBase * factorComprasRenta;
+            const rentaEstimada = Math.round(baseImponibleRenta * 0.10); // Tarifa estimada del régimen
+
+            // IVA estimado: Compras x Factor Compras (10%) x 13%
+            const ivaEstimado = Math.round(totalPurchasesBase * factorComprasIVA * tarifaGeneralIVA);
+
+            const elBase = document.getElementById('d105-compras-base');
+            const elRenta = document.getElementById('d105-renta-estimada');
+            const elIVA = document.getElementById('d105-iva-estimado');
+
+            if (elBase) elBase.innerText = `₡${totalPurchasesBase.toLocaleString()}`;
+            if (elRenta) elRenta.innerText = `₡${rentaEstimada.toLocaleString()}`;
+            if (elIVA) elIVA.innerText = `₡${ivaEstimado.toLocaleString()}`;
         },
 
         renderLegalObligations() {
@@ -2431,12 +2896,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             this.renderPurchasesTable(filtered);
             this.updateHaciendaSummary(filtered);
+            this.calculateD105Hacienda();
         },
 
         updateHaciendaSummary(filtered) {
-            const total = filtered.reduce((sum, p) => sum + (p.total || 0), 0);
+            const applicablePurchases = filtered.filter(p => p.aplicaHacienda !== false);
+            const total = applicablePurchases.reduce((sum, p) => sum + (p.total || 0), 0);
             const foodCats = ['Carnes y Embutidos', 'Lácteos y Huevos', 'Abarrotes y Granos', 'Verduras y Frutas', 'Bebidas y Café'];
-            const foodTotal = filtered.filter(p => foodCats.includes(p.categoria)).reduce((sum, p) => sum + (p.total || 0), 0);
+            const foodTotal = applicablePurchases.filter(p => foodCats.includes(p.categoria)).reduce((sum, p) => sum + (p.total || 0), 0);
             const operTotal = total - foodTotal;
 
             const elTotal = document.getElementById('hacienda-total-purchases');
@@ -2447,7 +2914,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (elTotal) elTotal.innerText = `₡${total.toLocaleString()}`;
             if (elFood) elFood.innerText = `₡${foodTotal.toLocaleString()}`;
             if (elOper) elOper.innerText = `₡${operTotal.toLocaleString()}`;
-            if (elCount) elCount.innerText = filtered.length;
+            if (elCount) elCount.innerText = applicablePurchases.length;
         },
 
         renderPurchasesTable(list) {
@@ -2455,11 +2922,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!container) return;
 
             if (list.length === 0) {
-                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">No hay compras en el período seleccionado.</td></tr>`;
+                container.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; opacity: 0.5;">No hay compras en el período seleccionado.</td></tr>`;
                 return;
             }
 
             container.innerHTML = list.map(p => {
+                const aplica = p.aplicaHacienda !== false;
                 return `
                     <tr>
                         <td style="font-size: 0.85rem; font-weight: 700;">${p.fecha}</td>
@@ -2470,6 +2938,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td style="font-family: monospace; font-size: 0.85rem; color: var(--mostaza);">${this.sanitize(p.factura || 'N/A')}</td>
                         <td><span style="background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem;">${this.sanitize(p.categoria)}</span></td>
                         <td style="font-weight: 900; color: #2ecc71;">₡${(p.total || 0).toLocaleString()}</td>
+                        <td>
+                            <button onclick="FinancesManager.toggleTaxApplicable('${p.id}', ${!aplica})" style="background: ${aplica ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)'}; border: 1px solid ${aplica ? '#2ecc71' : '#e74c3c'}; color: ${aplica ? '#2ecc71' : '#e74c3c'}; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; font-weight: bold;">
+                                ${aplica ? '✓ Sí (D-105)' : '✗ Solo Interno'}
+                            </button>
+                        </td>
                         <td style="font-size: 0.8rem; opacity: 0.7;">${this.sanitize(p.registradoPor || 'admin')}</td>
                         <td>
                             <button class="action-btn" onclick="FinancesManager.deletePurchase('${p.id}', '${this.sanitize(p.proveedor)}', ${p.total})" style="color: var(--alerta);" title="Eliminar">
@@ -2481,6 +2954,16 @@ document.addEventListener("DOMContentLoaded", () => {
             }).join('');
         },
 
+        async toggleTaxApplicable(id, newState) {
+            try {
+                await window.FirebaseDB.collection('compras').doc(id).update({
+                    aplicaHacienda: newState
+                });
+            } catch (err) {
+                console.error("Error al actualizar deducibilidad tributaria:", err);
+            }
+        },
+
         openAddPurchaseModal() {
             document.getElementById('finance-purchase-modal').classList.add('active');
             document.getElementById('fin-purchase-date').value = new Date().toISOString().split('T')[0];
@@ -2488,6 +2971,8 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('fin-purchase-invoice').value = '';
             document.getElementById('fin-purchase-total').value = '';
             document.getElementById('fin-purchase-notes').value = '';
+            const taxCheck = document.getElementById('fin-purchase-tax-applicable');
+            if (taxCheck) taxCheck.checked = true;
         },
 
         closeAddPurchaseModal() {
@@ -2501,6 +2986,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const factura = document.getElementById('fin-purchase-invoice').value.trim();
             const total = parseFloat(document.getElementById('fin-purchase-total').value);
             const notas = document.getElementById('fin-purchase-notes').value.trim();
+            const aplicaHacienda = document.getElementById('fin-purchase-tax-applicable')?.checked !== false;
 
             if (!fecha || !proveedor || isNaN(total) || total <= 0) {
                 alert("Por favor completa la fecha, proveedor y un monto total válido.");
@@ -2514,6 +3000,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 factura: factura || 'S/N',
                 total,
                 notas,
+                aplicaHacienda,
                 registradoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
                 creadoEn: new Date().toISOString()
             };
@@ -2544,6 +3031,166 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
 
+        // ==========================================
+        // MÓDULO DE SALARIOS Y NÓMINA SEMANAL
+        // ==========================================
+        openAddSalaryModal() {
+            document.getElementById('finance-salary-modal').classList.add('active');
+            document.getElementById('fin-salary-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('fin-salary-employee').value = '';
+            document.getElementById('fin-salary-period').value = 'Semana en curso';
+            document.getElementById('fin-salary-amount').value = '';
+            document.getElementById('fin-salary-notes').value = '';
+        },
+
+        closeAddSalaryModal() {
+            document.getElementById('finance-salary-modal').classList.remove('active');
+        },
+
+        async saveSalary() {
+            const fechaPago = document.getElementById('fin-salary-date').value;
+            const empleado = document.getElementById('fin-salary-employee').value.trim();
+            const periodo = document.getElementById('fin-salary-period').value.trim();
+            const metodo = document.getElementById('fin-salary-method').value;
+            const monto = parseFloat(document.getElementById('fin-salary-amount').value);
+            const notas = document.getElementById('fin-salary-notes').value.trim();
+
+            if (!fechaPago || !empleado || isNaN(monto) || monto <= 0) {
+                alert("Por favor completa la fecha, colaborador y un monto válido.");
+                return;
+            }
+
+            const salaryData = {
+                fechaPago,
+                empleado,
+                periodo: periodo || 'Semanal',
+                metodo,
+                monto,
+                notas,
+                registradoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
+                creadoEn: new Date().toISOString()
+            };
+
+            const btn = document.getElementById('btn-save-salary');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                await window.FirebaseDB.collection('salarios').add(salaryData);
+                this.closeAddSalaryModal();
+            } catch (err) {
+                console.error("Error al guardar salario:", err);
+                alert("No se pudo registrar el pago de salario.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar Pago';
+            }
+        },
+
+        renderSalariesTable() {
+            const container = document.getElementById('fin-salaries-list');
+            if (!container) return;
+
+            if (this.salaries.length === 0) {
+                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">No hay pagos de salarios registrados.</td></tr>`;
+                return;
+            }
+
+            container.innerHTML = this.salaries.map(s => {
+                return `
+                    <tr>
+                        <td style="font-size: 0.85rem; font-weight: 700;">${s.fechaPago}</td>
+                        <td><strong>${this.sanitize(s.empleado)}</strong></td>
+                        <td style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">${this.sanitize(s.periodo)}</td>
+                        <td><span style="background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem;">${this.sanitize(s.metodo)}</span></td>
+                        <td style="font-weight: 900; color: #e67e22;">₡${(s.monto || 0).toLocaleString()}</td>
+                        <td style="font-size: 0.8rem; opacity: 0.7;">${this.sanitize(s.notas || 'N/A')}</td>
+                        <td>
+                            <button class="action-btn" onclick="FinancesManager.printSalaryReceipt('${s.id}')" style="color: #3498db; margin-right: 6px;" title="Descargar / Imprimir Comprobante Laboral">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </button>
+                            <button class="action-btn" onclick="FinancesManager.deleteSalary('${s.id}', '${this.sanitize(s.empleado)}', ${s.monto})" style="color: var(--alerta);" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        printSalaryReceipt(id) {
+            const salary = this.salaries.find(s => s.id === id);
+            if (!salary) return;
+
+            const printContent = `
+                <div style="font-family: Arial, sans-serif; padding: 30px; color: #000; max-width: 650px; margin: 0 auto; border: 1px solid #ccc; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 12px; margin-bottom: 15px;">
+                        <div>
+                            <h2 style="margin: 0; color: #990022; text-transform: uppercase;">Sr. & Sra. Pinto</h2>
+                            <p style="margin: 3px 0 0 0; font-size: 11px; color: #666;">El Sabor de ser Tico • Servicios de Alimentación</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="display: inline-block; background: #eee; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">COMPROBANTE DE PAGO</span>
+                            <div style="font-size: 11px; color: #555; margin-top: 4px;">Fecha: ${salary.fechaPago}</div>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9; width: 35%;">Colaborador:</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${this.sanitize(salary.empleado)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Período Laborado:</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${this.sanitize(salary.periodo)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Método de Pago:</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${this.sanitize(salary.metodo)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold; background: #f9f9f9;">Detalle / Observaciones:</td>
+                            <td style="padding: 6px; border: 1px solid #ddd;">${this.sanitize(salary.notas || 'Sin observaciones')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; background: #e8f8f5; font-size: 14px;">Total Neto Cancelado:</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: 900; color: #27ae60; font-size: 16px;">₡${(salary.monto || 0).toLocaleString()}</td>
+                        </tr>
+                    </table>
+
+                    <div style="margin-top: 40px; display: flex; justify-content: space-around; text-align: center;">
+                        <div style="width: 45%;">
+                            <div style="border-top: 1px solid #000; padding-top: 6px; font-size: 11px;">
+                                <strong>Firma del Colaborador</strong><br>
+                                Recibí conforme a satisfacción
+                            </div>
+                        </div>
+                        <div style="width: 45%;">
+                            <div style="border-top: 1px solid #000; padding-top: 6px; font-size: 11px;">
+                                <strong>Por Sr. & Sra. Pinto</strong><br>
+                                Patrono / Administrador
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const win = window.open('', '_blank');
+            win.document.write(printContent);
+            win.document.close();
+            win.print();
+        },
+
+        async deleteSalary(id, empleado, monto) {
+            if (!confirm(`¿Deseas eliminar el pago de salario de "${empleado}" por ₡${(monto || 0).toLocaleString()}?`)) return;
+            try {
+                await window.FirebaseDB.collection('salarios').doc(id).delete();
+            } catch (err) {
+                console.error("Error al eliminar pago:", err);
+                alert("No se pudo eliminar el registro.");
+            }
+        },
+
         exportPurchasesCSV() {
             if (this.purchases.length === 0) {
                 alert("No hay compras registradas para exportar.");
@@ -2551,7 +3198,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Fecha,Proveedor,Factura,Categoria,Monto (CRC),Registrado Por,Notas\n";
+            csvContent += "Fecha,Proveedor,Factura,Categoria,Monto (CRC),Aplica Hacienda,Registrado Por,Notas\n";
 
             this.purchases.forEach(p => {
                 const row = [
@@ -2560,6 +3207,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     `"${(p.factura || '').replace(/"/g, '""')}"`,
                     `"${(p.categoria || '').replace(/"/g, '""')}"`,
                     p.total || 0,
+                    p.aplicaHacienda !== false ? 'SI' : 'NO',
                     `"${(p.registradoPor || '').replace(/"/g, '""')}"`,
                     `"${(p.notas || '').replace(/"/g, '""')}"`
                 ];
@@ -2573,8 +3221,94 @@ document.addEventListener("DOMContentLoaded", () => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        },
+
+        exportHaciendaReportPDF() {
+            const baseCompras = document.getElementById('d105-compras-base')?.innerText || '₡0';
+            const rentaEstimada = document.getElementById('d105-renta-estimada')?.innerText || '₡0';
+            const ivaEstimado = document.getElementById('d105-iva-estimado')?.innerText || '₡0';
+            const totalCompras = document.getElementById('hacienda-total-purchases')?.innerText || '₡0';
+
+            const printContent = `
+                <div style="font-family: Arial, sans-serif; padding: 30px; color: #000; max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px;">
+                        <h2 style="margin: 0; text-transform: uppercase;">Sr. & Sra. Pinto</h2>
+                        <h4 style="margin: 5px 0; color: #555;">Resumen Tributario Régimen Simplificado (Costa Rica)</h4>
+                        <p style="font-size: 12px; margin: 0;">Actividad: 552001 - Restaurantes, sodas y servicios de alimentación</p>
+                        <p style="font-size: 11px; color: #777;">Generado el: ${new Date().toLocaleString('es-CR')}</p>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+                        <thead>
+                            <tr style="background: #f2f2f2;">
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Rubro de Declaración D-105</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Monto en Colones (CRC)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">Total Compras Declarables del Trimestre</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold;">${baseCompras}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">Factor Compras Renta (10%)</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">10.00%</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">Impuesto sobre la Renta Estimado</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold; color: #27ae60;">${rentaEstimada}</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">Factor Compras IVA (10%) x Tarifa (13%)</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">1.30% sobre compras</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 8px;">Impuesto IVA Trimestral Estimado</td>
+                                <td style="border: 1px solid #ddd; padding: 8px; text-align: right; font-weight: bold; color: #2980b9;">${ivaEstimado}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 6px; font-size: 11px; line-height: 1.5;">
+                        <strong>Instrucciones para el contribuyente:</strong><br>
+                        1. Ingresa a la plataforma ATV de Hacienda (Costa Rica).<br>
+                        2. Dirígete a la opción de presentar Declaración <strong>D-105 (Régimen de Tributación Simplificada)</strong>.<br>
+                        3. En la casilla de compras del trimestre, traslada el monto exacto: <strong>${baseCompras}</strong>.<br>
+                        4. Verifica los montos resultantes calculados por el sistema de ATV y realiza el pago antes del día 15 posterior al trimestre.
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Reporte_Hacienda_D105_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            if (window.html2pdf) {
+                window.html2pdf().set(opt).from(printContent).save();
+            } else {
+                const win = window.open('', '_blank');
+                win.document.write(printContent);
+                win.document.close();
+                win.print();
+            }
         }
     };
+
+    // Cerrar modales con clic afuera o con tecla Escape
+    document.addEventListener('click', (e) => {
+        if (e.target.classList && e.target.classList.contains('modal-overlay')) {
+            e.target.classList.remove('active');
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+        }
+    });
 
 });
 

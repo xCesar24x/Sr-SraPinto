@@ -477,42 +477,182 @@
 
             <!-- SECTION: FINANZAS & HACIENDA CR -->
             <section id="section-finances" class="admin-section">
-                <header class="top-bar">
+                <header class="top-bar" style="flex-wrap: wrap; gap: 15px;">
                     <div>
                         <h1 class="page-title">Contabilidad & Régimen Simplificado (Costa Rica) 🇨🇷</h1>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 4px;">Libro de compras tributario para declaración D-105, estado de resultados en vivo y semáforo de obligaciones.</p>
+                        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 4px;">Control total: compras con o sin IVA, salarios semanales, arqueo y cuadre de caja (Efectivo, SINPE, Tarjeta) y cálculo tributario D-105.</p>
                     </div>
-                    <button class="btn-primary" onclick="FinancesManager.openAddPurchaseModal()"><i class="fas fa-receipt"></i> Registrar Compra / Factura</button>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-primary" onclick="FinancesManager.openAddSalaryModal()" style="background: linear-gradient(135deg, #e67e22, #d35400); border: none;"><i class="fas fa-users-cog"></i> Registrar Salario / Planilla</button>
+                        <button class="btn-primary" onclick="FinancesManager.openAddPurchaseModal()"><i class="fas fa-receipt"></i> Registrar Compra / Factura</button>
+                    </div>
                 </header>
 
-                <!-- RESUMEN CONTABLE EN VIVO (P&L REAL) -->
-                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 25px;">
+                <!-- RESUMEN CONTABLE EN VIVO (P&L REAL & ESTADO DE RESULTADOS) -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <h2 style="font-size: 1.1rem; color: var(--mostaza);"><i class="fas fa-chart-line" style="color: #2ecc71; margin-right: 8px;"></i> Estado de Resultados (P&L en Tiempo Real)</h2>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.8rem; color: rgba(255,255,255,0.6);">Período Contable:</span>
+                        <select id="fin-pl-period" onchange="FinancesManager.recalculatePL()" class="report-select" style="padding: 6px 12px; font-size: 0.85rem;">
+                            <option value="hoy">Hoy</option>
+                            <option value="semana">Esta Semana</option>
+                            <option value="mes" selected>Este Mes</option>
+                            <option value="trimestre">Trimestre Fiscal Actual</option>
+                            <option value="ano">Año Fiscal Actual</option>
+                            <option value="todos">Histórico Completo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 25px;">
                     <div class="stat-card">
                         <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.1);"><i class="fas fa-cash-register"></i></div>
                         <div class="stat-info">
-                            <h3>Ingresos por Ventas</h3>
+                            <h3>Ventas Totales</h3>
                             <p id="fin-stat-income">₡0</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="color: #e74c3c; background: rgba(231, 76, 60, 0.1);"><i class="fas fa-shopping-cart"></i></div>
                         <div class="stat-info">
-                            <h3>Compras Registradas</h3>
+                            <h3>Compras Insumos</h3>
                             <p id="fin-stat-purchases">₡0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="color: #e67e22; background: rgba(230, 126, 34, 0.1);"><i class="fas fa-user-friends"></i></div>
+                        <div class="stat-info">
+                            <h3>Salarios Pagados</h3>
+                            <p id="fin-stat-salaries">₡0</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="color: #3498db; background: rgba(52, 152, 219, 0.1);"><i class="fas fa-balance-scale"></i></div>
                         <div class="stat-info">
-                            <h3>Utilidad Operativa Real</h3>
+                            <h3>Utilidad Neta Real</h3>
                             <p id="fin-stat-profit">₡0</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-percentage"></i></div>
                         <div class="stat-info">
-                            <h3>Rentabilidad Neta</h3>
+                            <h3>Margen Neto Real</h3>
                             <p id="fin-stat-margin">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CUADRE DE CAJA AL DÍA & ARQUEO POR MÉTODO DE PAGO -->
+                <div style="background: var(--tarjeta); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="font-size: 1.15rem; color: var(--mostaza);"><i class="fas fa-wallet" style="color: #2ecc71; margin-right: 8px;"></i> Cuadre de Caja al Día (Efectivo, SINPE Móvil y Tarjetas)</h2>
+                            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 3px;">Verifica que el dinero en tu cuenta bancaria y en efectivo coincida exactamente con lo vendido.</p>
+                        </div>
+                        <select id="cash-recon-period" onchange="FinancesManager.loadCashReconciliation()" class="report-select" style="padding: 6px 12px; font-size: 0.85rem;">
+                            <option value="hoy" selected>Caja de Hoy</option>
+                            <option value="ayer">Caja de Ayer</option>
+                            <option value="semana">Esta Semana</option>
+                            <option value="mes">Este Mes</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px;">
+                        <!-- Efectivo -->
+                        <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 10px; padding: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #2ecc71; text-transform: uppercase;"><i class="fas fa-money-bill-wave"></i> Efectivo en Caja</span>
+                                <span id="recon-cash-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">0 pedidos</span>
+                            </div>
+                            <h3 id="recon-cash-total" style="font-size: 1.5rem; color: white; margin-top: 6px;">₡0</h3>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Dinero físico a rendir</span>
+                        </div>
+
+                        <!-- SINPE Móvil -->
+                        <div style="background: rgba(52, 152, 219, 0.08); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 10px; padding: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #3498db; text-transform: uppercase;"><i class="fas fa-mobile-alt"></i> SINPE Móvil</span>
+                                <span id="recon-sinpe-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">0 pedidos</span>
+                            </div>
+                            <h3 id="recon-sinpe-total" style="font-size: 1.5rem; color: white; margin-top: 6px;">₡0</h3>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Transferencias bancarias</span>
+                        </div>
+
+                        <!-- Tarjeta (Datafono) -->
+                        <div style="background: rgba(155, 89, 182, 0.08); border: 1px solid rgba(155, 89, 182, 0.3); border-radius: 10px; padding: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #9b59b6; text-transform: uppercase;"><i class="fas fa-credit-card"></i> Datáfono / Tarjeta</span>
+                                <span id="recon-card-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">0 pedidos</span>
+                            </div>
+                            <h3 id="recon-card-total" style="font-size: 1.5rem; color: white; margin-top: 6px;">₡0</h3>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Lotes procesados</span>
+                        </div>
+
+                        <!-- Otros / Dietas / Regalías -->
+                        <div style="background: rgba(243, 156, 18, 0.08); border: 1px solid rgba(243, 156, 18, 0.3); border-radius: 10px; padding: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.8rem; font-weight: 700; color: #f39c12; text-transform: uppercase;"><i class="fas fa-tag"></i> Dietas & Regalías</span>
+                                <span id="recon-other-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.6);">0 pedidos</span>
+                            </div>
+                            <h3 id="recon-other-total" style="font-size: 1.5rem; color: white; margin-top: 6px;">₡0</h3>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Consumo interno</span>
+                        </div>
+                    </div>
+
+                    <!-- ARQUEO INTERACTIVO DE CAJA (CUADRE AL DÍA) -->
+                    <div class="arqueo-box">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 style="font-size: 1rem; color: #2ecc71;"><i class="fas fa-balance-scale-right" style="margin-right: 8px;"></i> Realizar Arqueo / Cierre de Caja del Día</h3>
+                                <p style="font-size: 0.78rem; color: rgba(255,255,255,0.6); margin-top: 2px;">Ingresa el conteo físico y bancario real para verificar si tu caja está exactamente cuadrada.</p>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-primary" onclick="FinancesManager.openCashHistoryModal()" style="padding: 6px 12px; font-size: 0.8rem; background: transparent; border: 1px solid var(--border);"><i class="fas fa-history"></i> Historial Cierres</button>
+                                <button class="btn-primary" id="btn-save-cash-closing" onclick="FinancesManager.saveCashClosing()" style="padding: 6px 14px; font-size: 0.8rem; background: #27ae60; border: none;"><i class="fas fa-save"></i> Guardar Cierre de Caja</button>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 15px;">
+                            <!-- Efectivo contado -->
+                            <div class="recon-input-group">
+                                <label style="font-size: 0.8rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between;">
+                                    <span>💵 Efectivo en Gaveta</span>
+                                    <span id="recon-expected-cash" style="color: rgba(255,255,255,0.4);">Esp: ₡0</span>
+                                </label>
+                                <input type="number" id="recon-input-cash" oninput="FinancesManager.calculateCashDifferences()" placeholder="₡ Billetes y monedas" class="recon-input-field">
+                                <div id="diff-cash-badge" class="diff-badge diff-badge-balanced">Diferencia: ₡0 (Exacto)</div>
+                            </div>
+
+                            <!-- SINPE verificado -->
+                            <div class="recon-input-group">
+                                <label style="font-size: 0.8rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between;">
+                                    <span>📱 SINPE Móvil en Banco</span>
+                                    <span id="recon-expected-sinpe" style="color: rgba(255,255,255,0.4);">Esp: ₡0</span>
+                                </label>
+                                <input type="number" id="recon-input-sinpe" oninput="FinancesManager.calculateCashDifferences()" placeholder="₡ Saldo transferencias" class="recon-input-field">
+                                <div id="diff-sinpe-badge" class="diff-badge diff-badge-balanced">Diferencia: ₡0 (Exacto)</div>
+                            </div>
+
+                            <!-- Datáfono verificado -->
+                            <div class="recon-input-group">
+                                <label style="font-size: 0.8rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between;">
+                                    <span>💳 Cierre Lote Datáfono</span>
+                                    <span id="recon-expected-card" style="color: rgba(255,255,255,0.4);">Esp: ₡0</span>
+                                </label>
+                                <input type="number" id="recon-input-card" oninput="FinancesManager.calculateCashDifferences()" placeholder="₡ Total voucher o lote" class="recon-input-field">
+                                <div id="diff-card-badge" class="diff-badge diff-badge-balanced">Diferencia: ₡0 (Exacto)</div>
+                            </div>
+                        </div>
+
+                        <!-- Resultado consolidado del Arqueo -->
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 0.85rem; font-weight: 700;">Estado de la Caja:</span>
+                                <span id="recon-global-status" class="diff-badge diff-badge-balanced"><i class="fas fa-check-circle"></i> Caja Cuadrada al Centavo</span>
+                            </div>
+                            <div style="font-size: 0.9rem;">
+                                Diferencia Neta Global: <strong id="recon-global-diff" style="color: #2ecc71;">₡0</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -578,12 +718,108 @@
                                     <th>N° Factura / Tiquete</th>
                                     <th>Categoría</th>
                                     <th>Monto Total (₡)</th>
+                                    <th>Aplica Hacienda</th>
                                     <th>Registrado Por</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="fin-purchases-list">
-                                <tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.6;">Cargando libro de compras...</td></tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 20px; opacity: 0.6;">Cargando libro de compras...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TOPE ANUAL DE COMPRAS (RÉGIMEN SIMPLIFICADO - 186 SALARIOS BASE) -->
+                <div class="annual-limit-card" style="margin-top: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <h3 style="color: var(--mostaza); font-size: 1.05rem; margin: 0;"><i class="fas fa-shield-alt" style="color: #2ecc71;"></i> Límite Anual de Permanencia en Régimen Simplificado (Hacienda CR)</h3>
+                                <span id="annual-limit-status-badge" style="background: rgba(46, 204, 113, 0.15); border: 1px solid #2ecc71; color: #2ecc71; font-size: 0.72rem; padding: 2px 8px; border-radius: 6px; font-weight: 700;">🟢 SEGURO</span>
+                            </div>
+                            <p style="font-size: 0.78rem; color: rgba(255,255,255,0.6); margin-top: 4px;">
+                                Tope legal máximo fijado por Tributación: <strong>186 Salarios Base (~₡85,969,200/año)</strong> en compras. Si no lo superas, estás blindado para no llevar contabilidad formal ni requerir contador público.
+                            </p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase;">Compras Acumuladas Año Fiscal</span>
+                            <h3 id="annual-purchases-sum" style="color: #2ecc71; font-size: 1.3rem; margin-top: 2px;">₡0 / ₡85,969,200</h3>
+                        </div>
+                    </div>
+
+                    <div class="annual-progress-container">
+                        <div id="annual-limit-progress-fill" class="annual-progress-fill" style="width: 0%;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                        <span id="annual-limit-pct">0% del tope anual utilizado</span>
+                        <span id="annual-limit-remaining">₡85,969,200 de margen disponible</span>
+                    </div>
+                </div>
+
+                <!-- CALCULADORA AUTOMÁTICA DE DECLARACIÓN HACIENDA D-105 (RÉGIMEN SIMPLIFICADO CR) -->
+                <div style="background: var(--tarjeta); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="font-size: 1.15rem; color: #2ecc71;"><i class="fas fa-calculator" style="margin-right: 8px;"></i> Asistente de Declaración D-105 (Tributación Directa CR)</h2>
+                            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 3px;">Cálculo automático de Renta e IVA en base a tus compras del trimestre para la actividad de Servicios de Alimentación.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-primary" onclick="FinancesManager.openATVGuideModal()" style="padding: 8px 14px; font-size: 0.8rem; background: rgba(52, 152, 219, 0.15); border: 1px solid #3498db; color: #3498db;"><i class="fas fa-list-ol"></i> Guía Casillas ATV</button>
+                            <button class="btn-primary" onclick="FinancesManager.exportHaciendaReportPDF()" style="padding: 8px 14px; font-size: 0.8rem; background: transparent; border: 1px solid #2ecc71; color: #2ecc71;"><i class="fas fa-file-pdf"></i> Descargar Hoja D-105 (PDF)</button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase;">Actividad Económica Hacienda</span>
+                            <h4 style="color: white; font-size: 0.95rem; margin-top: 2px;">552001 - Restaurantes, sodas y servicios de alimentación</h4>
+                            <span style="font-size: 0.75rem; color: var(--mostaza); display: block; margin-top: 4px;">Factor Compras Renta: <strong>10%</strong> • Factor Compras IVA: <strong>10%</strong></span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase;">Base de Compras Aplicables</span>
+                            <h3 id="d105-compras-base" style="color: var(--mostaza); font-size: 1.3rem; margin-top: 2px;">₡0</h3>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Compras gravadas y exentas del trimestre</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase;">Impuesto Renta Estimado (D-105)</span>
+                            <h3 id="d105-renta-estimada" style="color: #2ecc71; font-size: 1.3rem; margin-top: 2px;">₡0</h3>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Base imponible estimada x tarifa</span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase;">Impuesto IVA Trimestral Estimado</span>
+                            <h3 id="d105-iva-estimado" style="color: #3498db; font-size: 1.3rem; margin-top: 2px;">₡0</h3>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">Débito fiscal por factor simplificado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIBRO DE SALARIOS / PLANILLAS SEMANALES -->
+                <div style="background: var(--tarjeta); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 style="font-size: 1.15rem; color: var(--mostaza);"><i class="fas fa-users-cog" style="color: #e67e22; margin-right: 8px;"></i> Registro de Salarios & Pagos de Personal</h2>
+                            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 3px;">Control semanal de pagos a colaboradores para mantener la contabilidad al centavo.</p>
+                        </div>
+                        <button class="btn-primary" onclick="FinancesManager.openAddSalaryModal()" style="padding: 8px 14px; font-size: 0.8rem; background: #e67e22; border: none;"><i class="fas fa-plus"></i> Registrar Pago Semanal</button>
+                    </div>
+
+                    <div class="audit-table-container">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha Pago</th>
+                                    <th>Colaborador</th>
+                                    <th>Período / Semana</th>
+                                    <th>Método</th>
+                                    <th>Monto Pagado (₡)</th>
+                                    <th>Comprobante / Notas</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fin-salaries-list">
+                                <tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.6;">Cargando registro de salarios...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -826,6 +1062,15 @@
                         <input type="number" id="fin-purchase-total" placeholder="Ej: 45000">
                     </div>
                 </div>
+                <div style="background: rgba(46, 204, 113, 0.08); border: 1px dashed rgba(46, 204, 113, 0.4); border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: white; font-size: 0.85rem;">
+                        <input type="checkbox" id="fin-purchase-tax-applicable" checked style="width: 18px; height: 18px; accent-color: #2ecc71;">
+                        <span><strong>Incluir en Declaración de Hacienda D-105</strong> (Compras deducibles/computables)</span>
+                    </label>
+                    <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); display: block; margin-top: 4px; margin-left: 28px;">
+                        Marca esta casilla si cuentas con comprobante válido y deseas que sume a tu base imponible trimestral del Régimen Simplificado. Si la desmarcas, solo contará para tu contabilidad interna real.
+                    </span>
+                </div>
                 <div class="form-group">
                     <label>Notas / Detalle de Insumos (Opcional)</label>
                     <input type="text" id="fin-purchase-notes" placeholder="Ej: 10kg queso semiduro, 2 cajas manteca, servilletas">
@@ -875,6 +1120,162 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="FinancesManager.closeLegalModal()">Cancelar</button>
                 <button class="btn-primary" id="btn-save-legal" onclick="FinancesManager.saveLegalObligation()">Guardar Recordatorio</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR PAGO DE SALARIO / PLANILLA -->
+    <div id="finance-salary-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-hand-holding-usd" style="color: #e67e22;"></i> Registrar Pago de Salario</h2>
+                <button onclick="FinancesManager.closeAddSalaryModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Fecha de Pago</label>
+                    <input type="date" id="fin-salary-date">
+                </div>
+                <div class="form-group">
+                    <label>Colaborador / Empleado</label>
+                    <input type="text" id="fin-salary-employee" placeholder="Ej: Vendedor 1, Cocinero, Bryan...">
+                </div>
+                <div class="form-group">
+                    <label>Período / Semana Trabajada</label>
+                    <input type="text" id="fin-salary-period" placeholder="Ej: Semana del 8 al 14 Septiembre">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Método de Pago</label>
+                        <select id="fin-salary-method">
+                            <option value="SINPE Móvil">📱 SINPE Móvil</option>
+                            <option value="Efectivo">💵 Efectivo</option>
+                            <option value="Transferencia">🏦 Transferencia Bancaria</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monto Pagado (₡)</label>
+                        <input type="number" id="fin-salary-amount" placeholder="Ej: 50000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Comprobante / Detalle de Horas</label>
+                    <input type="text" id="fin-salary-notes" placeholder="Ej: SINPE ref #998822 / 48 horas laboradas">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="FinancesManager.closeAddSalaryModal()">Cancelar</button>
+                <button class="btn-primary" id="btn-save-salary" onclick="FinancesManager.saveSalary()">Guardar Pago</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GUÍA DE CASILLAS ATV HACIENDA (D-105) -->
+    <div id="hacienda-atv-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-landmark" style="color: #2ecc71;"></i> Guía de Llenado ATV Hacienda (D-105)</h2>
+                <button onclick="FinancesManager.closeATVGuideModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.5;">
+                    <strong>¿Cómo declarar en 3 minutos sin contador?</strong><br>
+                    1. Abre el portal ATV de Hacienda: <a href="https://atv.hacienda.go.cr/ATV/Login.aspx" target="_blank" style="color: #2ecc71; text-decoration: underline; font-weight: bold;">atv.hacienda.go.cr</a>.<br>
+                    2. Ve a <strong>Declaraciones > Declaración Jurada Régimen de Tributación Simplificada (D-105)</strong>.<br>
+                    3. Selecciona la actividad <strong>552001</strong> y el trimestre a declarar.<br>
+                    4. Copia los montos de cada casilla mostrados a continuación dando click en <strong>"Copiar"</strong>.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Casilla 101 -->
+                    <div class="atv-field-card">
+                        <div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 700;">CASILLA [ 101 ] - COMPRAS CON DERECHO A CRÉDITO FISCAL (GRAVADAS)</div>
+                            <div style="font-size: 1.1rem; font-weight: 900; color: #2ecc71; margin-top: 2px;" id="atv-val-101">₡0</div>
+                            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.4);">Monto total de compras con comprobante del trimestre</div>
+                        </div>
+                        <button class="atv-copy-btn" onclick="FinancesManager.copyToClipboard('atv-val-101', this)"><i class="fas fa-copy"></i> Copiar</button>
+                    </div>
+
+                    <!-- Casilla 102 -->
+                    <div class="atv-field-card">
+                        <div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 700;">CASILLA [ 102 ] - COMPRAS EXENTAS / SIN DERECHO A CRÉDITO</div>
+                            <div style="font-size: 1.1rem; font-weight: 900; color: var(--mostaza); margin-top: 2px;" id="atv-val-102">₡0</div>
+                            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.4);">Compras sin IVA soportado</div>
+                        </div>
+                        <button class="atv-copy-btn" onclick="FinancesManager.copyToClipboard('atv-val-102', this)"><i class="fas fa-copy"></i> Copiar</button>
+                    </div>
+
+                    <!-- Casilla 202 -->
+                    <div class="atv-field-card">
+                        <div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 700;">CASILLA [ 202 ] - IMPUESTO DETERMINADO SOBRE EL VALOR AGREGADO (IVA)</div>
+                            <div style="font-size: 1.1rem; font-weight: 900; color: #3498db; margin-top: 2px;" id="atv-val-202">₡0</div>
+                            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.4);">Cálculo automático: Compras x Factor 10% x Tarifa 13% (1.30%)</div>
+                        </div>
+                        <button class="atv-copy-btn" onclick="FinancesManager.copyToClipboard('atv-val-202', this)"><i class="fas fa-copy"></i> Copiar</button>
+                    </div>
+
+                    <!-- Casilla 302 -->
+                    <div class="atv-field-card">
+                        <div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 700;">CASILLA [ 302 ] - IMPUESTO SOBRE LA RENTA DETERMINADO</div>
+                            <div style="font-size: 1.1rem; font-weight: 900; color: #e67e22; margin-top: 2px;" id="atv-val-302">₡0</div>
+                            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.4);">Base compras x Factor 10% x Escala Régimen Simplificado (1%)</div>
+                        </div>
+                        <button class="atv-copy-btn" onclick="FinancesManager.copyToClipboard('atv-val-302', this)"><i class="fas fa-copy"></i> Copiar</button>
+                    </div>
+
+                    <!-- Total a pagar en conectividad bancaria -->
+                    <div style="background: rgba(46, 204, 113, 0.15); border: 2px solid #2ecc71; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: #2ecc71; font-weight: 900; text-transform: uppercase;">MONTO TOTAL A PAGAR EN BANCO (IVA + RENTA)</div>
+                            <div style="font-size: 1.4rem; font-weight: 900; color: #fff; margin-top: 2px;" id="atv-val-total">₡0</div>
+                            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.6);">Pagable en BN, BCR, BAC u otros por 'Pago de Tributos'</div>
+                        </div>
+                        <button class="atv-copy-btn" onclick="FinancesManager.copyToClipboard('atv-val-total', this)" style="background: #2ecc71; color: #000;"><i class="fas fa-copy"></i> Copiar Total</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="FinancesManager.closeATVGuideModal()">Cerrar</button>
+                <a href="https://atv.hacienda.go.cr/ATV/Login.aspx" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; background: #2ecc71; color: #000; font-weight: 700;">
+                    <i class="fas fa-external-link-alt"></i> Ir al Portal ATV Hacienda
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HISTORIAL DE ARQUEOS Y CIERRES DE CAJA -->
+    <div id="cash-history-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 750px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-history" style="color: #2ecc71;"></i> Historial de Arqueos y Cierres de Caja</h2>
+                <button onclick="FinancesManager.closeCashHistoryModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="audit-table-container">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha & Hora</th>
+                                <th>Usuario</th>
+                                <th>Efectivo (Contado / Esp)</th>
+                                <th>SINPE (Reportado / Esp)</th>
+                                <th>Datáfono (Lote / Esp)</th>
+                                <th>Diferencia Global</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cash-history-list">
+                            <tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">Cargando historial de cierres...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="FinancesManager.closeCashHistoryModal()">Cerrar</button>
             </div>
         </div>
     </div>
