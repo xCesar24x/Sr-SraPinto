@@ -82,32 +82,100 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ========================================
-    // MÓDULO: Inventario
     // ========================================
+    // MÓDULO: Inventario & Costeo de Insumos / Empaques
+    // ========================================
+    const BASELINE_INVENTORY = {
+        'pinto': { nombre: 'Pinto Tradicional', tipo: 'ingrediente', costoUnitario: 250, unidad: 'porción' },
+        'queso_frito': { nombre: 'Queso Frito Turrialba', tipo: 'ingrediente', costoUnitario: 300, unidad: 'porción' },
+        'huevos': { nombre: 'Huevos de Granja', tipo: 'ingrediente', costoUnitario: 120, unidad: 'unidad' },
+        'maduro': { nombre: 'Plátano Maduro', tipo: 'ingrediente', costoUnitario: 150, unidad: 'porción' },
+        'tortilla_harina': { nombre: 'Tortilla de Harina Grande', tipo: 'ingrediente', costoUnitario: 180, unidad: 'unidad' },
+        'natilla': { nombre: 'Natilla Casera', tipo: 'ingrediente', costoUnitario: 100, unidad: 'porción' },
+        'masa_empanada': { nombre: 'Masa para Empanada', tipo: 'ingrediente', costoUnitario: 150, unidad: 'unidad' },
+        'carne_mechada': { nombre: 'Carne Mechada en Salsa', tipo: 'ingrediente', costoUnitario: 450, unidad: 'porción' },
+        'ensalada': { nombre: 'Ensalada Fresca Repollo', tipo: 'ingrediente', costoUnitario: 100, unidad: 'porción' },
+        'patacones': { nombre: 'Patacones Crujientes', tipo: 'ingrediente', costoUnitario: 300, unidad: 'orden' },
+        'frijoles_molidos': { nombre: 'Frijoles Molidos', tipo: 'ingrediente', costoUnitario: 150, unidad: 'porción' },
+        'queso_rallado': { nombre: 'Queso Blanco Rallado', tipo: 'ingrediente', costoUnitario: 200, unidad: 'porción' },
+        'pan_hamburguesa': { nombre: 'Pan Artesanal Hamburguesa', tipo: 'ingrediente', costoUnitario: 250, unidad: 'unidad' },
+        'torta_carne': { nombre: 'Torta de Carne Especial', tipo: 'ingrediente', costoUnitario: 500, unidad: 'unidad' },
+        'papas_fritas': { nombre: 'Papas Fritas', tipo: 'ingrediente', costoUnitario: 300, unidad: 'orden' },
+        'queso_mozzarella': { nombre: 'Queso Mozzarella', tipo: 'ingrediente', costoUnitario: 250, unidad: 'porción' },
+        'salchicha': { nombre: 'Salchicha Especial', tipo: 'ingrediente', costoUnitario: 200, unidad: 'unidad' },
+        'porcion_carne': { nombre: 'Porción de Carne Extra', tipo: 'ingrediente', costoUnitario: 500, unidad: 'orden' },
+        'cafe': { nombre: 'Café Chorreado Especial', tipo: 'ingrediente', costoUnitario: 150, unidad: 'servicio' },
+        'botella_agua': { nombre: 'Botella de Agua Sellada', tipo: 'ingrediente', costoUnitario: 350, unidad: 'botella' },
+        'gaseosa': { nombre: 'Refresco / Gaseosa Lata', tipo: 'ingrediente', costoUnitario: 600, unidad: 'lata' },
+        'hidratante': { nombre: 'Bebida Hidratante', tipo: 'ingrediente', costoUnitario: 650, unidad: 'botella' },
+        // Empaques y Desechables
+        'caja_empaque': { nombre: 'Caja / Contenedor Térmico para Comida', tipo: 'empaque', costoUnitario: 120, unidad: 'unidad' },
+        'vaso_cafe_tapa': { nombre: 'Vaso Térmico + Tapa de Café', tipo: 'empaque', costoUnitario: 80, unidad: 'unidad' },
+        'bolsa_kraft': { nombre: 'Bolsa de Papel Kraft para Llevar', tipo: 'empaque', costoUnitario: 50, unidad: 'unidad' },
+        'kit_cubiertos': { nombre: 'Kit Tenedor + Servilleta', tipo: 'empaque', costoUnitario: 40, unidad: 'kit' },
+        'vaso_fresco': { nombre: 'Vaso para Refresco + Pajilla', tipo: 'empaque', costoUnitario: 60, unidad: 'unidad' }
+    };
+
     db.collection("inventario").onSnapshot((snapshot) => {
         currentInventory = [];
         snapshot.forEach(doc => {
-            currentInventory.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            const baseline = BASELINE_INVENTORY[doc.id] || {};
+            currentInventory.push({ 
+                id: doc.id, 
+                nombre: data.nombre || baseline.nombre || doc.id.replace(/_/g, ' '),
+                tipo: data.tipo || baseline.tipo || 'ingrediente',
+                costoUnitario: typeof data.costoUnitario === 'number' ? data.costoUnitario : (baseline.costoUnitario || 0),
+                ...data 
+            });
         });
 
-        // Ordenar alfabéticamente
-        currentInventory.sort((a, b) => (a.nombre || a.id).localeCompare(b.nombre || b.id));
+        // Asegurar que empaques y baseline estén presentes
+        Object.keys(BASELINE_INVENTORY).forEach(key => {
+            if (!currentInventory.find(i => i.id === key)) {
+                currentInventory.push({
+                    id: key,
+                    ...BASELINE_INVENTORY[key],
+                    cantidad: 50
+                });
+            }
+        });
+
+        window.currentInventory = currentInventory;
+
+        // Ordenar alfabéticamente: ingredientes primero, luego empaques
+        currentInventory.sort((a, b) => {
+            if (a.tipo !== b.tipo) return (a.tipo === 'ingrediente' ? -1 : 1);
+            return (a.nombre || a.id).localeCompare(b.nombre || b.id);
+        });
 
         renderTable(currentInventory);
         updateStats(currentInventory);
         updateSelect(currentInventory);
+
+        // Si la sección de Volio está abierta, refrescar la tabla de catálogo para reflejar cambios en tiempo real
+        if (window.VolioManager && typeof window.VolioManager.renderDishesTable === 'function') {
+            window.VolioManager.renderDishesTable();
+        }
     });
 
     function renderTable(items) {
+        if (!inventoryList) return;
         if (items.length === 0) {
-            inventoryList.innerHTML = `<tr><td colspan="4" style="text-align:center;">El inventario está vacío. Los items se crearán automáticamente.</td></tr>`;
+            inventoryList.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">El inventario está vacío.</td></tr>`;
             return;
         }
 
         inventoryList.innerHTML = items.map(item => {
             const nombreStr = item.nombre || item.id.replace(/_/g, ' ');
             const cant = item.cantidad || 0;
+            const tipo = item.tipo === 'empaque' ? 'empaque' : 'ingrediente';
+            const costoUnit = item.costoUnitario || 0;
             
+            const tipoBadge = tipo === 'empaque'
+                ? '<span style="background: rgba(155, 89, 182, 0.2); color: #9b59b6; border: 1px solid rgba(155, 89, 182, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-box"></i> Empaque</span>'
+                : '<span style="background: rgba(230, 126, 34, 0.2); color: #e67e22; border: 1px solid rgba(230, 126, 34, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;"><i class="fas fa-carrot"></i> Ingrediente</span>';
+
             let status = '';
             if (cant <= 0) status = '<span class="status-badge status-low">Agotado</span>';
             else if (cant <= 10) status = '<span class="status-badge status-warn">Bajo</span>';
@@ -115,11 +183,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             return `
                 <tr>
-                    <td style="text-transform: capitalize;"><strong>${nombreStr}</strong></td>
-                    <td style="font-size: 1.2rem; font-weight: 900;">${cant}</td>
+                    <td style="text-transform: capitalize;">
+                        <strong style="color: #fff;">${nombreStr}</strong>
+                    </td>
+                    <td>${tipoBadge}</td>
+                    <td style="font-size: 1.15rem; font-weight: 800; color: var(--mostaza);">${cant}</td>
+                    <td style="font-weight: 700; color: #2ecc71; font-size: 1.05rem;">₡${costoUnit.toLocaleString()}</td>
                     <td>${status}</td>
                     <td>
-                        <button class="action-btn" onclick="AdminManager.openAddModal('${item.id}')" title="Ajustar">
+                        <button class="action-btn" onclick="AdminManager.openAddModal('${item.id}')" title="Ajustar Stock y Costo">
                             <i class="fas fa-edit"></i>
                         </button>
                     </td>
@@ -150,9 +222,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateSelect(items) {
+        if (!selectItem) return;
         selectItem.innerHTML = items.map(item => {
             const nombreStr = item.nombre || item.id.replace(/_/g, ' ');
-            return `<option value="${item.id}">${nombreStr} (Actual: ${item.cantidad || 0})</option>`;
+            const tipoLabel = item.tipo === 'empaque' ? '📦' : '🥩';
+            return `<option value="${item.id}">${tipoLabel} ${nombreStr} (Stock: ${item.cantidad || 0} | ₡${(item.costoUnitario || 0).toLocaleString()})</option>`;
         }).join('');
     }
 
@@ -186,42 +260,119 @@ document.addEventListener("DOMContentLoaded", () => {
 
         openAddModal(id = null) {
             modal.classList.add('active');
-            if(id) {
-                selectItem.value = id;
+            const targetId = id || (selectItem ? selectItem.value : null);
+            if (targetId && selectItem) {
+                selectItem.value = targetId;
+                this.onStockItemSelected(targetId);
             }
         },
+
+        onStockItemSelected(id) {
+            const item = (window.currentInventory || []).find(i => i.id === id);
+            if (item) {
+                const costInput = document.getElementById('stock-item-cost');
+                const tipoSelect = document.getElementById('stock-item-tipo');
+                if (costInput) costInput.value = item.costoUnitario || 0;
+                if (tipoSelect) tipoSelect.value = item.tipo || 'ingrediente';
+            }
+        },
+
         closeAddModal() {
             modal.classList.remove('active');
-            document.getElementById('stock-qty').value = '';
+            const qtyInput = document.getElementById('stock-qty');
+            if (qtyInput) qtyInput.value = '';
         },
+
         async saveStock() {
             const id = selectItem.value;
-            const op = document.querySelector('input[name="stock-op"]:checked').value;
-            const qtyStr = document.getElementById('stock-qty').value;
+            const op = document.querySelector('input[name="stock-op"]:checked')?.value || 'add';
+            const qtyStr = document.getElementById('stock-qty')?.value;
             const qty = parseFloat(qtyStr);
+            const costoUnit = parseFloat(document.getElementById('stock-item-cost')?.value) || 0;
+            const tipo = document.getElementById('stock-item-tipo')?.value || 'ingrediente';
 
-            if (!id || isNaN(qty) || qty <= 0) {
-                alert("Por favor ingresa una cantidad válida.");
+            if (!id) {
+                alert("Por favor selecciona un insumo o empaque.");
                 return;
             }
 
             try {
                 const docRef = db.collection('inventario').doc(id);
+                const updateData = {
+                    costoUnitario: costoUnit,
+                    tipo: tipo
+                };
                 
-                if (op === 'add') {
-                    await docRef.update({
-                        cantidad: firebase.firestore.FieldValue.increment(qty)
-                    });
-                } else {
-                    await docRef.update({
-                        cantidad: qty
-                    });
+                // Si especificó cantidad de stock
+                if (!isNaN(qty) && qty > 0) {
+                    if (op === 'add') {
+                        updateData.cantidad = firebase.firestore.FieldValue.increment(qty);
+                    } else {
+                        updateData.cantidad = qty;
+                    }
+                }
+                
+                await docRef.set(updateData, { merge: true });
+                
+                // Actualizar en el array local inmediatamente
+                const existing = (window.currentInventory || []).find(i => i.id === id);
+                if (existing) {
+                    existing.costoUnitario = costoUnit;
+                    existing.tipo = tipo;
+                    if (!isNaN(qty) && qty > 0) {
+                        if (op === 'add') existing.cantidad = (existing.cantidad || 0) + qty;
+                        else existing.cantidad = qty;
+                    }
+                }
+
+                // Si VolioManager está activo, refrescar catálogo
+                if (window.VolioManager && typeof window.VolioManager.renderDishesTable === 'function') {
+                    window.VolioManager.renderDishesTable();
                 }
                 
                 this.closeAddModal();
             } catch (error) {
                 console.error("Error al actualizar inventario:", error);
                 alert("Hubo un error al guardar.");
+            }
+        },
+
+        // Modal Nuevo Insumo o Empaque
+        openNewItemModal() {
+            document.getElementById('new-item-name').value = '';
+            document.getElementById('new-item-cost').value = '';
+            document.getElementById('new-item-stock').value = '';
+            document.getElementById('new-item-tipo').value = 'ingrediente';
+            document.getElementById('new-item-modal').classList.add('active');
+        },
+        closeNewItemModal() {
+            document.getElementById('new-item-modal').classList.remove('active');
+        },
+        async saveNewItem() {
+            const nombre = document.getElementById('new-item-name').value.trim();
+            const tipo = document.getElementById('new-item-tipo').value;
+            const costo = parseFloat(document.getElementById('new-item-cost').value) || 0;
+            const stock = parseFloat(document.getElementById('new-item-stock').value) || 0;
+
+            if (!nombre) {
+                alert("Por favor escribe el nombre del insumo o empaque.");
+                return;
+            }
+
+            const id = 'inv_' + nombre.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            try {
+                await db.collection('inventario').doc(id).set({
+                    nombre,
+                    tipo,
+                    costoUnitario: costo,
+                    cantidad: stock,
+                    actualizadoEn: new Date().toISOString()
+                }, { merge: true });
+
+                this.closeNewItemModal();
+            } catch (err) {
+                console.error("Error al crear item de inventario:", err);
+                alert("No se pudo crear el item en el inventario.");
             }
         },
 
@@ -2324,7 +2475,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             container.innerHTML = filtered.map(dish => {
                 const precio = dish.precio || 0;
-                const costo = dish.costo || 0;
+                let costo = dish.costo || 0;
+
+                // Calcular costo en vivo si el platillo tiene recetaItems definida
+                if (dish.recetaItems && Array.isArray(dish.recetaItems) && dish.recetaItems.length > 0) {
+                    const liveCosto = this.calculateDishLiveCost(dish.recetaItems);
+                    if (liveCosto > 0) costo = liveCosto;
+                }
+
                 const margen = precio - costo;
                 const margenPct = precio > 0 ? Math.round((margen / precio) * 100) : 0;
                 const foodCostPct = precio > 0 ? Math.round((costo / precio) * 100) : 0;
@@ -2370,6 +2528,19 @@ document.addEventListener("DOMContentLoaded", () => {
             }).join('');
         },
 
+        calculateDishLiveCost(recetaItems) {
+            if (!recetaItems || !Array.isArray(recetaItems) || recetaItems.length === 0) return 0;
+            const inv = window.currentInventory || [];
+            let total = 0;
+            recetaItems.forEach(item => {
+                const found = inv.find(i => i.id === item.inventarioId);
+                const unitCost = found ? (found.costoUnitario || 0) : (item.costoUnitario || 0);
+                const qty = typeof item.cantidad === 'number' ? item.cantidad : (parseFloat(item.cantidad) || 0);
+                total += (unitCost * qty);
+            });
+            return Math.round(total);
+        },
+
         updateImgPreview() {
             const val = document.getElementById('volio-dish-img')?.value || 'images-catalogo/Señor Pinto.jpeg';
             const preview = document.getElementById('volio-dish-img-preview');
@@ -2398,7 +2569,6 @@ document.addEventListener("DOMContentLoaded", () => {
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
-                    // Optimizar y redimensionar imagen en memoria para un almacenamiento ultra eficiente
                     const canvas = document.createElement('canvas');
                     const MAX_WIDTH = 800;
                     const MAX_HEIGHT = 800;
@@ -2422,17 +2592,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Convertir a JPEG 85% para excelente calidad y tamaño liviano (~50-80kb)
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
-                    // Asignar al input y previsualización
                     document.getElementById('volio-dish-img').value = dataUrl;
                     const preview = document.getElementById('volio-dish-img-preview');
                     if (preview) preview.src = dataUrl;
-
-                    if (document.getElementById('volio-dish-img-select')) {
-                        document.getElementById('volio-dish-img-select').value = '';
-                    }
 
                     if (statusEl) {
                         statusEl.style.display = 'inline-flex';
@@ -2449,16 +2613,144 @@ document.addEventListener("DOMContentLoaded", () => {
             reader.readAsDataURL(file);
         },
 
-        selectFromCatalog(val) {
-            if (!val) return;
-            document.getElementById('volio-dish-img').value = val;
-            this.updateImgPreview();
-            const statusEl = document.getElementById('volio-dish-file-status');
-            if (statusEl) {
-                statusEl.style.display = 'inline-flex';
-                statusEl.style.color = '#3498db';
-                statusEl.innerHTML = `<i class="fas fa-image"></i> Catálogo`;
+        deriveDefaultRecipe(dish) {
+            const DEFAULT_DISH_RECIPES = {
+                'p-senor-pinto': [
+                    { inventarioId: 'pinto', cantidad: 1 },
+                    { inventarioId: 'queso_frito', cantidad: 1 },
+                    { inventarioId: 'huevos', cantidad: 1 },
+                    { inventarioId: 'maduro', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 },
+                    { inventarioId: 'kit_cubiertos', cantidad: 1 }
+                ],
+                'c-senor-pinto-cafe': [
+                    { inventarioId: 'pinto', cantidad: 1 },
+                    { inventarioId: 'queso_frito', cantidad: 1 },
+                    { inventarioId: 'huevos', cantidad: 1 },
+                    { inventarioId: 'maduro', cantidad: 1 },
+                    { inventarioId: 'cafe', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 },
+                    { inventarioId: 'vaso_cafe_tapa', cantidad: 1 },
+                    { inventarioId: 'kit_cubiertos', cantidad: 1 }
+                ],
+                'p-burrote': [
+                    { inventarioId: 'tortilla_harina', cantidad: 1 },
+                    { inventarioId: 'pinto', cantidad: 1 },
+                    { inventarioId: 'queso_frito', cantidad: 1 },
+                    { inventarioId: 'huevos', cantidad: 1 },
+                    { inventarioId: 'natilla', cantidad: 1 },
+                    { inventarioId: 'bolsa_kraft', cantidad: 1 }
+                ],
+                'c-burrote-cafe': [
+                    { inventarioId: 'tortilla_harina', cantidad: 1 },
+                    { inventarioId: 'pinto', cantidad: 1 },
+                    { inventarioId: 'queso_frito', cantidad: 1 },
+                    { inventarioId: 'huevos', cantidad: 1 },
+                    { inventarioId: 'natilla', cantidad: 1 },
+                    { inventarioId: 'cafe', cantidad: 1 },
+                    { inventarioId: 'bolsa_kraft', cantidad: 1 },
+                    { inventarioId: 'vaso_cafe_tapa', cantidad: 1 }
+                ],
+                'p-sra-hamburguesa': [
+                    { inventarioId: 'pan_hamburguesa', cantidad: 1 },
+                    { inventarioId: 'torta_carne', cantidad: 1 },
+                    { inventarioId: 'queso_mozzarella', cantidad: 1 },
+                    { inventarioId: 'papas_fritas', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ],
+                'p-sr-patacon': [
+                    { inventarioId: 'patacones', cantidad: 1 },
+                    { inventarioId: 'frijoles_molidos', cantidad: 1 },
+                    { inventarioId: 'queso_rallado', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ],
+                'p-sra-quesadilla': [
+                    { inventarioId: 'tortilla_harina', cantidad: 1 },
+                    { inventarioId: 'queso_rallado', cantidad: 2 },
+                    { inventarioId: 'carne_mechada', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ],
+                'p-empanada-carne': [
+                    { inventarioId: 'masa_empanada', cantidad: 1 },
+                    { inventarioId: 'carne_mechada', cantidad: 1 },
+                    { inventarioId: 'bolsa_kraft', cantidad: 1 }
+                ],
+                'p-empanada-queso': [
+                    { inventarioId: 'masa_empanada', cantidad: 1 },
+                    { inventarioId: 'queso_mozzarella', cantidad: 1 },
+                    { inventarioId: 'bolsa_kraft', cantidad: 1 }
+                ],
+                'p-empanada-carne-queso': [
+                    { inventarioId: 'masa_empanada', cantidad: 1 },
+                    { inventarioId: 'carne_mechada', cantidad: 0.5 },
+                    { inventarioId: 'queso_mozzarella', cantidad: 0.5 },
+                    { inventarioId: 'bolsa_kraft', cantidad: 1 }
+                ],
+                'p-sra-empanada-m1': [
+                    { inventarioId: 'masa_empanada', cantidad: 1 },
+                    { inventarioId: 'carne_mechada', cantidad: 1 },
+                    { inventarioId: 'pinto', cantidad: 0.5 },
+                    { inventarioId: 'ensalada', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ],
+                'p-sra-empanada-m2': [
+                    { inventarioId: 'masa_empanada', cantidad: 1 },
+                    { inventarioId: 'queso_mozzarella', cantidad: 1 },
+                    { inventarioId: 'ensalada', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ],
+                'p-cono-salchipapa': [
+                    { inventarioId: 'papas_fritas', cantidad: 1 },
+                    { inventarioId: 'salchicha', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ],
+                'p-queso-pinto': [
+                    { inventarioId: 'pinto', cantidad: 1 },
+                    { inventarioId: 'queso_frito', cantidad: 2 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ],
+                'b-cafe-premium': [
+                    { inventarioId: 'cafe', cantidad: 1 },
+                    { inventarioId: 'vaso_cafe_tapa', cantidad: 1 }
+                ],
+                'b-agua': [
+                    { inventarioId: 'botella_agua', cantidad: 1 }
+                ],
+                'b-gaseosas': [
+                    { inventarioId: 'gaseosa', cantidad: 1 }
+                ],
+                'b-hidratante': [
+                    { inventarioId: 'hidratante', cantidad: 1 }
+                ]
+            };
+
+            if (dish && dish.id && DEFAULT_DISH_RECIPES[dish.id]) {
+                return JSON.parse(JSON.stringify(DEFAULT_DISH_RECIPES[dish.id]));
             }
+
+            const nameLower = ((dish && dish.nombre) || '').toLowerCase();
+            const items = [];
+            if (nameLower.includes('pinto')) items.push({ inventarioId: 'pinto', cantidad: 1 }, { inventarioId: 'queso_frito', cantidad: 1 }, { inventarioId: 'huevos', cantidad: 1 });
+            if (nameLower.includes('burrote') || nameLower.includes('burrito')) items.push({ inventarioId: 'tortilla_harina', cantidad: 1 }, { inventarioId: 'natilla', cantidad: 1 });
+            if (nameLower.includes('patacón') || nameLower.includes('patacon')) items.push({ inventarioId: 'patacones', cantidad: 1 }, { inventarioId: 'frijoles_molidos', cantidad: 1 }, { inventarioId: 'queso_rallado', cantidad: 1 });
+            if (nameLower.includes('hamburguesa')) items.push({ inventarioId: 'pan_hamburguesa', cantidad: 1 }, { inventarioId: 'torta_carne', cantidad: 1 }, { inventarioId: 'queso_mozzarella', cantidad: 1 }, { inventarioId: 'papas_fritas', cantidad: 1 });
+            if (nameLower.includes('empanada')) items.push({ inventarioId: 'masa_empanada', cantidad: 1 }, { inventarioId: 'carne_mechada', cantidad: 1 });
+            if (nameLower.includes('salchipapa')) items.push({ inventarioId: 'papas_fritas', cantidad: 1 }, { inventarioId: 'salchicha', cantidad: 1 });
+            if (nameLower.includes('café') || nameLower.includes('cafe')) items.push({ inventarioId: 'cafe', cantidad: 1 }, { inventarioId: 'vaso_cafe_tapa', cantidad: 1 });
+            if (nameLower.includes('agua')) items.push({ inventarioId: 'botella_agua', cantidad: 1 });
+            if (nameLower.includes('gaseosa')) items.push({ inventarioId: 'gaseosa', cantidad: 1 });
+            if (nameLower.includes('hidratante') || nameLower.includes('powerade')) items.push({ inventarioId: 'hidratante', cantidad: 1 });
+
+            if (items.length === 0) {
+                items.push({ inventarioId: 'pinto', cantidad: 1 });
+            }
+
+            if (!items.some(it => it.inventarioId.includes('empaque') || it.inventarioId.includes('vaso') || it.inventarioId.includes('bolsa'))) {
+                if (dish && dish.categoria === 'bebidas') items.push({ inventarioId: 'vaso_fresco', cantidad: 1 });
+                else items.push({ inventarioId: 'caja_empaque', cantidad: 1 });
+            }
+
+            return items;
         },
 
         openDishModal(id = null) {
@@ -2466,26 +2758,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const title = document.getElementById('volio-dish-modal-title');
             document.getElementById('volio-dish-id').value = id || '';
 
-            // Limpiar selector de archivo local
             const fileInput = document.getElementById('volio-dish-file');
             if (fileInput) fileInput.value = '';
             const statusEl = document.getElementById('volio-dish-file-status');
             if (statusEl) statusEl.style.display = 'none';
 
+            let dish = null;
             if (id) {
-                const dish = this.dishes.find(d => d.id === id);
-                if (dish) {
-                    title.innerHTML = `<i class="fas fa-edit"></i> Editar Producto: ${this.sanitize(dish.nombre)}`;
-                    document.getElementById('volio-dish-name').value = dish.nombre || '';
-                    document.getElementById('volio-dish-category').value = dish.categoria || 'desayuno';
-                    document.getElementById('volio-dish-ingredients').value = dish.ingredientes || '';
-                    document.getElementById('volio-dish-desc').value = dish.desc || '';
-                    document.getElementById('volio-dish-price').value = dish.precio || '';
-                    document.getElementById('volio-dish-cost').value = dish.costo || '';
-                    document.getElementById('volio-dish-img').value = dish.img || '';
-                    if (document.getElementById('volio-dish-img-select')) {
-                        document.getElementById('volio-dish-img-select').value = dish.img || '';
-                    }
+                dish = this.dishes.find(d => d.id === id);
+            }
+
+            if (dish) {
+                title.innerHTML = `<i class="fas fa-edit"></i> Editar Producto: ${this.sanitize(dish.nombre)}`;
+                document.getElementById('volio-dish-name').value = dish.nombre || '';
+                document.getElementById('volio-dish-category').value = dish.categoria || 'desayuno';
+                document.getElementById('volio-dish-ingredients').value = dish.ingredientes || '';
+                document.getElementById('volio-dish-desc').value = dish.desc || '';
+                document.getElementById('volio-dish-price').value = dish.precio || '';
+                document.getElementById('volio-dish-img').value = dish.img || 'images-catalogo/Señor Pinto.jpeg';
+
+                if (dish.recetaItems && Array.isArray(dish.recetaItems) && dish.recetaItems.length > 0) {
+                    this.activeRecipeItems = JSON.parse(JSON.stringify(dish.recetaItems));
+                } else {
+                    this.activeRecipeItems = this.deriveDefaultRecipe(dish);
                 }
             } else {
                 title.innerHTML = `<i class="fas fa-plus"></i> Nuevo Producto / Platillo`;
@@ -2494,16 +2789,165 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('volio-dish-ingredients').value = '';
                 document.getElementById('volio-dish-desc').value = '';
                 document.getElementById('volio-dish-price').value = '';
-                document.getElementById('volio-dish-cost').value = '';
+                document.getElementById('volio-dish-cost').value = '0';
                 document.getElementById('volio-dish-img').value = 'images-catalogo/Señor Pinto.jpeg';
-                if (document.getElementById('volio-dish-img-select')) {
-                    document.getElementById('volio-dish-img-select').value = 'images-catalogo/Señor Pinto.jpeg';
-                }
+                this.activeRecipeItems = [
+                    { inventarioId: 'pinto', cantidad: 1 },
+                    { inventarioId: 'caja_empaque', cantidad: 1 }
+                ];
             }
 
             this.updateImgPreview();
-            this.calcCostMetrics();
+            this.renderRecipeRows();
             modal.classList.add('active');
+        },
+
+        renderRecipeRows() {
+            const container = document.getElementById('volio-recipe-rows');
+            if (!container) return;
+
+            const inv = window.currentInventory || [];
+            if (!this.activeRecipeItems || this.activeRecipeItems.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 15px; color: rgba(255,255,255,0.5);">Sin insumos agregados aún. Haz clic en "+ Agregar Insumo / Empaque"</td></tr>`;
+                this.calculateRecipeTotals();
+                return;
+            }
+
+            // Opciones agrupadas para el select
+            const ingredientesOptions = inv.filter(i => i.tipo !== 'empaque').map(i => {
+                return `<option value="${i.id}">${i.nombre || i.id} (₡${(i.costoUnitario || 0).toLocaleString()})</option>`;
+            }).join('');
+            const empaquesOptions = inv.filter(i => i.tipo === 'empaque').map(i => {
+                return `<option value="${i.id}">📦 ${i.nombre || i.id} (₡${(i.costoUnitario || 0).toLocaleString()})</option>`;
+            }).join('');
+
+            container.innerHTML = this.activeRecipeItems.map((item, idx) => {
+                const invItem = inv.find(i => i.id === item.inventarioId) || { costoUnitario: item.costoUnitario || 0, tipo: 'ingrediente', nombre: item.inventarioId };
+                const unitCost = invItem.costoUnitario || 0;
+                const qty = typeof item.cantidad === 'number' ? item.cantidad : (parseFloat(item.cantidad) || 1);
+                const subtotal = Math.round(qty * unitCost);
+
+                return `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 6px 8px;">
+                            <select onchange="VolioManager.onRecipeItemChanged(${idx}, this.value)" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 0.8rem;">
+                                <optgroup label="🥩 Ingredientes de Cocina">
+                                    ${ingredientesOptions}
+                                </optgroup>
+                                <optgroup label="📦 Empaques y Desechables">
+                                    ${empaquesOptions}
+                                </optgroup>
+                            </select>
+                        </td>
+                        <td style="padding: 6px 4px; text-align: center;">
+                            <input type="number" min="0.1" step="0.5" value="${qty}" oninput="VolioManager.onRecipeQtyChanged(${idx}, this.value)" style="width: 65px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 5px 4px; text-align: center; border-radius: 6px; font-size: 0.82rem; font-weight: 700;">
+                        </td>
+                        <td style="padding: 6px 8px; text-align: right; color: rgba(255,255,255,0.7); font-size: 0.82rem;">
+                            ₡${unitCost.toLocaleString()}
+                        </td>
+                        <td style="padding: 6px 8px; text-align: right; font-weight: 800; color: #2ecc71; font-size: 0.85rem;">
+                            ₡${subtotal.toLocaleString()}
+                        </td>
+                        <td style="padding: 6px 4px; text-align: center;">
+                            <button type="button" onclick="VolioManager.removeRecipeRow(${idx})" class="action-btn" style="color: var(--alerta); padding: 4px;" title="Quitar insumo">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Seleccionar los valores correctos en los selects
+            const selects = container.querySelectorAll('select');
+            this.activeRecipeItems.forEach((item, idx) => {
+                if (selects[idx]) {
+                    selects[idx].value = item.inventarioId;
+                }
+            });
+
+            this.calculateRecipeTotals();
+        },
+
+        addRecipeRow() {
+            if (!this.activeRecipeItems) this.activeRecipeItems = [];
+            const inv = window.currentInventory || [];
+            const defaultId = inv.length > 0 ? inv[0].id : 'pinto';
+            this.activeRecipeItems.push({ inventarioId: defaultId, cantidad: 1 });
+            this.renderRecipeRows();
+        },
+
+        removeRecipeRow(index) {
+            if (!this.activeRecipeItems) return;
+            this.activeRecipeItems.splice(index, 1);
+            this.renderRecipeRows();
+        },
+
+        onRecipeItemChanged(index, newInvId) {
+            if (!this.activeRecipeItems || !this.activeRecipeItems[index]) return;
+            this.activeRecipeItems[index].inventarioId = newInvId;
+            this.renderRecipeRows();
+        },
+
+        onRecipeQtyChanged(index, newQty) {
+            if (!this.activeRecipeItems || !this.activeRecipeItems[index]) return;
+            const parsed = parseFloat(newQty);
+            this.activeRecipeItems[index].cantidad = isNaN(parsed) ? 0 : parsed;
+            this.calculateRecipeTotals();
+        },
+
+        calculateRecipeTotals() {
+            const inv = window.currentInventory || [];
+            let subtotalIng = 0;
+            let subtotalEmp = 0;
+
+            if (this.activeRecipeItems && Array.isArray(this.activeRecipeItems)) {
+                this.activeRecipeItems.forEach(it => {
+                    const found = inv.find(i => i.id === it.inventarioId);
+                    const cost = found ? (found.costoUnitario || 0) : 0;
+                    const qty = typeof it.cantidad === 'number' ? it.cantidad : (parseFloat(it.cantidad) || 0);
+                    const sub = Math.round(qty * cost);
+                    if (found && found.tipo === 'empaque') {
+                        subtotalEmp += sub;
+                    } else {
+                        subtotalIng += sub;
+                    }
+                });
+            }
+
+            const total = subtotalIng + subtotalEmp;
+
+            const elIng = document.getElementById('receta-subtotal-ing');
+            const elEmp = document.getElementById('receta-subtotal-emp');
+            const elTotal = document.getElementById('receta-total-cost');
+            const costInput = document.getElementById('volio-dish-cost');
+
+            if (elIng) elIng.innerText = `₡${subtotalIng.toLocaleString()}`;
+            if (elEmp) elEmp.innerText = `₡${subtotalEmp.toLocaleString()}`;
+            if (elTotal) elTotal.innerText = `₡${total.toLocaleString()}`;
+            if (costInput) {
+                costInput.value = total;
+            }
+
+            this.calcCostMetrics();
+        },
+
+        syncIngredientsText(event) {
+            if (event) event.preventDefault();
+            const inv = window.currentInventory || [];
+            if (!this.activeRecipeItems || this.activeRecipeItems.length === 0) return;
+
+            const names = this.activeRecipeItems
+                .map(it => {
+                    const found = inv.find(i => i.id === it.inventarioId);
+                    if (found && found.tipo === 'empaque') return null;
+                    return found ? (found.nombre || it.inventarioId.replace(/_/g, ' ')) : it.inventarioId.replace(/_/g, ' ');
+                })
+                .filter(Boolean);
+
+            const textInput = document.getElementById('volio-dish-ingredients');
+            if (textInput && names.length > 0) {
+                textInput.value = names.join(', ');
+            }
         },
 
         closeDishModal() {
@@ -2554,6 +2998,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 desc,
                 precio,
                 costo,
+                recetaItems: this.activeRecipeItems || [],
                 img: img || 'images-catalogo/Señor Pinto.jpeg',
                 actualizadoEn: new Date().toISOString()
             };
