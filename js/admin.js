@@ -1089,7 +1089,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (autoSendEmail) {
-                const mailtoDest = "bryan@srsrapinto.com,srsrapintocr@gmail.com";
+                const mailtoDest = "bryanviquezmurillo@gmail.com";
                 const subject = `Cierre de Caja - Sr. & Sra. Pinto - ${dateStr}`;
                 
                 let body = `Hola Bryan,\n\n`;
