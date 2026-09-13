@@ -502,39 +502,58 @@ document.addEventListener("DOMContentLoaded", () => {
             // Ordenar pedidos de más reciente a más antiguo para el log de auditoría
             filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-            // Calcular Métricas Financieras (Ventas, Costos y Rentabilidad)
+            // Calcular Métricas Operativas (Comandas, Ticket Promedio, Productos y Categorías)
             let totalRevenue = 0;
-            let totalCogs = 0;
             let cashOrdersCount = 0;
             let dietaBryanTotal = 0;
-            let dietaMaicTotal = 0;
             let regaliaTotal = 0;
             
             const selectedProduct = this.selectedProductFilter;
+            const productSales = {};
+            const categorySales = {
+                'Desayunos': { qty: 0, revenue: 0 },
+                'Almuerzos': { qty: 0, revenue: 0 },
+                'Snacks': { qty: 0, revenue: 0 },
+                'Bebidas': { qty: 0, revenue: 0 }
+            };
 
             filteredOrders.forEach(order => {
                 const method = order.metodoPago || 'Efectivo';
-                const isSpecial = (method === 'Dieta Bryan' || method === 'Dieta Maic' || method === 'Regalía');
+                const isSpecial = (method === 'Dieta Bryan' || method === 'Regalía');
                 
                 let orderHasProduct = false;
                 let productRevenue = 0;
-                let productCogs = 0;
                 
                 if (order.items) {
                     order.items.forEach(item => {
-                        const cleanId = item.id.split('-')[0];
-                        const costPerUnit = COSTOS_PRODUCTOS[cleanId] || COSTOS_PRODUCTOS[item.id] || (item.precio * 0.4);
                         const qty = item.cantidad || 0;
-                        const cogsVal = costPerUnit * qty;
+                        const subtotal = (item.precio || 0) * qty;
                         
+                        // Contabilizar productos vendidos
+                        productSales[item.nombre] = (productSales[item.nombre] || 0) + qty;
+
+                        // Clasificar por categoría
+                        const nameLower = (item.nombre || '').toLowerCase();
+                        const idLower = (item.id || '').toLowerCase();
+                        if (nameLower.includes('pinto') || nameLower.includes('burrote') || nameLower.includes('desayuno') || idLower.startsWith('p-senor') || idLower.startsWith('p-burrote') || idLower.startsWith('p-queso-pinto')) {
+                            categorySales['Desayunos'].qty += qty;
+                            categorySales['Desayunos'].revenue += subtotal;
+                        } else if (nameLower.includes('casado') || nameLower.includes('almuerzo') || idLower.startsWith('v-casado')) {
+                            categorySales['Almuerzos'].qty += qty;
+                            categorySales['Almuerzos'].revenue += subtotal;
+                        } else if (nameLower.includes('café') || nameLower.includes('fresco') || nameLower.includes('agua') || nameLower.includes('gaseosa') || idLower.startsWith('b-')) {
+                            categorySales['Bebidas'].qty += qty;
+                            categorySales['Bebidas'].revenue += subtotal;
+                        } else {
+                            categorySales['Snacks'].qty += qty;
+                            categorySales['Snacks'].revenue += subtotal;
+                        }
+
                         if (selectedProduct) {
                             if (item.nombre === selectedProduct) {
                                 orderHasProduct = true;
-                                productRevenue += (item.precio * qty);
-                                productCogs += cogsVal;
+                                productRevenue += subtotal;
                             }
-                        } else {
-                            totalCogs += cogsVal;
                         }
                     });
                 }
@@ -546,10 +565,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             cashOrdersCount += 1;
                         } else {
                             if (method === 'Dieta Bryan') dietaBryanTotal += productRevenue;
-                            else if (method === 'Dieta Maic') dietaMaicTotal += productRevenue;
                             else if (method === 'Regalía') regaliaTotal += productRevenue;
                         }
-                        totalCogs += productCogs;
                     }
                 } else {
                     if (!isSpecial) {
@@ -557,33 +574,59 @@ document.addEventListener("DOMContentLoaded", () => {
                         cashOrdersCount += 1;
                     } else {
                         if (method === 'Dieta Bryan') dietaBryanTotal += (order.total || 0);
-                        else if (method === 'Dieta Maic') dietaMaicTotal += (order.total || 0);
                         else if (method === 'Regalía') regaliaTotal += (order.total || 0);
                     }
                 }
             });
 
-            // Redondear para evitar decimales molestos
-            totalCogs = Math.round(totalCogs);
-            const totalProfit = Math.max(0, totalRevenue - totalCogs);
-            const profitMargin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0;
             const avgTicket = cashOrdersCount > 0 ? Math.round(totalRevenue / cashOrdersCount) : 0;
 
-            // Renderizar métricas en pantalla
-            document.getElementById('stat-revenue').innerText = `₡${totalRevenue.toLocaleString()}`;
-            document.getElementById('stat-cogs').innerText = `₡${totalCogs.toLocaleString()}`;
-            document.getElementById('stat-profit').innerText = `₡${totalProfit.toLocaleString()}`;
-            document.getElementById('stat-margin').innerText = `${profitMargin}%`;
-            document.getElementById('stat-orders-count').innerText = cashOrdersCount;
-            document.getElementById('stat-avg-ticket').innerText = `₡${avgTicket.toLocaleString()}`;
-            
-            document.getElementById('stat-dieta-bryan').innerText = `₡${dietaBryanTotal.toLocaleString()}`;
-            document.getElementById('stat-dieta-maic').innerText = `₡${dietaMaicTotal.toLocaleString()}`;
-            document.getElementById('stat-regalias').innerText = `₡${regaliaTotal.toLocaleString()}`;
+            // Renderizar métricas operativas en pantalla
+            const elOrdersCount = document.getElementById('stat-orders-count');
+            const elAvgTicket = document.getElementById('stat-avg-ticket');
+            const elDietaBryan = document.getElementById('stat-dieta-bryan');
+            const elRegalias = document.getElementById('stat-regalias');
+            const elTopDishName = document.getElementById('stat-top-dish-name');
+            const elTopDishQty = document.getElementById('stat-top-dish-qty');
+            const elTopCatName = document.getElementById('stat-top-cat-name');
+            const elTopCatCount = document.getElementById('stat-top-cat-count');
+
+            if (elOrdersCount) elOrdersCount.innerText = cashOrdersCount;
+            if (elAvgTicket) elAvgTicket.innerText = `₡${avgTicket.toLocaleString()}`;
+            if (elDietaBryan) elDietaBryan.innerText = `₡${dietaBryanTotal.toLocaleString()}`;
+            if (elRegalias) elRegalias.innerText = `₡${regaliaTotal.toLocaleString()}`;
+
+            // Calcular Platillo Estrella
+            const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
+            if (elTopDishName && elTopDishQty) {
+                if (sortedProducts.length > 0) {
+                    elTopDishName.innerText = sortedProducts[0][0];
+                    elTopDishName.title = sortedProducts[0][0];
+                    elTopDishQty.innerText = `${sortedProducts[0][1]} unidades vendidas`;
+                } else {
+                    elTopDishName.innerText = '-';
+                    elTopDishQty.innerText = '0 unidades';
+                }
+            }
+
+            // Calcular Categoría Líder
+            const sortedCategories = Object.entries(categorySales).sort((a, b) => b[1].revenue - a[1].revenue);
+            if (elTopCatName && elTopCatCount) {
+                if (sortedCategories.length > 0 && sortedCategories[0][1].revenue > 0) {
+                    elTopCatName.innerText = sortedCategories[0][0];
+                    elTopCatCount.innerText = `${sortedCategories[0][1].qty} un. (₡${sortedCategories[0][1].revenue.toLocaleString()})`;
+                } else {
+                    elTopCatName.innerText = '-';
+                    elTopCatCount.innerText = '0 comandas';
+                }
+            }
+
+            // Compatibilidad si existen viejos elementos
+            if (document.getElementById('stat-revenue')) document.getElementById('stat-revenue').innerText = `₡${totalRevenue.toLocaleString()}`;
 
             // Procesar Gráficos e Ingredientes
             this.processBestsellers(filteredOrders);
-            this.processPaymentMethods(filteredOrders);
+            this.processCategorySales(categorySales);
             this.processIngredientsConsumption(filteredOrders);
             this.renderAuditLog(filteredOrders);
         },
@@ -681,47 +724,36 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         },
 
-        processPaymentMethods(orders) {
-            const selectedProduct = this.selectedProductFilter;
-            const paymentTotals = { 
-                'Efectivo': 0, 
-                'SINPE Móvil': 0, 
-                'Tarjeta': 0,
-                'Dieta Bryan': 0,
-                'Dieta Maic': 0,
-                'Regalía': 0
+        processCategorySales(categorySales) {
+            const chartCanvas = document.getElementById('category-chart') || document.getElementById('payment-methods-chart');
+            if (!chartCanvas) return;
+
+            const labels = [];
+            const data = [];
+            const bgColors = [];
+            const borderColors = [];
+
+            const colorMap = {
+                'Desayunos': { bg: 'rgba(241, 196, 15, 0.75)', border: '#f1c40f' },
+                'Almuerzos': { bg: 'rgba(46, 204, 113, 0.75)', border: '#2ecc71' },
+                'Snacks': { bg: 'rgba(230, 126, 34, 0.75)', border: '#e67e22' },
+                'Bebidas': { bg: 'rgba(52, 152, 219, 0.75)', border: '#3498db' }
             };
 
-            orders.forEach(order => {
-                const method = order.metodoPago || 'Efectivo';
-                if (paymentTotals[method] === undefined) {
-                    paymentTotals[method] = 0;
-                }
-                
-                if (selectedProduct) {
-                    if (order.items) {
-                        order.items.forEach(item => {
-                            if (item.nombre === selectedProduct) {
-                                paymentTotals[method] += (item.precio * (item.cantidad || 0));
-                            }
-                        });
-                    }
-                } else {
-                    paymentTotals[method] += (order.total || 0);
+            Object.entries(categorySales).forEach(([cat, info]) => {
+                if (info.revenue > 0 || info.qty > 0) {
+                    labels.push(cat);
+                    data.push(info.revenue);
+                    bgColors.push(colorMap[cat]?.bg || 'rgba(150, 150, 150, 0.7)');
+                    borderColors.push(colorMap[cat]?.border || '#888');
                 }
             });
-
-            // Solo mostrar métodos de pago que tengan montos > 0
-            const activePayments = Object.entries(paymentTotals).filter(([_, val]) => val > 0);
-            
-            const labels = activePayments.map(([label, _]) => label);
-            const data = activePayments.map(([_, val]) => val);
 
             if (window.paymentsChartInstance) {
                 window.paymentsChartInstance.destroy();
             }
 
-            const ctx = document.getElementById('payment-methods-chart').getContext('2d');
+            const ctx = chartCanvas.getContext('2d');
             const totalSum = data.reduce((a, b) => a + b, 0);
 
             if (totalSum === 0) {
@@ -729,22 +761,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
                 ctx.font = "14px Gotham";
                 ctx.textAlign = "center";
-                ctx.fillText("Sin transacciones registradas.", 200, 140);
+                ctx.fillText("Sin ventas registradas en el período.", 200, 140);
                 return;
             }
-
-            // Definir colores fijos según método
-            const colorMap = {
-                'Efectivo': { bg: 'rgba(46, 204, 113, 0.7)', border: '#2ecc71' },
-                'SINPE Móvil': { bg: 'rgba(241, 196, 15, 0.7)', border: '#f1c40f' },
-                'Tarjeta': { bg: 'rgba(52, 152, 219, 0.7)', border: '#3498db' },
-                'Dieta Bryan': { bg: 'rgba(155, 89, 182, 0.7)', border: '#9b59b6' },
-                'Dieta Maic': { bg: 'rgba(155, 89, 182, 0.7)', border: '#9b59b6' },
-                'Regalía': { bg: 'rgba(230, 126, 34, 0.7)', border: '#e67e22' }
-            };
-
-            const bgColors = labels.map(lbl => colorMap[lbl]?.bg || 'rgba(150, 150, 150, 0.7)');
-            const borderColors = labels.map(lbl => colorMap[lbl]?.border || '#999');
 
             window.paymentsChartInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -754,7 +773,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         data: data,
                         backgroundColor: bgColors,
                         borderColor: borderColors,
-                        borderWidth: 1
+                        borderWidth: 2
                     }]
                 },
                 options: {
@@ -763,7 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: 'rgba(255, 255, 255, 0.8)', font: { size: 11 } }
+                            labels: { color: 'rgba(255, 255, 255, 0.85)', font: { size: 12 } }
                         },
                         tooltip: {
                             callbacks: {
@@ -1005,10 +1024,6 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <td style="padding: 8px; text-align: right; font-weight: bold; color: #9b59b6;">${dietaBryan}</td>
                             </tr>
                             <tr style="border-bottom: 1px solid #eee;">
-                                <td style="padding: 8px;">Dieta Maic</td>
-                                <td style="padding: 8px; text-align: right; font-weight: bold; color: #9b59b6;">${dietaMaic}</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #eee;">
                                 <td style="padding: 8px;">Regalías (Comunidad)</td>
                                 <td style="padding: 8px; text-align: right; font-weight: bold; color: #e67e22;">${regalias}</td>
                             </tr>
@@ -1074,10 +1089,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (autoSendEmail) {
-                const mailtoDest = "bryan@srsrapinto.com,maic@srsrapinto.com";
+                const mailtoDest = "bryan@srsrapinto.com,srsrapintocr@gmail.com";
                 const subject = `Cierre de Caja - Sr. & Sra. Pinto - ${dateStr}`;
                 
-                let body = `Hola Bryan y Maic,\n\n`;
+                let body = `Hola Bryan,\n\n`;
                 body += `Se ha realizado un cierre de turno en el sistema. A continuación se presentan los resultados correspondientes:\n\n`;
                 body += `----------------------------------------\n`;
                 body += `RESUMEN DE RENDIMIENTO (${shiftText.toUpperCase()})\n`;
@@ -1099,7 +1114,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 body += `CONSUMOS INTERNOS\n`;
                 body += `----------------------------------------\n`;
                 body += `👤 Dieta Bryan: ${dietaBryan}\n`;
-                body += `👤 Dieta Maic: ${dietaMaic}\n`;
                 body += `🎁 Regalías: ${regalias}\n\n`;
                 body += `El PDF detallado con el consumo de ingredientes y productos más vendidos ha sido descargado automáticamente a su dispositivo.\n\n`;
                 body += `Saludos,\n`;
@@ -1947,22 +1961,27 @@ document.addEventListener("DOMContentLoaded", () => {
                         <h4 style="color: var(--mostaza); font-size: 0.95rem; margin-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
                             ${cat.label} (${catDishes.length} en catálogo)
                         </h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px;">
                 `;
 
                 if (catDishes.length === 0) {
-                    html += `<p style="font-size: 0.8rem; color: rgba(255,255,255,0.4);">No hay platillos creados en esta categoría.</p>`;
+                    html += `<p style="font-size: 0.8rem; color: rgba(255,255,255,0.4); grid-column: 1 / -1;">No hay productos creados en esta categoría.</p>`;
                 } else {
                     catDishes.forEach(dish => {
                         const isScheduled = currentDayDishes.includes(dish.id);
+                        const imgSrc = dish.img || 'images-catalogo/Señor Pinto.jpeg';
                         html += `
-                            <div style="background: ${isScheduled ? 'rgba(233, 19, 80, 0.12)' : 'rgba(0,0,0,0.3)'}; border: 1px solid ${isScheduled ? 'var(--rojo)' : 'var(--border)'}; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;">
-                                <div>
-                                    <strong style="color: white; font-size: 0.9rem; display: block;">${this.sanitize(dish.nombre)}</strong>
-                                    <span style="font-size: 0.8rem; color: var(--mostaza);">₡${(dish.precio || 0).toLocaleString()} • Costo: ₡${(dish.costo || 0).toLocaleString()}</span>
+                            <div style="background: ${isScheduled ? 'rgba(233, 19, 80, 0.12)' : 'rgba(0,0,0,0.3)'}; border: 1px solid ${isScheduled ? 'var(--rojo)' : 'var(--border)'}; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: all 0.2s;">
+                                <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                                    <img src="${imgSrc}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border);" onerror="this.src='logo-brand/PNG/Icono Mostaza.png'">
+                                    <div style="min-width: 0;">
+                                        <strong style="color: white; font-size: 0.88rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.sanitize(dish.nombre)}</strong>
+                                        <span style="font-size: 0.78rem; color: var(--mostaza); font-weight: bold;">₡${(dish.precio || 0).toLocaleString()} <span style="color: rgba(255,255,255,0.4); font-weight: normal;">• Costo: ₡${(dish.costo || 0).toLocaleString()}</span></span>
+                                        ${dish.ingredientes ? `<div style="font-size: 0.72rem; color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${this.sanitize(dish.ingredientes)}</div>` : ''}
+                                    </div>
                                 </div>
-                                <label class="switch-toggle" style="cursor: pointer;">
-                                    <input type="checkbox" ${isScheduled ? 'checked' : ''} onchange="VolioManager.toggleDishInDay('${dish.id}', this.checked)" style="accent-color: var(--rojo); width: 18px; height: 18px; cursor: pointer;">
+                                <label class="switch-toggle" style="cursor: pointer; flex-shrink: 0;" title="${isScheduled ? 'Activo hoy' : 'Inactivo hoy'}">
+                                    <input type="checkbox" ${isScheduled ? 'checked' : ''} onchange="VolioManager.toggleDishInDay('${dish.id}', this.checked)" style="accent-color: var(--rojo); width: 20px; height: 20px; cursor: pointer;">
                                 </label>
                             </div>
                         `;
@@ -2004,13 +2023,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const filterCat = document.getElementById('volio-filter-cat')?.value || 'todas';
 
             const filtered = this.dishes.filter(d => {
-                const matchSearch = (d.nombre || '').toLowerCase().includes(search) || (d.desc || '').toLowerCase().includes(search);
+                const matchSearch = (d.nombre || '').toLowerCase().includes(search) || 
+                                    (d.desc || '').toLowerCase().includes(search) || 
+                                    (d.ingredientes || '').toLowerCase().includes(search);
                 const matchCat = filterCat === 'todas' || d.categoria === filterCat;
                 return matchSearch && matchCat;
             });
 
             if (filtered.length === 0) {
-                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.5;">No se encontraron platillos.</td></tr>`;
+                container.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 20px; opacity: 0.5;">No se encontraron productos en el catálogo.</td></tr>`;
                 return;
             }
 
@@ -2026,14 +2047,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 else if (margenPct <= 65) marginBadgeClass = 'dish-margin-mid';
 
                 const catLabels = { desayuno: '🍳 Desayuno', almuerzo: '🍲 Almuerzo', snacks: '🥟 Snacks', bebidas: '☕ Bebidas' };
+                const imgSrc = dish.img || 'images-catalogo/Señor Pinto.jpeg';
 
                 return `
                     <tr>
-                        <td>
-                            <strong>${this.sanitize(dish.nombre)}</strong>
-                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${this.sanitize(dish.desc || '')}</div>
+                        <td style="width: 50px;">
+                            <img src="${imgSrc}" style="width: 42px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border);" alt="Foto" onerror="this.src='logo-brand/PNG/Icono Mostaza.png'">
                         </td>
-                        <td style="font-size: 0.85rem;">${catLabels[dish.categoria] || dish.categoria}</td>
+                        <td>
+                            <strong style="color: white; font-size: 0.92rem;">${this.sanitize(dish.nombre)}</strong>
+                            ${dish.ingredientes ? `<div style="font-size: 0.75rem; color: #f1c40f; margin-top: 2px;"><i class="fas fa-mortar-pestle" style="margin-right: 4px;"></i>${this.sanitize(dish.ingredientes)}</div>` : ''}
+                            ${dish.desc ? `<div style="font-size: 0.72rem; color: rgba(255,255,255,0.4);">${this.sanitize(dish.desc)}</div>` : ''}
+                        </td>
+                        <td style="font-size: 0.82rem;">${catLabels[dish.categoria] || dish.categoria}</td>
                         <td style="font-weight: 800; color: var(--mostaza);">₡${precio.toLocaleString()}</td>
                         <td style="font-weight: 700; color: #e74c3c;">₡${costo.toLocaleString()}</td>
                         <td style="font-weight: 700; color: #2ecc71;">₡${margen.toLocaleString()}</td>
@@ -2057,6 +2083,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }).join('');
         },
 
+        updateImgPreview() {
+            const val = document.getElementById('volio-dish-img')?.value || 'images-catalogo/Señor Pinto.jpeg';
+            const preview = document.getElementById('volio-dish-img-preview');
+            if (preview) {
+                preview.src = val;
+            }
+        },
+
         openDishModal(id = null) {
             const modal = document.getElementById('volio-dish-modal');
             const title = document.getElementById('volio-dish-modal-title');
@@ -2065,24 +2099,33 @@ document.addEventListener("DOMContentLoaded", () => {
             if (id) {
                 const dish = this.dishes.find(d => d.id === id);
                 if (dish) {
-                    title.innerHTML = `<i class="fas fa-edit"></i> Editar Platillo: ${this.sanitize(dish.nombre)}`;
+                    title.innerHTML = `<i class="fas fa-edit"></i> Editar Producto: ${this.sanitize(dish.nombre)}`;
                     document.getElementById('volio-dish-name').value = dish.nombre || '';
                     document.getElementById('volio-dish-category').value = dish.categoria || 'desayuno';
+                    document.getElementById('volio-dish-ingredients').value = dish.ingredientes || '';
                     document.getElementById('volio-dish-desc').value = dish.desc || '';
                     document.getElementById('volio-dish-price').value = dish.precio || '';
                     document.getElementById('volio-dish-cost').value = dish.costo || '';
                     document.getElementById('volio-dish-img').value = dish.img || '';
+                    if (document.getElementById('volio-dish-img-select')) {
+                        document.getElementById('volio-dish-img-select').value = dish.img || '';
+                    }
                 }
             } else {
-                title.innerHTML = `<i class="fas fa-plus"></i> Nuevo Platillo / Receta`;
+                title.innerHTML = `<i class="fas fa-plus"></i> Nuevo Producto / Platillo`;
                 document.getElementById('volio-dish-name').value = '';
                 document.getElementById('volio-dish-category').value = 'desayuno';
+                document.getElementById('volio-dish-ingredients').value = '';
                 document.getElementById('volio-dish-desc').value = '';
                 document.getElementById('volio-dish-price').value = '';
                 document.getElementById('volio-dish-cost').value = '';
-                document.getElementById('volio-dish-img').value = '';
+                document.getElementById('volio-dish-img').value = 'images-catalogo/Señor Pinto.jpeg';
+                if (document.getElementById('volio-dish-img-select')) {
+                    document.getElementById('volio-dish-img-select').value = 'images-catalogo/Señor Pinto.jpeg';
+                }
             }
 
+            this.updateImgPreview();
             this.calcCostMetrics();
             modal.classList.add('active');
         },
@@ -2117,6 +2160,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const id = document.getElementById('volio-dish-id').value;
             const nombre = document.getElementById('volio-dish-name').value.trim();
             const categoria = document.getElementById('volio-dish-category').value;
+            const ingredientes = document.getElementById('volio-dish-ingredients')?.value.trim() || '';
             const desc = document.getElementById('volio-dish-desc').value.trim();
             const precio = parseFloat(document.getElementById('volio-dish-price').value);
             const costo = parseFloat(document.getElementById('volio-dish-cost').value) || 0;
@@ -2130,6 +2174,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const dishData = {
                 nombre,
                 categoria,
+                ingredientes,
                 desc,
                 precio,
                 costo,
@@ -2160,9 +2205,21 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         async deleteDish(id, nombre) {
-            if (!confirm(`¿Deseas eliminar el platillo "${nombre}" del catálogo Volio?`)) return;
+            if (!confirm(`¿Deseas eliminar el platillo "${nombre}" del catálogo de Volio?`)) return;
             try {
                 await window.FirebaseDB.collection('volio_platillos').doc(id).delete();
+                // Remover de la programación semanal de todos los días
+                const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
+                const updates = {};
+                days.forEach(d => {
+                    if (this.schedule[d] && this.schedule[d].includes(id)) {
+                        this.schedule[d] = this.schedule[d].filter(dishId => dishId !== id);
+                        updates[d] = this.schedule[d];
+                    }
+                });
+                if (Object.keys(updates).length > 0) {
+                    await window.FirebaseDB.collection('config_volio').doc('programacion_semanal').update(updates);
+                }
             } catch (err) {
                 console.error("Error al eliminar platillo:", err);
                 alert("No se pudo eliminar el platillo.");
@@ -2252,31 +2309,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const defaults = [
                 {
+                    tipo: 'Luz',
+                    titulo: 'Recibo de Luz Eléctrica (CNFL / ICE)',
+                    fechaVencimiento: new Date(y, now.getDate() > 15 ? m + 1 : m, 15).toISOString().split('T')[0],
+                    recurrencia: 'dia_15',
+                    monto: 45000,
+                    notas: 'Vence el día 15 de cada mes',
+                    pagado: false
+                },
+                {
+                    tipo: 'Agua',
+                    titulo: 'Recibo de Agua Potable (AyA / ESPH)',
+                    fechaVencimiento: new Date(y, m + 1, 0).toISOString().split('T')[0],
+                    recurrencia: 'mensual',
+                    monto: 25000,
+                    notas: 'Fecha por confirmar / Fin de mes',
+                    pagado: false
+                },
+                {
                     tipo: 'CCSS',
                     titulo: 'Planilla Mensual CCSS',
                     fechaVencimiento: new Date(y, m, 20).toISOString().split('T')[0],
+                    recurrencia: 'mensual',
                     monto: 35000,
+                    notas: 'Último hábil de cada mes',
                     pagado: false
                 },
                 {
                     tipo: 'INS',
                     titulo: 'Póliza Riesgos del Trabajo INS',
                     fechaVencimiento: new Date(y, m + 1, 10).toISOString().split('T')[0],
+                    recurrencia: 'semestral',
                     monto: 18000,
+                    notas: 'Póliza laboral',
                     pagado: false
                 },
                 {
                     tipo: 'Patente',
                     titulo: 'Patente Municipal Comercial',
                     fechaVencimiento: new Date(y, Math.floor(m / 3) * 3 + 3, 15).toISOString().split('T')[0],
+                    recurrencia: 'trimestral',
                     monto: 45000,
+                    notas: 'Trimestral',
                     pagado: false
                 },
                 {
                     tipo: 'Hacienda D-105',
                     titulo: 'Declaración Trimestral Tributación (D-105)',
                     fechaVencimiento: new Date(y, Math.floor(m / 3) * 3 + 3, 15).toISOString().split('T')[0],
+                    recurrencia: 'trimestral',
                     monto: 0,
+                    notas: 'Régimen Simplificado (5610.0)',
                     pagado: false
                 }
             ];
@@ -2769,14 +2852,39 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!container) return;
 
             if (this.legalObligations.length === 0) {
-                container.innerHTML = `<p style="opacity: 0.5; font-size: 0.85rem;">No hay obligaciones registradas.</p>`;
+                container.innerHTML = `<p style="opacity: 0.5; font-size: 0.85rem; grid-column: 1 / -1; text-align: center; padding: 20px;">No hay recordatorios de pago registrados.</p>`;
                 return;
             }
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            container.innerHTML = this.legalObligations.map(item => {
+            // Ordenar por fecha de vencimiento
+            const sorted = [...this.legalObligations].sort((a, b) => new Date(a.fechaVencimiento || '') - new Date(b.fechaVencimiento || ''));
+
+            const iconsMap = {
+                'Luz': '💡',
+                'Agua': '💧',
+                'CCSS': '🏥',
+                'INS': '🛡️',
+                'Patente': '🏛️',
+                'Hacienda D-105': '📋',
+                'Alquiler': '🏠',
+                'Internet': '📶',
+                'Otro': '📌'
+            };
+
+            const recurrenceMap = {
+                'dia_15': '📅 Vence el 15 de cada mes',
+                'mensual': '📅 Mensual (Fin de mes)',
+                'trimestral': '📅 Trimestral',
+                'semestral': '📅 Semestral',
+                'anual': '📅 Anual',
+                'unica': '📌 Fecha única'
+            };
+
+            container.innerHTML = sorted.map(item => {
+                const icon = iconsMap[item.tipo] || '📌';
                 const dueDate = new Date(item.fechaVencimiento + 'T00:00:00');
                 const diffTime = dueDate - today;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -2787,6 +2895,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (item.pagado) {
                     statusClass = 'status-aldia';
                     statusLabel = '<i class="fas fa-check"></i> Pagado';
+                } else if (isNaN(diffDays)) {
+                    statusClass = 'status-porvencer';
+                    statusLabel = '<i class="fas fa-clock"></i> Fecha por definir';
                 } else if (diffDays < 0) {
                     statusClass = 'status-vencido';
                     statusLabel = `<i class="fas fa-exclamation-triangle"></i> Vencido hace ${Math.abs(diffDays)}d`;
@@ -2795,24 +2906,47 @@ document.addEventListener("DOMContentLoaded", () => {
                     statusLabel = `<i class="fas fa-clock"></i> Vence en ${diffDays}d`;
                 }
 
+                const recLabel = recurrenceMap[item.recurrencia] || (item.recurrencia === 'dia_15' ? '📅 Día 15 de cada mes' : '');
+
                 return `
-                    <div class="legal-card">
+                    <div class="legal-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 12px; border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: rgba(0,0,0,0.35);">
                         <div>
-                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: bold;">
-                                ${this.sanitize(item.tipo)}
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.3rem;">${icon}</span>
+                                    <div>
+                                        <span style="font-size: 0.72rem; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: bold; display: block;">
+                                            ${this.sanitize(item.tipo)}
+                                        </span>
+                                        <strong style="font-size: 0.95rem; color: white;">
+                                            ${this.sanitize(item.titulo)}
+                                        </strong>
+                                    </div>
+                                </div>
+                                <span class="legal-status-pill ${statusClass}" style="flex-shrink: 0;">${statusLabel}</span>
                             </div>
-                            <strong style="font-size: 0.95rem; color: white; display: block; margin-top: 2px;">
-                                ${this.sanitize(item.titulo)}
-                            </strong>
-                            <div style="font-size: 0.8rem; color: var(--mostaza); margin-top: 4px;">
-                                Vence: <strong>${item.fechaVencimiento}</strong> • ₡${(item.monto || 0).toLocaleString()}
+
+                            <div style="margin-top: 10px; font-size: 0.8rem; color: var(--mostaza); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                                <span>Vence: <strong>${item.fechaVencimiento || 'Por definir'}</strong></span>
+                                ${item.monto ? `<span>• Monto: <strong>₡${item.monto.toLocaleString()}</strong></span>` : ''}
                             </div>
+
+                            ${recLabel ? `<div style="font-size: 0.72rem; color: #f1c40f; background: rgba(241, 196, 15, 0.1); padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 6px;">${recLabel}</div>` : ''}
+                            ${item.notas ? `<div style="font-size: 0.74rem; color: rgba(255,255,255,0.6); margin-top: 6px; line-height: 1.3;"><i class="fas fa-sticky-note" style="color: rgba(255,255,255,0.4); margin-right: 4px;"></i>${this.sanitize(item.notas)}</div>` : ''}
                         </div>
-                        <div style="text-align: right; display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
-                            <span class="legal-status-pill ${statusClass}">${statusLabel}</span>
-                            <button onclick="FinancesManager.toggleLegalPaid('${item.id}', ${!item.pagado})" style="background: transparent; border: 1px solid var(--border); color: rgba(255,255,255,0.8); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
-                                ${item.pagado ? 'Marcar Pendiente' : 'Marcar Pagado'}
+
+                        <div style="border-top: 1px dashed var(--border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                            <button onclick="FinancesManager.toggleLegalPaid('${item.id}', ${!item.pagado})" style="background: ${item.pagado ? 'rgba(46, 204, 113, 0.15)' : 'transparent'}; border: 1px solid ${item.pagado ? '#2ecc71' : 'var(--border)'}; color: ${item.pagado ? '#2ecc71' : 'rgba(255,255,255,0.85)'}; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-${item.pagado ? 'check-circle' : 'circle'}"></i> ${item.pagado ? 'Pagado' : 'Marcar Pagado'}
                             </button>
+                            <div style="display: flex; gap: 6px;">
+                                <button class="action-btn" onclick="FinancesManager.openLegalModal('${item.id}')" title="Editar recordatorio">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn" onclick="FinancesManager.deleteLegalObligation('${item.id}', '${this.sanitize(item.titulo)}')" style="color: var(--alerta);" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -2830,9 +2964,82 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
 
-        openLegalModal() {
-            document.getElementById('finance-legal-modal').classList.add('active');
-            document.getElementById('fin-legal-duedate').value = new Date().toISOString().split('T')[0];
+        openLegalModal(id = null) {
+            const modal = document.getElementById('finance-legal-modal');
+            const titleEl = document.getElementById('finance-legal-modal-title');
+            document.getElementById('fin-legal-id').value = id || '';
+
+            if (id) {
+                const item = this.legalObligations.find(o => o.id === id);
+                if (item) {
+                    if (titleEl) titleEl.innerHTML = `<i class="fas fa-edit" style="color: #e67e22;"></i> Editar Recordatorio: ${this.sanitize(item.titulo)}`;
+                    document.getElementById('fin-legal-type').value = item.tipo || 'Luz';
+                    document.getElementById('fin-legal-title').value = item.titulo || '';
+                    document.getElementById('fin-legal-duedate').value = item.fechaVencimiento || '';
+                    document.getElementById('fin-legal-recurrence').value = item.recurrencia || 'mensual';
+                    document.getElementById('fin-legal-amount').value = item.monto || '';
+                    document.getElementById('fin-legal-notes').value = item.notas || '';
+                }
+            } else {
+                if (titleEl) titleEl.innerHTML = `<i class="fas fa-bell" style="color: #e67e22;"></i> Nuevo Recordatorio de Pago / Servicio`;
+                document.getElementById('fin-legal-type').value = 'Luz';
+                document.getElementById('fin-legal-title').value = 'Recibo de Luz Eléctrica (CNFL / ICE)';
+                
+                // Preconfigurar fecha de la luz para el 15 de este mes o el próximo
+                const now = new Date();
+                const dueMonth = now.getDate() > 15 ? now.getMonth() + 1 : now.getMonth();
+                const next15 = new Date(now.getFullYear(), dueMonth, 15);
+                document.getElementById('fin-legal-duedate').value = next15.toISOString().split('T')[0];
+                document.getElementById('fin-legal-recurrence').value = 'dia_15';
+                document.getElementById('fin-legal-amount').value = '';
+                document.getElementById('fin-legal-notes').value = 'Vence el 15 de cada mes';
+            }
+
+            modal.classList.add('active');
+        },
+
+        handleLegalTypeChange() {
+            const type = document.getElementById('fin-legal-type').value;
+            const titleInput = document.getElementById('fin-legal-title');
+            const recSelect = document.getElementById('fin-legal-recurrence');
+            const notesInput = document.getElementById('fin-legal-notes');
+            const dateInput = document.getElementById('fin-legal-duedate');
+
+            const now = new Date();
+            if (type === 'Luz') {
+                titleInput.value = 'Recibo de Luz Eléctrica (CNFL / ICE)';
+                recSelect.value = 'dia_15';
+                notesInput.value = 'Vence el 15 de cada mes';
+                const dueMonth = now.getDate() > 15 ? now.getMonth() + 1 : now.getMonth();
+                dateInput.value = new Date(now.getFullYear(), dueMonth, 15).toISOString().split('T')[0];
+            } else if (type === 'Agua') {
+                titleInput.value = 'Recibo de Agua Potable (AyA / ESPH)';
+                recSelect.value = 'mensual';
+                notesInput.value = 'Fecha por confirmar / Fin de mes';
+                dateInput.value = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+            } else if (type === 'CCSS') {
+                titleInput.value = 'Planilla Mensual CCSS';
+                recSelect.value = 'mensual';
+                notesInput.value = 'Último día hábil de mes';
+            } else if (type === 'INS') {
+                titleInput.value = 'Póliza Riesgos del Trabajo INS';
+                recSelect.value = 'semestral';
+                notesInput.value = 'Póliza de Riesgos de Trabajo';
+            } else if (type === 'Patente') {
+                titleInput.value = 'Patente Municipal Comercial';
+                recSelect.value = 'trimestral';
+                notesInput.value = 'Pago trimestral municipal';
+            } else if (type === 'Hacienda D-105') {
+                titleInput.value = 'Declaración Trimestral Tributación (D-105)';
+                recSelect.value = 'trimestral';
+                notesInput.value = 'Régimen Simplificado (5610.0)';
+            } else if (type === 'Alquiler') {
+                titleInput.value = 'Alquiler de Local / Cocina';
+                recSelect.value = 'mensual';
+            } else if (type === 'Internet') {
+                titleInput.value = 'Servicio de Internet y Telefonía';
+                recSelect.value = 'mensual';
+            }
         },
 
         closeLegalModal() {
@@ -2840,29 +3047,52 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         async saveLegalObligation() {
+            const id = document.getElementById('fin-legal-id').value;
             const tipo = document.getElementById('fin-legal-type').value;
             const titulo = document.getElementById('fin-legal-title').value.trim();
             const fechaVencimiento = document.getElementById('fin-legal-duedate').value;
+            const recurrencia = document.getElementById('fin-legal-recurrence').value;
             const monto = parseFloat(document.getElementById('fin-legal-amount').value) || 0;
+            const notas = document.getElementById('fin-legal-notes').value.trim();
 
-            if (!titulo || !fechaVencimiento) {
-                alert("Por favor completa la descripción y fecha de vencimiento.");
+            if (!titulo) {
+                alert("Por favor completa el nombre o descripción del servicio.");
                 return;
             }
 
+            const data = {
+                tipo,
+                titulo,
+                fechaVencimiento: fechaVencimiento || '',
+                recurrencia,
+                monto,
+                notas,
+                actualizadoEn: new Date().toISOString()
+            };
+
             try {
-                await window.FirebaseDB.collection('obligaciones_legales').add({
-                    tipo,
-                    titulo,
-                    fechaVencimiento,
-                    monto,
-                    pagado: false,
-                    creadoEn: new Date().toISOString()
-                });
+                const db = window.FirebaseDB;
+                if (id) {
+                    await db.collection('obligaciones_legales').doc(id).update(data);
+                } else {
+                    data.pagado = false;
+                    data.creadoEn = new Date().toISOString();
+                    await db.collection('obligaciones_legales').add(data);
+                }
                 this.closeLegalModal();
             } catch (err) {
-                console.error("Error al registrar obligación:", err);
-                alert("No se pudo registrar la obligación.");
+                console.error("Error al guardar recordatorio:", err);
+                alert("No se pudo guardar el recordatorio.");
+            }
+        },
+
+        async deleteLegalObligation(id, name) {
+            if (!confirm(`¿Deseas eliminar el recordatorio de "${name}"?`)) return;
+            try {
+                await window.FirebaseDB.collection('obligaciones_legales').doc(id).delete();
+            } catch (err) {
+                console.error("Error al eliminar obligación:", err);
+                alert("No se pudo eliminar el recordatorio.");
             }
         },
 
@@ -3389,6 +3619,34 @@ Sr. & Sra. Pinto - El Sabor de ser Tico`;
             document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
         }
     });
+
+    // Función de mantenimiento administrativo para inicio limpio de semana
+    window.resetSystemDataForNextWeek = async () => {
+        if (!confirm("¿Deseas resetear el inventario a 0 y borrar pedidos de prueba para iniciar semana?")) return;
+        try {
+            const db = window.FirebaseDB;
+            if (!db) return;
+            const invSnap = await db.collection('inventario').get();
+            if (!invSnap.empty) {
+                const b1 = db.batch();
+                invSnap.forEach(doc => b1.update(doc.ref, { cantidad: 0 }));
+                await b1.commit();
+            }
+            const pedSnap = await db.collection('pedidos').get();
+            if (!pedSnap.empty) {
+                const b2 = db.batch();
+                pedSnap.forEach(doc => b2.delete(doc.ref));
+                await b2.commit();
+            }
+            if (window.FinancesManager && window.FinancesManager.seedInitialObligations) {
+                await window.FinancesManager.seedInitialObligations();
+            }
+            alert("✅ Datos reseteados con éxito para la nueva semana.");
+        } catch (err) {
+            console.error("Error al resetear datos:", err);
+            alert("Ocurrió un error al resetear datos.");
+        }
+    };
 
 });
 

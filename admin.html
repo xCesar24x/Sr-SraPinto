@@ -53,11 +53,11 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="#" id="nav-inventory" class="active" onclick="AdminManager.switchTab('inventory', event)"><i class="fas fa-boxes"></i> Inventario</a>
-                <a href="#" id="nav-volio" onclick="AdminManager.switchTab('volio', event)"><i class="fas fa-calendar-alt"></i> Modo Volio</a>
+                <a href="#" id="nav-volio" onclick="AdminManager.switchTab('volio', event)"><i class="fas fa-utensils"></i> Productos & Menú Volio</a>
                 <a href="#" id="nav-finances" onclick="AdminManager.switchTab('finances', event)"><i class="fas fa-file-invoice-dollar"></i> Finanzas & Hacienda</a>
                 <a href="#" id="nav-reports" onclick="AdminManager.switchTab('reports', event)"><i class="fas fa-chart-line"></i> Reportes</a>
                 <a href="#" id="nav-users" onclick="AdminManager.switchTab('users', event)"><i class="fas fa-users"></i> Usuarios</a>
-                <a href="#" id="nav-feria" onclick="AdminManager.switchTab('feria', event)"><i class="fas fa-store-slash"></i> Modo Feria</a>
+                <a href="#" id="nav-feria" style="display: none;" onclick="AdminManager.switchTab('feria', event)"><i class="fas fa-store-slash"></i> Modo Feria</a>
             </nav>
             <div class="sidebar-footer">
                 <a href="#" onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Salir</a>
@@ -205,39 +205,11 @@
                     </button>
                 </div>
 
-                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                    <div class="stat-card">
-                        <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.1);"><i class="fas fa-hand-holding-usd"></i></div>
-                        <div class="stat-info">
-                            <h3>Ventas Totales</h3>
-                            <p id="stat-revenue">₡0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="color: #e74c3c; background: rgba(231, 76, 60, 0.1);"><i class="fas fa-tags"></i></div>
-                        <div class="stat-info">
-                            <h3>Costo de Ventas (COGS)</h3>
-                            <p id="stat-cogs">₡0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card" style="border-color: rgba(46, 204, 113, 0.3);">
-                        <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.15);"><i class="fas fa-wallet"></i></div>
-                        <div class="stat-info">
-                            <h3>Utilidad Bruta</h3>
-                            <p id="stat-profit" style="color: #2ecc71;">₡0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-chart-pie"></i></div>
-                        <div class="stat-info">
-                            <h3>Margen Utilidad</h3>
-                            <p id="stat-margin">0%</p>
-                        </div>
-                    </div>
+                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
                     <div class="stat-card">
                         <div class="stat-icon" style="color: #3498db; background: rgba(52, 152, 219, 0.1);"><i class="fas fa-receipt"></i></div>
                         <div class="stat-info">
-                            <h3>Pedidos</h3>
+                            <h3>Comandas Despachadas</h3>
                             <p id="stat-orders-count">0</p>
                         </div>
                     </div>
@@ -248,6 +220,22 @@
                             <p id="stat-avg-ticket">₡0</p>
                         </div>
                     </div>
+                    <div class="stat-card" style="border-color: rgba(241, 196, 15, 0.3);">
+                        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.1);"><i class="fas fa-crown"></i></div>
+                        <div class="stat-info">
+                            <h3>Platillo Estrella</h3>
+                            <p id="stat-top-dish-name" style="font-size: 1.05rem; font-weight: 800; color: #f1c40f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">-</p>
+                            <span id="stat-top-dish-qty" style="font-size: 0.72rem; color: rgba(255,255,255,0.6);">0 pedidos</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(46, 204, 113, 0.3);">
+                        <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.1);"><i class="fas fa-layer-group"></i></div>
+                        <div class="stat-info">
+                            <h3>Categoría Líder</h3>
+                            <p id="stat-top-cat-name" style="font-size: 1.05rem; font-weight: 800; color: #2ecc71;">-</p>
+                            <span id="stat-top-cat-count" style="font-size: 0.72rem; color: rgba(255,255,255,0.6);">0 comandas</span>
+                        </div>
+                    </div>
                     <div class="stat-card" style="border-color: rgba(155, 89, 182, 0.2);">
                         <div class="stat-icon" style="color: #9b59b6; background: rgba(155, 89, 182, 0.1);"><i class="fas fa-user-tag"></i></div>
                         <div class="stat-info">
@@ -255,17 +243,10 @@
                             <p id="stat-dieta-bryan">₡0</p>
                         </div>
                     </div>
-                    <div class="stat-card" style="border-color: rgba(155, 89, 182, 0.2);">
-                        <div class="stat-icon" style="color: #9b59b6; background: rgba(155, 89, 182, 0.1);"><i class="fas fa-user-tag"></i></div>
-                        <div class="stat-info">
-                            <h3>Dieta Maic</h3>
-                            <p id="stat-dieta-maic">₡0</p>
-                        </div>
-                    </div>
                     <div class="stat-card" style="border-color: rgba(230, 126, 34, 0.2);">
                         <div class="stat-icon" style="color: #e67e22; background: rgba(230, 126, 34, 0.1);"><i class="fas fa-gift"></i></div>
                         <div class="stat-info">
-                            <h3>Regalías</h3>
+                            <h3>Regalías & Cortesías</h3>
                             <p id="stat-regalias">₡0</p>
                         </div>
                     </div>
@@ -273,17 +254,16 @@
 
                 <div class="charts-grid">
                     <div class="chart-card">
-                        <h3><i class="fas fa-hamburger"></i> Productos Más Vendidos</h3>
+                        <h3><i class="fas fa-hamburger"></i> Productos Más Vendidos (Top 5)</h3>
                         <div class="chart-container-canvas">
                             <canvas id="bestsellers-chart"></canvas>
                         </div>
                     </div>
                     <div class="chart-card">
-                        <h3><i class="fas fa-credit-card"></i> Métodos de Pago</h3>
+                        <h3><i class="fas fa-chart-pie"></i> Ventas por Categoría (Desayunos / Almuerzos / Snacks / Bebidas)</h3>
                         <div class="chart-container-canvas">
-                            <canvas id="payment-methods-chart"></canvas>
+                            <canvas id="category-chart"></canvas>
                         </div>
-                    </div>
                 </div>
 
                 <div class="reports-split">
@@ -458,17 +438,18 @@
                         <table class="inventory-table">
                             <thead>
                                 <tr>
-                                    <th>Platillo</th>
+                                    <th>Foto</th>
+                                    <th>Platillo & Ingredientes</th>
                                     <th>Categoría</th>
                                     <th>Precio Venta</th>
-                                    <th>Costo (Materia Prima)</th>
+                                    <th>Costo Insumos</th>
                                     <th>Margen Bruto</th>
-                                    <th>Food Cost %</th>
+                                    <th>Rentabilidad</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="volio-dishes-list">
-                                <tr><td colspan="7" style="text-align: center; padding: 20px; opacity: 0.6;">Cargando platillos...</td></tr>
+                                <tr><td colspan="8" style="text-align: center; padding: 20px; opacity: 0.6;">Cargando platillos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1032,7 +1013,7 @@
 
     <!-- MODAL NUEVO/EDITAR PLATILLO VOLIO -->
     <div id="volio-dish-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 550px;">
+        <div class="modal-content" style="max-width: 560px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
                 <h2 id="volio-dish-modal-title"><i class="fas fa-utensils"></i> Platillo Modo Volio</h2>
                 <button onclick="VolioManager.closeDishModal()" class="close-btn"><i class="fas fa-times"></i></button>
@@ -1040,11 +1021,11 @@
             <div class="modal-body">
                 <input type="hidden" id="volio-dish-id">
                 <div class="form-group">
-                    <label>Nombre del Platillo</label>
+                    <label>Nombre del Producto / Platillo</label>
                     <input type="text" id="volio-dish-name" placeholder="Ej: Casado Volio con Pollo Mechado">
                 </div>
                 <div class="form-group">
-                    <label>Categoría</label>
+                    <label>Categoría del Menú</label>
                     <select id="volio-dish-category">
                         <option value="desayuno">🍳 Desayuno</option>
                         <option value="almuerzo">🍲 Almuerzo</option>
@@ -1053,12 +1034,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Descripción / Acompañamientos</label>
-                    <input type="text" id="volio-dish-desc" placeholder="Ej: Arroz, frijoles, plátano maduro, ensalada y picadillo">
+                    <label style="color: var(--mostaza); font-weight: 700;"><i class="fas fa-mortar-pestle"></i> Ingredientes de la Receta</label>
+                    <textarea id="volio-dish-ingredients" rows="2" placeholder="Ej: Arroz, frijoles negros, huevo frito, queso tierno, natilla, plátano maduro" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 8px; color: white; padding: 8px; font-family: inherit; font-size: 0.85rem; resize: vertical;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Descripción / Acompañamientos para el Cliente</label>
+                    <input type="text" id="volio-dish-desc" placeholder="Ej: Servido caliente con ensalada del día y salsas caseras">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
-                        <label>Precio de Venta al Cliente (₡)</label>
+                        <label>Precio de Venta al Público (₡)</label>
                         <input type="number" id="volio-dish-price" oninput="VolioManager.calcCostMetrics()" placeholder="Ej: 3500">
                     </div>
                     <div class="form-group">
@@ -1073,13 +1058,33 @@
                     <span>Food Cost: <strong id="preview-food-cost" style="color: #f1c40f;">0%</strong></span>
                 </div>
                 <div class="form-group" style="margin-top: 15px;">
-                    <label>Ruta de Imagen (Opcional)</label>
-                    <input type="text" id="volio-dish-img" placeholder="images-catalogo/Señor Pinto.jpeg">
+                    <label style="display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-image"></i> Foto del Producto</span>
+                        <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">Selecciona o escribe la ruta</span>
+                    </label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <img id="volio-dish-img-preview" src="images-catalogo/Señor Pinto.jpeg" style="width: 48px; height: 48px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;" alt="Preview" onerror="this.src='logo-brand/PNG/Icono Mostaza.png'">
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                            <select id="volio-dish-img-select" onchange="document.getElementById('volio-dish-img').value = this.value; VolioManager.updateImgPreview();" class="report-select" style="padding: 6px 10px; font-size: 0.8rem;">
+                                <option value="">-- Seleccionar imagen del catálogo --</option>
+                                <option value="images-catalogo/Señor Pinto.jpeg">Señor Pinto (Gallo Pinto Tradicional)</option>
+                                <option value="images-catalogo/BurrotedePinto.jpg">Burrote de Pinto</option>
+                                <option value="images-catalogo/Sr. Patacón.jpeg">Sr. Patacón</option>
+                                <option value="images-catalogo/Sra. Empanada Arreglada .jpeg">Sra. Empanada Arreglada</option>
+                                <option value="images-catalogo/Hamburguesa.jpeg">Hamburguesa de la Casa</option>
+                                <option value="images-catalogo/Sr. Cono de SalchiPapas.jpeg">Cono de Salchipapas</option>
+                                <option value="images-catalogo/12onzas.jpg">Café Chorreado</option>
+                                <option value="images-catalogo/hidratantes.jpg">Fresco Natural / Bebida</option>
+                                <option value="images-catalogo/promo_quesopinto.jpg">Queso Pinto Especial</option>
+                            </select>
+                            <input type="text" id="volio-dish-img" oninput="VolioManager.updateImgPreview()" placeholder="images-catalogo/Señor Pinto.jpeg o URL web" style="font-size: 0.8rem; padding: 6px 10px;">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="VolioManager.closeDishModal()">Cancelar</button>
-                <button class="btn-primary" id="btn-save-volio-dish" onclick="VolioManager.saveDish()">Guardar Platillo</button>
+                <button class="btn-primary" id="btn-save-volio-dish" onclick="VolioManager.saveDish()"><i class="fas fa-save"></i> Guardar Producto</button>
             </div>
         </div>
     </div>
@@ -1139,39 +1144,43 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Notas / Detalle de Insumos (Opcional)</label>
-                    <input type="text" id="fin-purchase-notes" placeholder="Ej: 10kg queso semiduro, 2 cajas manteca, servilletas">
+                    <label style="color: var(--mostaza); font-weight: 700;"><i class="fas fa-comment-dots"></i> ¿A qué corresponde este gasto? / Justificación y Notas</label>
+                    <input type="text" id="fin-purchase-notes" placeholder="Ej: Insumos de carne mechada, bolsas para delivery, recibo de luz del local, etc." style="border-color: rgba(241, 196, 15, 0.4); padding: 9px 12px;">
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="FinancesManager.closeAddPurchaseModal()">Cancelar</button>
-                <button class="btn-primary" id="btn-save-purchase" onclick="FinancesManager.savePurchase()">Guardar Compra</button>
+                <button class="btn-primary" id="btn-save-purchase" onclick="FinancesManager.savePurchase()"><i class="fas fa-save"></i> Guardar Compra</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL NUEVA OBLIGACIÓN LEGAL / TRIBUTARIA -->
+    <!-- MODAL NUEVA/EDITAR OBLIGACIÓN LEGAL O SERVICIO (LUZ, AGUA, CCSS, ETC) -->
     <div id="finance-legal-modal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 520px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
-                <h2><i class="fas fa-bell" style="color: #e67e22;"></i> Nueva Obligación / Recordatorio</h2>
+                <h2 id="finance-legal-modal-title"><i class="fas fa-bell" style="color: #e67e22;"></i> Recordatorio de Pago / Servicio</h2>
                 <button onclick="FinancesManager.closeLegalModal()" class="close-btn"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
+                <input type="hidden" id="fin-legal-id">
                 <div class="form-group">
-                    <label>Tipo de Obligación</label>
-                    <select id="fin-legal-type">
+                    <label>Tipo de Obligación o Servicio</label>
+                    <select id="fin-legal-type" onchange="FinancesManager.handleLegalTypeChange()">
+                        <option value="Luz">💡 Recibo de Luz Eléctrica (CNFL / ICE)</option>
+                        <option value="Agua">💧 Recibo de Agua Potable (AyA / ESPH)</option>
                         <option value="CCSS">🏥 CCSS (Caja - Planilla Mensual)</option>
                         <option value="INS">🛡️ Póliza de Riesgos de Trabajo (INS)</option>
                         <option value="Patente">🏛️ Patente Municipal (Trimestral)</option>
                         <option value="Hacienda D-105">📋 Hacienda D-105 (Régimen Simplificado)</option>
-                        <option value="Permiso Salud">🩺 Permiso Sanitario de Funcionamiento</option>
-                        <option value="Otro">📌 Otro Compromiso</option>
+                        <option value="Alquiler">🏠 Alquiler de Local / Cocina</option>
+                        <option value="Internet">📶 Internet / Telefonía</option>
+                        <option value="Otro">📌 Otro Compromiso / Gasto Fijo</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Descripción</label>
-                    <input type="text" id="fin-legal-title" placeholder="Ej: Pago cuota CCSS mes en curso">
+                    <label>Descripción / Proveedor del Servicio</label>
+                    <input type="text" id="fin-legal-title" placeholder="Ej: Recibo de Luz Eléctrica - Local Principal">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
@@ -1179,14 +1188,31 @@
                         <input type="date" id="fin-legal-duedate">
                     </div>
                     <div class="form-group">
+                        <label>Recurrencia del Pago</label>
+                        <select id="fin-legal-recurrence" class="report-select" style="width: 100%; padding: 8px;">
+                            <option value="dia_15">Día 15 de cada mes (Luz)</option>
+                            <option value="mensual">Mensual (Fin de mes)</option>
+                            <option value="trimestral">Trimestral (Mar, Jun, Set, Dic)</option>
+                            <option value="semestral">Semestral</option>
+                            <option value="anual">Anual</option>
+                            <option value="unica">Fecha fija única</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 15px;">
+                    <div class="form-group">
                         <label>Monto Estimado (₡)</label>
                         <input type="number" id="fin-legal-amount" placeholder="Ej: 35000">
+                    </div>
+                    <div class="form-group">
+                        <label>N° NIS / Medidor / Contrato</label>
+                        <input type="text" id="fin-legal-notes" placeholder="Ej: NIS 2345678 / Pago web BN">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="FinancesManager.closeLegalModal()">Cancelar</button>
-                <button class="btn-primary" id="btn-save-legal" onclick="FinancesManager.saveLegalObligation()">Guardar Recordatorio</button>
+                <button class="btn-primary" id="btn-save-legal" onclick="FinancesManager.saveLegalObligation()"><i class="fas fa-save"></i> Guardar Recordatorio</button>
             </div>
         </div>
     </div>
@@ -1389,7 +1415,7 @@
     <script src="js/firebase-init.js"></script>
     
     <!-- ADMIN JS -->
-    <script src="js/admin.js"></script>
+    <script src="js/admin.js?v=2.1"></script>
 
 </body>
 </html>
