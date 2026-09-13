@@ -3637,6 +3637,207 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
 
+        getFilteredPurchasesList() {
+            const period = document.getElementById('fin-period-select')?.value || 'trimestre_actual';
+            const now = new Date();
+            let startDate = new Date();
+            let endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+            let filterActive = true;
+
+            if (period === 'hoy') {
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'semana_actual') {
+                const day = now.getDay() || 7;
+                startDate.setDate(now.getDate() - day + 1);
+                startDate.setHours(0, 0, 0, 0);
+            } else if (period === 'mes_actual') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+            } else if (period === 'trimestre_actual') {
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                startDate = new Date(now.getFullYear(), currentQuarter * 3, 1, 0, 0, 0);
+            } else {
+                filterActive = false;
+            }
+
+            return this.purchases.filter(p => {
+                if (!filterActive) return true;
+                const pDate = new Date(p.fecha + 'T12:00:00');
+                return pDate >= startDate && pDate <= endDate;
+            }).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+        },
+
+        exportPurchasesPDF() {
+            const list = this.getFilteredPurchasesList();
+            if (list.length === 0) {
+                alert("No hay facturas de compra registradas en el período seleccionado para generar el Libro de Compras.");
+                return;
+            }
+
+            const periodText = document.getElementById('fin-period-select')?.selectedOptions[0]?.text || 'Período Seleccionado';
+            const totalGeneral = list.reduce((sum, p) => sum + (p.total || 0), 0);
+            const computables = list.filter(p => p.aplicaHacienda !== false);
+            const totalComputable = computables.reduce((sum, p) => sum + (p.total || 0), 0);
+            const totalNoComputable = totalGeneral - totalComputable;
+            const ivaEstimado = Math.round(totalComputable * 0.10 * 0.13);
+            const rentaEstimada = Math.round(totalComputable * 0.10 * 0.10);
+
+            const rowsHtml = list.map((p, index) => {
+                const aplica = p.aplicaHacienda !== false;
+                return `
+                    <tr style="background: ${index % 2 === 0 ? '#ffffff' : '#fcfcfc'};">
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; text-align: center; font-size: 10px;">${index + 1}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; font-size: 10px; font-weight: bold; white-space: nowrap;">${p.fecha}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; font-size: 10px;">
+                            <strong>${this.sanitize(p.proveedor)}</strong>
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; font-size: 10px; font-family: monospace; color: #7f8c8d;">${this.sanitize(p.factura || 'S/N')}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; font-size: 10px;">${this.sanitize(p.categoria)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; font-size: 10px; color: #555;">${this.sanitize(p.notas || 'Gasto de insumos / operación')}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; text-align: center; font-size: 10px; font-weight: bold; color: ${aplica ? '#27ae60' : '#888'};">
+                            ${aplica ? 'SÍ (D-105)' : 'NO (Interno)'}
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 6px 8px; text-align: right; font-size: 10px; font-weight: bold; color: #2c3e50;">₡${(p.total || 0).toLocaleString()}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const printContent = `
+                <div style="font-family: Arial, sans-serif; color: #222; padding: 15px; line-height: 1.4;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #800020; padding-bottom: 12px; margin-bottom: 15px;">
+                        <div>
+                            <h1 style="color: #800020; margin: 0; font-size: 20px; text-transform: uppercase; letter-spacing: 0.5px;">Sr. & Sra. Pinto</h1>
+                            <div style="font-size: 11px; color: #666; margin-top: 2px;">El Sabor de ser Tico • Servicios de Alimentación</div>
+                            <div style="font-size: 13px; font-weight: bold; margin-top: 6px; color: #111;">LIBRO OFICIAL DE COMPRAS E INSUMOS</div>
+                            <div style="font-size: 11px; color: #444;">Actividad Económica 5610.0 • Régimen de Tributación Simplificada (Tribu CR)</div>
+                        </div>
+                        <div style="text-align: right; font-size: 11px; color: #444;">
+                            <div><strong>Período:</strong> ${periodText}</div>
+                            <div><strong>Fecha de Emisión:</strong> ${new Date().toLocaleString('es-CR')}</div>
+                            <div><strong>Total de Comprobantes:</strong> ${list.length}</div>
+                            <div style="margin-top: 4px;"><span style="background: #e8f8f5; color: #27ae60; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #27ae60;">REGISTRO AL DÍA</span></div>
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 18px;">
+                        <thead>
+                            <tr style="background: #800020; color: white; font-size: 10px; text-transform: uppercase;">
+                                <th style="border: 1px solid #800020; padding: 6px 8px; width: 25px; text-align: center;">#</th>
+                                <th style="border: 1px solid #800020; padding: 6px 8px; width: 75px; text-align: left;">Fecha</th>
+                                <th style="border: 1px solid #800020; padding: 6px 8px; text-align: left;">Proveedor / Razón Social</th>
+                                <th style="border: 1px solid #800020; padding: 6px 8px; text-align: left;">Factura / Clave Electrónica</th>
+                                <th style="border: 1px solid #800020; padding: 6px 8px; text-align: left;">Categoría</th>
+                                <th style="border: 1px solid #800020; padding: 6px 8px; text-align: left;">Concepto / Justificación</th>
+                                <th style="border: 1px solid #800020; padding: 6px 8px; width: 85px; text-align: center;">Aplica D-105</th>
+                                <th style="border: 1px solid #800020; padding: 6px 8px; width: 95px; text-align: right;">Monto Total (₡)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div style="flex: 1; background: #f4fbf6; border: 1px solid #c3e6cb; border-radius: 6px; padding: 12px; font-size: 11px;">
+                            <strong style="color: #155724; display: block; margin-bottom: 8px; font-size: 12px;">LIQUIDACIÓN TRIBUTARIA TRIBU CR (D-105)</strong>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Total Compras Computables (Casilla 101):</span>
+                                <strong>₡${totalComputable.toLocaleString()}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Impuesto IVA Determinado (1.30% s/compras):</span>
+                                <strong style="color: #2980b9;">₡${ivaEstimado.toLocaleString()}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Impuesto Renta Determinado (1.00% s/compras):</span>
+                                <strong style="color: #d35400;">₡${rentaEstimada.toLocaleString()}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-top: 1px solid #b1dfbb; padding-top: 5px; margin-top: 5px; font-size: 12px;">
+                                <span>Total a Pagar en Conectividad Bancaria:</span>
+                                <strong style="color: #27ae60; font-size: 13px;">₡${(ivaEstimado + rentaEstimada).toLocaleString()}</strong>
+                            </div>
+                        </div>
+
+                        <div style="flex: 1; background: #fdfefe; border: 1px solid #e2e3e5; border-radius: 6px; padding: 12px; font-size: 11px;">
+                            <strong style="color: #383d41; display: block; margin-bottom: 8px; font-size: 12px;">RESUMEN Y CONTROL DE TOPE ANUAL</strong>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Total General de Facturas Registradas:</span>
+                                <strong>₡${totalGeneral.toLocaleString()}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Compras con Respaldo Tributario:</span>
+                                <span>₡${totalComputable.toLocaleString()}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Gastos Operativos Solo Internos:</span>
+                                <span>₡${totalNoComputable.toLocaleString()}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-top: 1px solid #e2e3e5; padding-top: 5px; margin-top: 5px;">
+                                <span>Tope Anual Régimen Simplificado (186 SB):</span>
+                                <strong style="color: #2c3e50;">~₡85,969,200</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 8.5px; color: #777; border-top: 1px solid #ddd; padding-top: 8px; text-align: justify; line-height: 1.3;">
+                        Certificación y Respaldo: El presente Libro de Compras Digital constituye el registro formal cronológico exigido por la Dirección General de Tributación (Ministerio de Hacienda de Costa Rica) para contribuyentes bajo el Régimen de Tributación Simplificada, Código de Actividad 5610.0 (Servicios de comidas y bebidas), amparado en los Artículos 22 y 27 del Reglamento a la Ley del Impuesto sobre el Valor Agregado y el Artículo 88 del Código de Normas y Procedimientos Tributarios.
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: [6, 6, 6, 6],
+                filename: `Libro_de_Compras_Sr_Sra_Pinto_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            if (window.html2pdf) {
+                window.html2pdf().set(opt).from(printContent).save();
+            } else {
+                const win = window.open('', '_blank');
+                win.document.write(printContent);
+                win.document.close();
+                win.print();
+            }
+        },
+
+        exportPurchasesCSV() {
+            const list = this.getFilteredPurchasesList();
+            if (list.length === 0) {
+                alert("No hay facturas para exportar en el período seleccionado.");
+                return;
+            }
+
+            let csv = "\uFEFF"; // BOM para acentos en Excel
+            csv += "Consecutivo,Fecha,Proveedor,Factura / Clave,Categoria,Concepto / Justificacion,Aplica D-105,Monto Total (CRC)\n";
+
+            list.forEach((p, idx) => {
+                const escapeCsv = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+                const aplica = p.aplicaHacienda !== false ? 'SI' : 'NO';
+                csv += [
+                    idx + 1,
+                    escapeCsv(p.fecha),
+                    escapeCsv(p.proveedor),
+                    escapeCsv(p.factura),
+                    escapeCsv(p.categoria),
+                    escapeCsv(p.notas),
+                    aplica,
+                    p.total || 0
+                ].join(",") + "\n";
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Libro_de_Compras_Sr_Sra_Pinto_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        },
+
         // ==========================================
         // MÓDULO DE SALARIOS Y NÓMINA SEMANAL
         // ==========================================
