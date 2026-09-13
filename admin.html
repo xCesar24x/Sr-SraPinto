@@ -423,9 +423,6 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                         <h2 style="font-size: 1.15rem; color: var(--mostaza);"><i class="fas fa-book-open" style="color: #f1c40f; margin-right: 8px;"></i> Catálogo Maestro & Costeo Unitario (F&B)</h2>
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <button class="btn-primary" onclick="VolioManager.importAllCatalogDishes(true)" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(241, 196, 15, 0.15); border: 1px solid #f1c40f; color: #f1c40f; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border-radius: 6px;">
-                                <i class="fas fa-cloud-download-alt"></i> Traer Todos los Productos de Feria
-                            </button>
                             <input type="text" id="volio-search-dish" oninput="VolioManager.renderDishesTable()" placeholder="Buscar platillo..." style="background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem;">
                             <select id="volio-filter-cat" onchange="VolioManager.renderDishesTable()" class="report-select" style="padding: 6px 10px; font-size: 0.85rem;">
                                 <option value="todas">Todas las Categorías</option>
