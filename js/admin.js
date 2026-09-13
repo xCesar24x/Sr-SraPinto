@@ -1875,25 +1875,312 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         async seedInitialDishes() {
+            await this.importAllCatalogDishes(false);
+        },
+
+        async importAllCatalogDishes(interactive = true) {
+            if (interactive && !confirm("¿Deseas importar y sincronizar todos los productos del menú y combos de Modo Feria al Catálogo Maestro?")) return;
             const db = window.FirebaseDB;
-            const batch = db.batch();
-            const initial = [
-                { id: 'v-pinto-clasico', nombre: 'Gallo Pinto Tradicional Volio', categoria: 'desayuno', desc: 'Con huevo, queso frito, maduro y natilla', precio: 3000, costo: 950, img: 'images-catalogo/Señor Pinto.jpeg' },
-                { id: 'v-burrote-volio', nombre: 'Burrote Mañanero Volio', categoria: 'desayuno', desc: 'Tortilla de harina con pinto, queso y huevo', precio: 3500, costo: 1100, img: 'images-catalogo/BurrotedePinto.jpg' },
-                { id: 'v-casado-carne', nombre: 'Casado con Carne Mechada en Salsa', categoria: 'almuerzo', desc: 'Arroz, frijoles, ensalada rusa, maduro y picadillo de papa', precio: 4000, costo: 1400, img: 'images-catalogo/Señor Pinto.jpeg' },
-                { id: 'v-casado-pollo', nombre: 'Casado con Pollo Caribeño', categoria: 'almuerzo', desc: 'Arroz, frijoles, plátano maduro, ensalada verde y picadillo', precio: 4000, costo: 1300, img: 'images-catalogo/Señor Pinto.jpeg' },
-                { id: 'v-casado-chuleta', nombre: 'Casado con Chuleta Ahumada', categoria: 'almuerzo', desc: 'Arroz, frijoles, maduros, ensalada y picadillo', precio: 4200, costo: 1550, img: 'images-catalogo/Señor Pinto.jpeg' },
-                { id: 'v-empanada-volio', nombre: 'Empanada Arreglada Volio', categoria: 'snacks', desc: 'Empanada crujiente con ensalada y salsas de la casa', precio: 2500, costo: 850, img: 'images-catalogo/Sra. Empanada Arreglada .jpeg' },
-                { id: 'v-patacon-volio', nombre: 'Orden de Patacones con Molidos', categoria: 'snacks', desc: 'Patacones crujientes con frijoles molidos y queso', precio: 3000, costo: 900, img: 'images-catalogo/Sr. Patacón.jpeg' },
-                { id: 'v-cafe-volio', nombre: 'Café Chorreado Especial', categoria: 'bebidas', desc: 'Café de especialidad tico', precio: 1000, costo: 250, img: 'images-catalogo/12onzas.jpg' },
-                { id: 'v-fresco-natural', nombre: 'Fresco Natural del Día (16oz)', categoria: 'bebidas', desc: 'Frutas de temporada (Cas, Maracuyá, Guanábana)', precio: 1500, costo: 350, img: 'images-catalogo/hidratantes.jpg' }
+            if (!db) return;
+
+            const allProducts = [
+                // 🍳 PINTOS & DESAYUNOS
+                {
+                    id: 'p-senor-pinto',
+                    nombre: 'Señor Pinto',
+                    categoria: 'desayuno',
+                    desc: 'Tradicional gallo pinto con queso frito, huevo frito y maduros.',
+                    ingredientes: 'Arroz y frijoles (pinto), queso frito, 1 huevo frito, plátano maduro, natilla casera',
+                    precio: 3500,
+                    costo: 1100,
+                    img: 'images-catalogo/Señor Pinto.jpeg'
+                },
+                {
+                    id: 'c-senor-pinto-cafe',
+                    nombre: 'Combo: Señor Pinto + Café',
+                    categoria: 'desayuno',
+                    desc: 'Señor Pinto tradicional completo con Café Premium Grande (12oz).',
+                    ingredientes: 'Pinto, queso frito, huevo frito, plátano maduro + café chorreado 12oz',
+                    precio: 4000,
+                    costo: 1350,
+                    img: 'images-catalogo/señorpintocombo.jpeg'
+                },
+                {
+                    id: 'p-burrote',
+                    nombre: 'Burrote de Pinto',
+                    categoria: 'desayuno',
+                    desc: 'Delicioso gallo pinto con queso, huevo y natilla en tortilla de harina.',
+                    ingredientes: 'Tortilla de harina grande, gallo pinto, queso tierno, huevo revuelto, natilla',
+                    precio: 3000,
+                    costo: 950,
+                    img: 'images-catalogo/BurrotedePinto.jpg'
+                },
+                {
+                    id: 'c-burrote-cafe',
+                    nombre: 'Combo: Burrote de Pinto + Café',
+                    categoria: 'desayuno',
+                    desc: 'Burrote de pinto con queso, huevo y natilla + Café Premium Grande.',
+                    ingredientes: 'Tortilla de harina, pinto, queso, huevo, natilla + café chorreado 12oz',
+                    precio: 3500,
+                    costo: 1200,
+                    img: 'images-catalogo/BurrotedePintocafe.jpg'
+                },
+                {
+                    id: 'p-queso-pinto',
+                    nombre: 'Queso Pinto',
+                    categoria: 'desayuno',
+                    desc: 'Delicioso gallo pinto con abundante queso tierno y frito.',
+                    ingredientes: 'Gallo pinto, doble porción de queso frito y queso tierno artesanal',
+                    precio: 3500,
+                    costo: 1100,
+                    img: 'images-catalogo/Quesopinto.jpeg'
+                },
+                {
+                    id: 'c-queso-pinto-cafe',
+                    nombre: 'Combo: Queso Pinto + Café',
+                    categoria: 'desayuno',
+                    desc: 'Gallo pinto con abundante queso acompañado de Café Premium.',
+                    ingredientes: 'Gallo pinto, doble queso frito + café 12oz',
+                    precio: 4000,
+                    costo: 1350,
+                    img: 'images-catalogo/promo_quesopinto.jpg'
+                },
+
+                // 🥩 ALMUERZOS
+                {
+                    id: 'p-sra-empanada-m1',
+                    nombre: 'Sra. Empanada Arreglada',
+                    categoria: 'almuerzo',
+                    desc: 'Empanada de maíz con ensalada fresca de repollo, carne mechada y salsas.',
+                    ingredientes: 'Masa de maíz, carne mechada, ensalada fresca de repollo, tomate, salsas caseras',
+                    precio: 3500,
+                    costo: 1150,
+                    img: 'images-catalogo/Sra. Empanada Arreglada .jpeg'
+                },
+                {
+                    id: 'p-sr-patacon',
+                    nombre: 'Sr. Patacón',
+                    categoria: 'almuerzo',
+                    desc: 'Patacones crujientes con frijoles molidos especiales y queso rallado.',
+                    ingredientes: 'Plátano verde frito, frijoles molidos arreglados, queso blanco rallado',
+                    precio: 4000,
+                    costo: 1300,
+                    img: 'images-catalogo/Sr. Patacón.jpeg'
+                },
+                {
+                    id: 'p-patacon-caribeno',
+                    nombre: 'Patacón Caribeño',
+                    categoria: 'almuerzo',
+                    desc: 'Patacones estilo caribeño con frijoles, carne mechada, queso fundido y pico de gallo.',
+                    ingredientes: 'Plátano verde, frijoles caribeños, carne mechada, queso fundido, pico de gallo casero',
+                    precio: 4000,
+                    costo: 1350,
+                    img: 'images-catalogo/pataconcaribeño.jpeg'
+                },
+                {
+                    id: 'p-sra-quesadilla',
+                    nombre: 'Sra. Quesadilla',
+                    categoria: 'almuerzo',
+                    desc: 'Tortilla de harina dorada a la plancha con queso fundido y carne mechada.',
+                    ingredientes: 'Tortilla de harina grande, queso mozzarella fundido, carne mechada sazonada, natilla',
+                    precio: 4000,
+                    costo: 1300,
+                    img: 'images-catalogo/Sra. Quesadilla.jpeg'
+                },
+                {
+                    id: 'p-sra-hamburguesa',
+                    nombre: 'Sra. Hamburguesa con Papas',
+                    categoria: 'almuerzo',
+                    desc: 'Hamburguesa casera con torta artesanal, vegetales frescos y papas fritas.',
+                    ingredientes: 'Pan artesanal, torta de carne de res, queso, tomate, lechuga, papas fritas',
+                    precio: 5000,
+                    costo: 1650,
+                    img: 'images-catalogo/Sra. Hamburguesa con Papas.jpeg'
+                },
+                {
+                    id: 'ce-hamburguesa-jr-fresco',
+                    nombre: 'Combo: Hamburguesa Jr + Té Frío',
+                    categoria: 'almuerzo',
+                    desc: 'Hamburguesa Junior clásica con papas y té frío refrescante.',
+                    ingredientes: 'Pan hamburguesa, torta de res, vegetales, papas fritas + vaso de té frío',
+                    precio: 2500,
+                    costo: 900,
+                    img: 'images-catalogo/Hamburguesajr.jpeg'
+                },
+                {
+                    id: 'p-sr-papi-carne',
+                    nombre: 'Sr. Papi Carne',
+                    categoria: 'almuerzo',
+                    desc: 'Generosa porción de papas fritas con carne mechada al estilo de la casa.',
+                    ingredientes: 'Papas fritas crujientes, carne mechada sazonada, queso rallado y salsas',
+                    precio: 3500,
+                    costo: 1200,
+                    img: 'images-catalogo/Srpapicarne.jpeg'
+                },
+
+                // 🥟 SNACKS & ANTOJOS
+                {
+                    id: 'p-cono-salchipapa',
+                    nombre: 'Sr. Cono de SalchiPapas',
+                    categoria: 'snacks',
+                    desc: 'Papas fritas crujientes con salchicha y salsas de la casa.',
+                    ingredientes: 'Papas fritas, salchicha en rodajas, aderezos de la casa, queso',
+                    precio: 3000,
+                    costo: 950,
+                    img: 'images-catalogo/Sr. Cono de SalchiPapas.jpeg'
+                },
+                {
+                    id: 'ce-salchipapa-fresco',
+                    nombre: 'Combo: Salchipapas + Té Frío',
+                    categoria: 'snacks',
+                    desc: 'Cono de salchipapas acompañado de un delicioso té frío.',
+                    ingredientes: 'Papas fritas, salchichas tostadas, aderezos + té frío',
+                    precio: 2500,
+                    costo: 850,
+                    img: 'images-catalogo/Sr. Cono de SalchiPapas.jpeg'
+                },
+                {
+                    id: 'ce-hotdog-fresco',
+                    nombre: 'Combo: Hot Dog + Té Frío',
+                    categoria: 'snacks',
+                    desc: 'Clásico hot dog con salchicha grande, papas tostadas y té frío.',
+                    ingredientes: 'Pan de hot dog, salchicha jumbo, papas tostadas, salsas + té frío',
+                    precio: 2000,
+                    costo: 650,
+                    img: 'images-catalogo/hotdog.jpeg'
+                },
+                {
+                    id: 'p-empanada-pinto',
+                    nombre: 'Empanada de Pinto',
+                    categoria: 'snacks',
+                    desc: 'Crujiente empanada rellena de gallo pinto tradicional.',
+                    ingredientes: 'Masa de maíz sazonada, relleno de gallo pinto artesanal',
+                    precio: 2500,
+                    costo: 750,
+                    img: 'images-catalogo/empanadas.jpeg'
+                },
+                {
+                    id: 'p-empanada-carne',
+                    nombre: 'Empanada de Carne',
+                    categoria: 'snacks',
+                    desc: 'Empanada artesanal crujiente rellena de carne mechada sazonada.',
+                    ingredientes: 'Masa de maíz, carne mechada de res sazonada con olores naturales',
+                    precio: 2500,
+                    costo: 800,
+                    img: 'images-catalogo/empanadas.jpeg'
+                },
+                {
+                    id: 'p-empanada-queso',
+                    nombre: 'Empanada de Queso Mozzarella',
+                    categoria: 'snacks',
+                    desc: 'Empanada rellena de abundante queso mozzarella derretido.',
+                    ingredientes: 'Masa de maíz, queso mozzarella rallado',
+                    precio: 2500,
+                    costo: 800,
+                    img: 'images-catalogo/empanadas.jpeg'
+                },
+                {
+                    id: 'p-empanada-carne-queso',
+                    nombre: 'Empanada de Carne y Queso',
+                    categoria: 'snacks',
+                    desc: 'Empanada mixta con carne mechada y queso mozzarella derretido.',
+                    ingredientes: 'Masa de maíz, carne mechada, queso mozzarella',
+                    precio: 2500,
+                    costo: 850,
+                    img: 'images-catalogo/empanadas.jpeg'
+                },
+                {
+                    id: 'c-empanada-cafe',
+                    nombre: 'Combo: Empanada + Café',
+                    categoria: 'snacks',
+                    desc: 'Empanada crujiente a elegir con Café Premium Grande.',
+                    ingredientes: 'Empanada a elegir + café chorreado 12oz',
+                    precio: 3000,
+                    costo: 1050,
+                    img: 'images-catalogo/empanadas.jpeg'
+                },
+                {
+                    id: 'ce-empanada-fresco',
+                    nombre: 'Combo: Empanada + Té Frío',
+                    categoria: 'snacks',
+                    desc: 'Empanada recién frita a elección acompañada de un refrescante té frío.',
+                    ingredientes: 'Empanada a elección + té frío',
+                    precio: 2000,
+                    costo: 650,
+                    img: 'images-catalogo/empanadas.jpeg'
+                },
+
+                // ☕ BEBIDAS
+                {
+                    id: 'b-cafe-premium',
+                    nombre: 'Café Premium Grande (12 onzas)',
+                    categoria: 'bebidas',
+                    desc: 'Café chorreado de tueste medio costarricense en vaso de 12 oz.',
+                    ingredientes: 'Café molido de altura costarricense, agua caliente',
+                    precio: 1000,
+                    costo: 250,
+                    img: 'images-catalogo/12onzas.jpg'
+                },
+                {
+                    id: 'b-cafe-8oz',
+                    nombre: 'Café (8 onzas)',
+                    categoria: 'bebidas',
+                    desc: 'Café de calidad premium en presentación tradicional de 8 onzas.',
+                    ingredientes: 'Café costarricense, agua caliente',
+                    precio: 1000,
+                    costo: 200,
+                    img: 'images-catalogo/12onzas.jpg'
+                },
+                {
+                    id: 'b-agua',
+                    nombre: 'Agua Embotellada',
+                    categoria: 'bebidas',
+                    desc: 'Botella de agua purificada fresca de 600ml.',
+                    ingredientes: 'Agua pura sellada',
+                    precio: 1000,
+                    costo: 350,
+                    img: 'images-catalogo/agua.jpg'
+                },
+                {
+                    id: 'b-gaseosas',
+                    nombre: 'Gaseosas',
+                    categoria: 'bebidas',
+                    desc: 'Refrescantes gaseosas bien frías (Coca Cola, Fresca, Fanta, Gingerale).',
+                    ingredientes: 'Lata / botella de refresco gaseoso',
+                    precio: 1200,
+                    costo: 600,
+                    img: 'images-catalogo/gaseosas.jpg'
+                },
+                {
+                    id: 'b-hidratante',
+                    nombre: 'Bebidas Hidratantes',
+                    categoria: 'bebidas',
+                    desc: 'Para recuperar energías y mantenerte hidratado.',
+                    ingredientes: 'Botella de electrolitos sellada',
+                    precio: 1300,
+                    costo: 650,
+                    img: 'images-catalogo/hidratantes.jpg'
+                }
             ];
 
-            initial.forEach(p => {
-                const ref = db.collection('volio_platillos').doc(p.id);
-                batch.set(ref, p);
-            });
-            await batch.commit();
+            try {
+                const batch = db.batch();
+                allProducts.forEach(p => {
+                    const ref = db.collection('volio_platillos').doc(p.id);
+                    batch.set(ref, {
+                        ...p,
+                        actualizadoEn: new Date().toISOString()
+                    }, { merge: true });
+                });
+                await batch.commit();
+
+                if (interactive) {
+                    alert(`✅ Se importaron y sincronizaron ${allProducts.length} productos y combos al Catálogo Maestro.`);
+                }
+            } catch (err) {
+                console.error("Error al importar productos al catálogo:", err);
+                if (interactive) alert("Hubo un error al sincronizar los productos.");
+            }
         },
 
         updateModeUI() {
