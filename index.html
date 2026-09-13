@@ -648,68 +648,174 @@
         }
         .carousel-slide.active .hero-overlay { transform: translateY(0); opacity: 1; }
 
-        /* 4 BUTTONS GRID */
-        .hub-buttons-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .hub-btn {
-            display: flex; align-items: center; gap: 15px; padding: 20px; border-radius: 15px;
-            text-decoration: none; color: white; border: none; text-align: left; cursor: pointer;
-            transition: transform 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-family: 'Gotham', 'Montserrat', sans-serif;
+        /* HUB BUTTONS: HERO MENU & COMPACT SECONDARY BUTTONS */
+        .hub-buttons-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
         }
-        .hub-btn:hover { transform: translateY(-3px); }
-        .hub-btn i { font-size: 2rem; }
-        .btn-text { display: flex; flex-direction: column; }
-        .btn-text strong { font-size: 1rem; font-weight: 900; text-transform: uppercase; }
-        .btn-text span { font-size: 0.75rem; opacity: 0.8; font-weight: 600; }
 
-        .btn-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
-        .btn-menu { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #2B0A11; }
-        .btn-menu .btn-text span { color: #2B0A11; }
-        .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
-        .btn-facebook { background: linear-gradient(135deg, #1877F2, #145dbf); }
-
-        .btn-eventos {
+        /* HERO: VER MENÚ SR & SRA PINTO */
+        .btn-menu-hero {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 24px 28px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #f1c40f 0%, #f39c12 50%, #e67e22 100%);
+            color: #2B0A11;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(241, 196, 15, 0.45), 0 3px 10px rgba(0,0,0,0.3);
+            font-family: 'Gotham', 'Montserrat', sans-serif;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-sizing: border-box;
+            position: relative;
+            animation: heroPulseGlow 3s infinite alternate;
+        }
+        .btn-menu-hero:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 16px 45px rgba(241, 196, 15, 0.65);
+        }
+        .hero-left-col {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            text-align: left;
+        }
+        .hero-menu-icon {
+            font-size: 2.5rem;
+            color: #2B0A11;
+            background: rgba(255, 255, 255, 0.3);
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            padding: 14px 28px;
-            border-radius: 50px;
-            text-decoration: none;
-            color: #2B0A11;
-            font-family: 'Gotham', 'Montserrat', sans-serif;
-            font-weight: 800;
-            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .hero-menu-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .hero-menu-tag {
+            font-size: 0.72rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #962d00;
+        }
+        .hero-menu-title {
+            font-size: 1.3rem;
+            font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: linear-gradient(135deg, #f1c40f, #25D366);
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35), inset 0 1px 0 rgba(255,255,255,0.25);
-            transition: all 0.3s ease;
+            color: #2B0A11;
+            line-height: 1.15;
+        }
+        .hero-menu-sub {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #3e1219;
+            opacity: 0.9;
+        }
+        .hero-menu-arrow {
+            font-size: 1.6rem;
+            color: #2B0A11;
+            background: rgba(255, 255, 255, 0.35);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+        .btn-menu-hero:hover .hero-menu-arrow {
+            transform: translateX(6px);
+        }
+
+        @keyframes heroPulseGlow {
+            0% { box-shadow: 0 10px 30px rgba(241, 196, 15, 0.35); }
+            100% { box-shadow: 0 14px 40px rgba(241, 196, 15, 0.65); }
+        }
+
+        /* 4 SECONDARY BUTTONS (COMPACT GRID) */
+        .hub-secondary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(255,255,255,0.15);
-            margin: 10px auto 0;
             box-sizing: border-box;
         }
-        .btn-eventos:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.6);
-            background: linear-gradient(135deg, #f39c12, #128C7E);
+        .hub-btn-compact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            text-decoration: none;
             color: white;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            transition: transform 0.25s, box-shadow 0.25s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            font-family: 'Gotham', 'Montserrat', sans-serif;
+            box-sizing: border-box;
         }
-        .btn-eventos i {
-            font-size: 1.25rem;
+        .hub-btn-compact:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
         }
-        .btn-eventos i.fa-star {
-            color: #2B0A11;
-            animation: starPulse 1.8s infinite ease-in-out;
-        }
-        .btn-eventos:hover i.fa-star {
-            color: white;
-        }
-        .btn-eventos span {
-            flex: 1;
+        .hub-btn-compact i {
+            font-size: 1.35rem;
+            width: 26px;
             text-align: center;
-            font-weight: 900;
+            flex-shrink: 0;
+        }
+        .hub-compact-text {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .hub-compact-text strong {
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .hub-compact-text span {
+            font-size: 0.68rem;
+            opacity: 0.85;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); }
+        .btn-instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .btn-facebook { background: linear-gradient(135deg, #1877F2, #145dbf); }
+        .btn-eventos-compact { background: linear-gradient(135deg, #16a085, #27ae60); color: white; }
+
+        @media (max-width: 600px) {
+            .btn-menu-hero { padding: 18px 20px; }
+            .hero-menu-title { font-size: 1.15rem; }
+            .hero-menu-icon { font-size: 2rem; width: 48px; height: 48px; }
+            .hub-secondary-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .hub-btn-compact { padding: 10px 10px; }
+            .hub-compact-text strong { font-size: 0.74rem; }
+            .hub-compact-text span { font-size: 0.64rem; }
         }
         @keyframes starPulse {
             0% { transform: scale(1); opacity: 0.8; }
@@ -1091,7 +1197,7 @@
                 <div class="footer-address">Auténtica Gastronomía Costarricense</div>
                 <div class="schedule-grid" style="grid-template-columns: 1fr;">
                     <div class="sched-item" style="text-align: center; border-color: rgba(37, 211, 102, 0.4); background: rgba(37, 211, 102, 0.05);">
-                        <div class="sched-day" style="font-size: 1.1rem; margin-bottom: 5px; color: var(--blanco);">ABIERTOS FINES DE SEMANA</div>
+                        <div class="sched-day" style="font-size: 1.1rem; margin-bottom: 5px; color: var(--blanco);">ABIERTOS DE LUNES A VIERNES</div>
                         <div class="sched-hour" style="color: #25d366; font-size: 1rem;">¡Te esperamos!</div>
                     </div>
                 </div>
@@ -1136,44 +1242,57 @@
                 </div>
             </div>
 
-            <!-- 4 Buttons Grid -->
-            <div class="hub-buttons-grid">
-                <button onclick="UIController.showMenu()" class="hub-btn btn-menu">
-                    <i class="fas fa-utensils"></i>
-                    <div class="btn-text">
-                        <strong>VER MENÚ SR & SRA PINTO</strong>
-                        <span>Ordena Acá</span>
+            <!-- HUB BUTTONS: HERO MENU & 4 COMPACT BUTTONS -->
+            <div class="hub-buttons-wrapper">
+                <!-- 1. BOTÓN PRINCIPAL HERO: VER MENÚ (MÁS GRANDE Y LLAMATIVO) -->
+                <button onclick="UIController.showMenu()" class="btn-menu-hero">
+                    <div class="hero-left-col">
+                        <div class="hero-menu-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="hero-menu-text">
+                            <span class="hero-menu-tag">🍽️ Ordena en Línea</span>
+                            <span class="hero-menu-title">VER MENÚ SR & SRA PINTO</span>
+                            <span class="hero-menu-sub">Toca acá para ver platillos y ordenar</span>
+                        </div>
+                    </div>
+                    <div class="hero-menu-arrow">
+                        <i class="fas fa-arrow-right"></i>
                     </div>
                 </button>
-                <a href="https://www.instagram.com/srysrapinto1" class="hub-btn btn-instagram" target="_blank">
-                    <i class="fab fa-instagram"></i>
-                    <div class="btn-text">
-                        <strong>INSTAGRAM</strong>
-                        <span>Videos y fotos diarias</span>
-                    </div>
-                </a>
-                <a href="https://www.facebook.com/share/1YZgUMp16x/" class="hub-btn btn-facebook" target="_blank">
-                    <i class="fab fa-facebook"></i>
-                    <div class="btn-text">
-                        <strong>FACEBOOK</strong>
-                        <span>Unite a la comunidad</span>
-                    </div>
-                </a>
-                <a href="https://wa.me/50688224763" class="hub-btn btn-whatsapp" target="_blank">
-                    <i class="fab fa-whatsapp"></i>
-                    <div class="btn-text">
-                        <strong>¡PEDIR POR WHATSAPP!</strong>
-                        <span>Respuesta inmediata</span>
-                    </div>
-                </a>
+
+                <!-- 2. LOS OTROS 4 BOTONES MÁS PEQUEÑOS EN GRID COMPACTO 2x2 -->
+                <div class="hub-secondary-grid">
+                    <a href="https://www.instagram.com/srysrapinto1" class="hub-btn-compact btn-instagram" target="_blank">
+                        <i class="fab fa-instagram"></i>
+                        <div class="hub-compact-text">
+                            <strong>INSTAGRAM</strong>
+                            <span>Fotos y videos</span>
+                        </div>
+                    </a>
+                    <a href="https://wa.me/50688224763" class="hub-btn-compact btn-whatsapp" target="_blank">
+                        <i class="fab fa-whatsapp"></i>
+                        <div class="hub-compact-text">
+                            <strong>WHATSAPP</strong>
+                            <span>Pedir directo</span>
+                        </div>
+                    </a>
+                    <a href="https://www.facebook.com/share/1YZgUMp16x/" class="hub-btn-compact btn-facebook" target="_blank">
+                        <i class="fab fa-facebook"></i>
+                        <div class="hub-compact-text">
+                            <strong>FACEBOOK</strong>
+                            <span>Comunidad</span>
+                        </div>
+                    </a>
+                    <a href="https://wa.me/50688224763?text=Hola!%20Me%20gustar%C3%ADa%20m%C3%A1s%20informaci%C3%B3n%20sobre%20eventos%20especiales%20🎉" class="hub-btn-compact btn-eventos-compact" target="_blank">
+                        <i class="fas fa-star"></i>
+                        <div class="hub-compact-text">
+                            <strong>EVENTOS</strong>
+                            <span>Cotizá aquí</span>
+                        </div>
+                    </a>
+                </div>
             </div>
-            
-            <!-- Botón de Eventos Especiales -->
-            <a href="https://wa.me/50688224763?text=Hola!%20Me%20gustar%C3%ADa%20m%C3%A1s%20informaci%C3%B3n%20sobre%20eventos%20especiales%20🎉" class="btn-eventos" target="_blank">
-                <i class="fas fa-star"></i>
-                <span>Contáctanos para tus eventos especiales</span>
-                <i class="fab fa-whatsapp"></i>
-            </a>
         </div>
     </div>
 </div>

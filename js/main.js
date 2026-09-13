@@ -1112,24 +1112,150 @@ const MenuController = {
         const sidebar = document.getElementById('sidebar-categories');
         if (!sidebar) return;
 
-        sidebar.innerHTML = this.CATEGORIAS.map(cat => `
+        let html = `
+            <button class="sidebar-btn ${StateManager.currentCategory === 'semana' ? 'active' : ''}" onclick="MenuController.renderWeeklyMenu()" data-cat="semana" style="border: 1px solid rgba(241, 196, 15, 0.4); background: ${StateManager.currentCategory === 'semana' ? 'linear-gradient(135deg, #f1c40f, #e67e22)' : 'rgba(241, 196, 15, 0.12)'}; color: ${StateManager.currentCategory === 'semana' ? '#111' : '#fff'}; font-weight: 800; margin-bottom: 6px;">
+                <span>📅</span> Menú de la Semana
+            </button>
+            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 6px 0 10px 0;"></div>
+        `;
+
+        html += this.CATEGORIAS.map(cat => `
             <button class="sidebar-btn ${cat.id === StateManager.currentCategory ? 'active' : ''}" onclick="MenuController.renderCategory('${cat.id}')" data-cat="${cat.id}">
                 <span>${cat.icon}</span> ${cat.nombre}
             </button>
         `).join('');
+
+        sidebar.innerHTML = html;
+    },
+
+    renderWeeklyMenu() {
+        StateManager.setCategory('semana');
+        const container = document.getElementById('menu-dynamic-content');
+        const titleEl = document.getElementById('current-category-title');
+        const countEl = document.getElementById('current-category-count');
+        if (!container) return;
+
+        // Actualizar botón activo en sidebar
+        document.querySelectorAll('.sidebar-btn').forEach(btn => {
+            if (btn.dataset.cat === 'semana') {
+                btn.classList.add('active');
+                btn.style.background = 'linear-gradient(135deg, #f1c40f, #e67e22)';
+                btn.style.color = '#111';
+            } else {
+                btn.classList.remove('active');
+                if (btn.dataset.cat === 'semana') {
+                    btn.style.background = 'rgba(241, 196, 15, 0.12)';
+                    btn.style.color = '#fff';
+                }
+            }
+        });
+
+        if (titleEl) titleEl.innerHTML = `📅 Menú y Programación Semanal<span>Conoce nuestras especialidades de Lunes a Viernes</span>`;
+        if (countEl) countEl.innerText = 'Lunes a Viernes';
+
+        const dayNames = [
+            { key: 'lunes', name: 'Lunes', icon: '☀️' },
+            { key: 'martes', name: 'Martes', icon: '🌮' },
+            { key: 'miercoles', name: 'Miércoles', icon: '🍲' },
+            { key: 'jueves', name: 'Jueves', icon: '🍛' },
+            { key: 'viernes', name: 'Viernes', icon: '🎉' }
+        ];
+
+        const todayNum = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
+        const dayMap = { 1: 'lunes', 2: 'martes', 3: 'miercoles', 4: 'jueves', 5: 'viernes' };
+        const currentTodayKey = dayMap[todayNum] || '';
+
+        const allDishes = (this.volioDishes && this.volioDishes.length > 0)
+            ? this.volioDishes
+            : this.MENU_DATA;
+
+        let daysHtml = `
+            <div style="background: rgba(241, 196, 15, 0.08); border: 1px solid rgba(241, 196, 15, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h4 style="margin: 0 0 4px 0; color: var(--mostaza); font-size: 1rem;"><i class="fas fa-calendar-alt"></i> Menú Semanal de Sr. & Sra. Pinto</h4>
+                    <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.75);">Descubre los platillos programados para cada día de la semana. ¡Cocinamos fresco todos los días!</p>
+                </div>
+                ${currentTodayKey ? `<span style="background: rgba(39, 174, 96, 0.25); color: #2ecc71; border: 1px solid rgba(39, 174, 96, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 800;"><i class="fas fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Hoy es ${currentTodayKey.toUpperCase()}</span>` : ''}
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+        `;
+
+        dayNames.forEach(day => {
+            const isToday = day.key === currentTodayKey;
+            const scheduledIds = (this.volioSchedule && this.volioSchedule[day.key]) ? this.volioSchedule[day.key] : [];
+            const dayDishes = allDishes.filter(d => scheduledIds.includes(d.id));
+
+            daysHtml += `
+                <div style="background: ${isToday ? 'rgba(241, 196, 15, 0.06)' : 'rgba(255, 255, 255, 0.03)'}; border: 1px solid ${isToday ? 'rgba(241, 196, 15, 0.4)' : 'rgba(255, 255, 255, 0.08)'}; border-radius: 14px; padding: 16px; transition: all 0.3s;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid ${isToday ? 'rgba(241, 196, 15, 0.2)' : 'rgba(255, 255, 255, 0.06)'}; padding-bottom: 8px;">
+                        <h4 style="margin: 0; font-size: 1.1rem; color: ${isToday ? 'var(--mostaza)' : '#fff'}; display: flex; align-items: center; gap: 8px;">
+                            <span>${day.icon}</span> ${day.name}
+                            ${isToday ? '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">¡HOY!</span>' : ''}
+                        </h4>
+                        <span style="font-size: 0.78rem; color: rgba(255,255,255,0.5);">${dayDishes.length} opciones programadas</span>
+                    </div>
+
+                    ${dayDishes.length > 0 ? `
+                        <div class="menu-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+                            ${dayDishes.map(product => {
+                                const imgSrc = product.img && product.img.includes('src="')
+                                    ? product.img.match(/src="([^"]+)"/)?.[1]
+                                    : (product.img || 'images-catalogo/Señor Pinto.jpeg');
+                                return `
+                                    <div class="product-card-horizontal" style="margin: 0;">
+                                        <div class="product-thumb">
+                                            <img src="${imgSrc}" alt="${product.nombre}" class="img-fit">
+                                        </div>
+                                        <div class="product-details">
+                                            <h4 class="product-title">${product.nombre}</h4>
+                                            <p class="product-desc" style="font-size: 0.75rem;">${product.desc || ''}</p>
+                                            <div class="product-footer">
+                                                <div class="product-price">₡${(product.precio || 0).toLocaleString()}</div>
+                                                <button class="btn-add-cart" onclick="CartManager.addItem('${product.id}')" title="Agregar a la orden">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : `
+                        <div style="padding: 12px; text-align: center; color: rgba(255,255,255,0.45); font-size: 0.82rem; font-style: italic;">
+                            🍳 Opciones tradicionales a la carta disponibles (Pintos, Desayunos, Snacks y Bebidas)
+                        </div>
+                    `}
+                </div>
+            `;
+        });
+
+        daysHtml += `</div>`;
+        container.innerHTML = daysHtml;
     },
 
     renderCategory(categoryId) {
+        if (categoryId === 'semana') {
+            this.renderWeeklyMenu();
+            return;
+        }
         StateManager.setCategory(categoryId);
         const container = document.getElementById('menu-dynamic-content');
         const titleEl = document.getElementById('current-category-title');
         const countEl = document.getElementById('current-category-count');
         if (!container) return;
 
+        // Reset de estilo del botón semana si no está activo
+        const semanaBtn = document.querySelector('.sidebar-btn[data-cat="semana"]');
+        if (semanaBtn) {
+            semanaBtn.classList.remove('active');
+            semanaBtn.style.background = 'rgba(241, 196, 15, 0.12)';
+            semanaBtn.style.color = '#fff';
+        }
+
         // Update sidebar active state
         document.querySelectorAll('.sidebar-btn').forEach(btn => {
             if (btn.dataset.cat === categoryId) btn.classList.add('active');
-            else btn.classList.remove('active');
+            else if (btn.dataset.cat !== 'semana') btn.classList.remove('active');
         });
 
         const categoryInfo = this.CATEGORIAS.find(c => c.id === categoryId);

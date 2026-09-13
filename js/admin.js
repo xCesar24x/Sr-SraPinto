@@ -157,10 +157,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.VolioManager && typeof window.VolioManager.renderDishesTable === 'function') {
             window.VolioManager.renderDishesTable();
         }
+
+        // Inicializar bitácora de mermas
+        if (window.MermasManager && typeof window.MermasManager.init === 'function') {
+            window.MermasManager.init();
+        }
     });
 
     function renderTable(items) {
         if (!inventoryList) return;
+        const countInsumos = document.getElementById('count-total-insumos');
+        if (countInsumos) countInsumos.innerText = items.length;
+
         if (items.length === 0) {
             inventoryList.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px;">El inventario está vacío.</td></tr>`;
             return;
@@ -191,9 +199,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td style="font-weight: 700; color: #2ecc71; font-size: 1.05rem;">₡${costoUnit.toLocaleString()}</td>
                     <td>${status}</td>
                     <td>
-                        <button class="action-btn" onclick="AdminManager.openAddModal('${item.id}')" title="Ajustar Stock y Costo">
-                            <i class="fas fa-edit"></i>
-                        </button>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="action-btn" onclick="AdminManager.openAddModal('${item.id}')" title="Ajustar Stock y Costo">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn" onclick="MermasManager.openModal('${item.id}')" title="Registrar Merma de este insumo" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -516,6 +529,371 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("Error al cambiar estado del turno:", error);
                 alert("No se pudo cambiar el estado del turno.");
             }
+        }
+    };
+
+    // ========================================
+    // MÓDULO: Control y Bitácora de Mermas
+    // ========================================
+    window.MermasManager = {
+        mermas: [],
+        listener: null,
+
+        init() {
+            if (this.listener) return;
+            const db = window.FirebaseDB;
+            if (!db) return;
+
+            this.listener = db.collection('mermas').orderBy('fecha', 'desc').onSnapshot((snapshot) => {
+                this.mermas = [];
+                snapshot.forEach(doc => {
+                    this.mermas.push({ id: doc.id, ...doc.data() });
+                });
+
+                this.renderMermasTable();
+                this.updateKPIs();
+            }, (err) => {
+                console.warn("Mermas listener:", err);
+            });
+        },
+
+        switchSubTab(subTab) {
+            const btnStock = document.getElementById('tab-inv-stock');
+            const btnMermas = document.getElementById('tab-inv-mermas');
+            const viewStock = document.getElementById('inv-view-stock');
+            const viewMermas = document.getElementById('inv-view-mermas');
+
+            if (subTab === 'stock') {
+                if (viewStock) viewStock.style.display = 'block';
+                if (viewMermas) viewMermas.style.display = 'none';
+                if (btnStock) {
+                    btnStock.style.background = 'var(--mostaza)';
+                    btnStock.style.color = '#111';
+                    btnStock.style.border = 'none';
+                }
+                if (btnMermas) {
+                    btnMermas.style.background = 'rgba(231, 76, 60, 0.1)';
+                    btnMermas.style.color = '#ff6b6b';
+                    btnMermas.style.border = '1px solid rgba(231, 76, 60, 0.4)';
+                }
+            } else {
+                if (viewStock) viewStock.style.display = 'none';
+                if (viewMermas) viewMermas.style.display = 'block';
+                if (btnMermas) {
+                    btnMermas.style.background = 'linear-gradient(135deg, #c0392b, #e74c3c)';
+                    btnMermas.style.color = '#fff';
+                    btnMermas.style.border = 'none';
+                }
+                if (btnStock) {
+                    btnStock.style.background = 'rgba(255, 255, 255, 0.08)';
+                    btnStock.style.color = '#fff';
+                    btnStock.style.border = '1px solid var(--border)';
+                }
+                this.init();
+            }
+        },
+
+        openModal(preselectedId = null) {
+            const modal = document.getElementById('merma-modal');
+            const select = document.getElementById('merma-item-select');
+            const inv = window.currentInventory || [];
+
+            if (select) {
+                if (inv.length === 0) {
+                    select.innerHTML = '<option value="">No hay insumos disponibles</option>';
+                } else {
+                    select.innerHTML = inv.map(item => {
+                        const icon = item.tipo === 'empaque' ? '📦' : '🥩';
+                        const nombre = item.nombre || item.id.replace(/_/g, ' ');
+                        return `<option value="${item.id}">${icon} ${nombre} (Stock: ${item.cantidad || 0} | ₡${(item.costoUnitario || 0).toLocaleString()})</option>`;
+                    }).join('');
+                }
+
+                if (preselectedId && inv.some(i => i.id === preselectedId)) {
+                    select.value = preselectedId;
+                }
+            }
+
+            const qtyInput = document.getElementById('merma-qty');
+            const authorInput = document.getElementById('merma-author');
+            const notesInput = document.getElementById('merma-notes');
+            const reasonSelect = document.getElementById('merma-reason');
+
+            if (qtyInput) qtyInput.value = '';
+            if (notesInput) notesInput.value = '';
+            if (authorInput) authorInput.value = localStorage.getItem('srsrapinto_username') || '';
+            if (reasonSelect) reasonSelect.value = 'Vencimiento / Mal estado';
+
+            this.onItemChange();
+            if (modal) modal.classList.add('active');
+        },
+
+        closeModal() {
+            const modal = document.getElementById('merma-modal');
+            if (modal) modal.classList.remove('active');
+        },
+
+        onItemChange() {
+            const select = document.getElementById('merma-item-select');
+            const stockDisplay = document.getElementById('merma-stock-display');
+            const costDisplay = document.getElementById('merma-cost-display');
+
+            if (!select || !select.value) return;
+
+            const inv = window.currentInventory || [];
+            const item = inv.find(i => i.id === select.value);
+
+            if (item) {
+                if (stockDisplay) stockDisplay.innerText = `${item.cantidad || 0} ${item.unidad || 'unidades'}`;
+                if (costDisplay) costDisplay.innerText = `₡${(item.costoUnitario || 0).toLocaleString()}`;
+            }
+            this.calcLoss();
+        },
+
+        calcLoss() {
+            const select = document.getElementById('merma-item-select');
+            const qtyInput = document.getElementById('merma-qty');
+            const lossDisplay = document.getElementById('merma-loss-total');
+
+            const qty = parseFloat(qtyInput?.value) || 0;
+            const inv = window.currentInventory || [];
+            const item = inv.find(i => i.id === select?.value);
+            const unitCost = item ? (item.costoUnitario || 0) : 0;
+            const total = qty * unitCost;
+
+            if (lossDisplay) {
+                lossDisplay.innerText = `₡${Math.round(total).toLocaleString()}`;
+            }
+        },
+
+        async saveMerma() {
+            const select = document.getElementById('merma-item-select');
+            const id = select?.value;
+            const qty = parseFloat(document.getElementById('merma-qty')?.value);
+            const motivo = document.getElementById('merma-reason')?.value || 'Otro';
+            const responsable = document.getElementById('merma-author')?.value.trim() || 'Admin';
+            const notas = document.getElementById('merma-notes')?.value.trim() || '';
+
+            if (!id) {
+                alert("Selecciona un insumo para mermar.");
+                return;
+            }
+            if (isNaN(qty) || qty <= 0) {
+                alert("Ingresa una cantidad válida mayor a cero.");
+                return;
+            }
+
+            const inv = window.currentInventory || [];
+            const item = inv.find(i => i.id === id);
+            const unitCost = item ? (item.costoUnitario || 0) : 0;
+            const costoTotal = Math.round(qty * unitCost);
+
+            try {
+                const db = window.FirebaseDB;
+                const batch = db.batch();
+
+                // 1. Crear registro de merma
+                const mermaRef = db.collection('mermas').doc();
+                batch.set(mermaRef, {
+                    insumoId: id,
+                    insumoNombre: item ? (item.nombre || item.id) : id,
+                    tipo: item ? (item.tipo || 'ingrediente') : 'ingrediente',
+                    cantidad: qty,
+                    unidad: item ? (item.unidad || 'unidad') : 'unidad',
+                    costoUnitario: unitCost,
+                    costoTotal: costoTotal,
+                    motivo: motivo,
+                    responsable: responsable,
+                    notas: notas,
+                    fecha: new Date().toISOString()
+                });
+
+                // 2. Descontar stock en inventario
+                const invRef = db.collection('inventario').doc(id);
+                batch.set(invRef, {
+                    cantidad: firebase.firestore.FieldValue.increment(-qty),
+                    actualizadoEn: new Date().toISOString()
+                }, { merge: true });
+
+                await batch.commit();
+
+                // Actualizar array local inmediatamente
+                if (item) {
+                    item.cantidad = (item.cantidad || 0) - qty;
+                }
+
+                this.closeModal();
+                alert(`✅ Merma registrada con éxito.\nSe descontaron ${qty} unidades de ${item ? item.nombre : id} y se registró una pérdida de ₡${costoTotal.toLocaleString()}.`);
+
+                // Si estamos en la vista de inventario, actualizar tabla
+                if (typeof renderTable === 'function') {
+                    renderTable(window.currentInventory);
+                }
+                if (typeof updateStats === 'function') {
+                    updateStats(window.currentInventory);
+                }
+            } catch (err) {
+                console.error("Error guardando merma:", err);
+                alert("Hubo un error al registrar la merma.");
+            }
+        },
+
+        async deleteMerma(mermaId, insumoId, qty) {
+            if (!confirm(`⚠️ ¿Deseas anular esta merma?\n\nAl anularla, se devolverán +${qty} unidades al inventario de forma automática.`)) return;
+
+            try {
+                const db = window.FirebaseDB;
+                const batch = db.batch();
+
+                batch.delete(db.collection('mermas').doc(mermaId));
+
+                if (insumoId && qty > 0) {
+                    const invRef = db.collection('inventario').doc(insumoId);
+                    batch.set(invRef, {
+                        cantidad: firebase.firestore.FieldValue.increment(qty),
+                        actualizadoEn: new Date().toISOString()
+                    }, { merge: true });
+                }
+
+                await batch.commit();
+                alert("✅ Merma anulada y stock devuelto al inventario.");
+            } catch (err) {
+                console.error("Error al anular merma:", err);
+                alert("Error al anular la merma.");
+            }
+        },
+
+        renderMermasTable(customList = null) {
+            const tbody = document.getElementById('mermas-list');
+            if (!tbody) return;
+
+            const list = customList || this.mermas || [];
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 25px; color: rgba(255,255,255,0.5);">No hay registros de mermas que coincidan con los filtros.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(m => {
+                const d = new Date(m.fecha);
+                const fechaStr = isNaN(d.getTime()) ? m.fecha : d.toLocaleString('es-CR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: true
+                });
+
+                let badgeColor = 'rgba(231, 76, 60, 0.2)';
+                let textColor = '#e74c3c';
+                let borderColor = 'rgba(231, 76, 60, 0.4)';
+
+                if (m.motivo.includes('Error') || m.motivo.includes('Quemado')) {
+                    badgeColor = 'rgba(230, 126, 34, 0.2)'; textColor = '#e67e22'; borderColor = 'rgba(230, 126, 34, 0.4)';
+                } else if (m.motivo.includes('Caída') || m.motivo.includes('Rotura')) {
+                    badgeColor = 'rgba(241, 196, 15, 0.2)'; textColor = '#f1c40f'; borderColor = 'rgba(241, 196, 15, 0.4)';
+                } else if (m.motivo.includes('Calidad') || m.motivo.includes('Proveedor')) {
+                    badgeColor = 'rgba(155, 89, 182, 0.2)'; textColor = '#9b59b6'; borderColor = 'rgba(155, 89, 182, 0.4)';
+                }
+
+                const motivoBadge = `<span style="background: ${badgeColor}; color: ${textColor}; border: 1px solid ${borderColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">${m.motivo}</span>`;
+
+                return `
+                    <tr>
+                        <td style="font-size: 0.8rem; color: rgba(255,255,255,0.7); white-space: nowrap;">${fechaStr}</td>
+                        <td><strong style="color: #fff; text-transform: capitalize;">${m.insumoNombre || m.insumoId}</strong></td>
+                        <td style="font-weight: 800; color: #f39c12; font-size: 1rem;">-${m.cantidad} <span style="font-size: 0.75rem; font-weight: 400; color: rgba(255,255,255,0.5);">${m.unidad || ''}</span></td>
+                        <td style="font-weight: 800; color: #e74c3c; font-size: 1rem;">₡${(m.costoTotal || 0).toLocaleString()}</td>
+                        <td>${motivoBadge}</td>
+                        <td style="font-size: 0.8rem; color: rgba(255,255,255,0.8);">${m.responsable || 'No especificado'}</td>
+                        <td style="font-size: 0.78rem; color: rgba(255,255,255,0.6); max-width: 220px;">${m.notas || '-'}</td>
+                        <td>
+                            <button class="action-btn" onclick="MermasManager.deleteMerma('${m.id}', '${m.insumoId}', ${m.cantidad})" title="Anular Merma y restaurar stock" style="background: rgba(231,76,60,0.15); color: #e74c3c;">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        updateKPIs() {
+            const list = this.mermas || [];
+            let totalCosto = 0;
+            let totalUnidades = 0;
+            const motivosCount = {};
+
+            list.forEach(m => {
+                totalCosto += (m.costoTotal || 0);
+                totalUnidades += (m.cantidad || 0);
+                const mot = m.motivo || 'Otro';
+                motivosCount[mot] = (motivosCount[mot] || 0) + 1;
+            });
+
+            let topMotivo = 'Sin registros';
+            let maxCount = 0;
+            Object.keys(motivosCount).forEach(k => {
+                if (motivosCount[k] > maxCount) {
+                    maxCount = motivosCount[k];
+                    topMotivo = k;
+                }
+            });
+
+            const kpiCosto = document.getElementById('kpi-mermas-costo');
+            const kpiUnidades = document.getElementById('kpi-mermas-unidades');
+            const kpiRegistros = document.getElementById('kpi-mermas-registros');
+            const kpiMotivo = document.getElementById('kpi-mermas-motivo');
+            const countMermas = document.getElementById('count-total-mermas');
+            const summaryBadge = document.getElementById('mermas-summary-cost');
+
+            if (kpiCosto) kpiCosto.innerText = `₡${Math.round(totalCosto).toLocaleString()}`;
+            if (kpiUnidades) kpiUnidades.innerText = `${totalUnidades.toLocaleString()} unids`;
+            if (kpiRegistros) kpiRegistros.innerText = list.length;
+            if (kpiMotivo) kpiMotivo.innerText = topMotivo;
+            if (countMermas) countMermas.innerText = list.length;
+            if (summaryBadge) summaryBadge.innerText = `₡${Math.round(totalCosto).toLocaleString()}`;
+        },
+
+        filterMermas() {
+            const query = (document.getElementById('mermas-search')?.value || '').toLowerCase().trim();
+            const reason = document.getElementById('mermas-filter-reason')?.value || 'todos';
+
+            const filtered = (this.mermas || []).filter(m => {
+                if (reason !== 'todos' && m.motivo !== reason) return false;
+                if (query) {
+                    const matchName = (m.insumoNombre || '').toLowerCase().includes(query);
+                    const matchNotes = (m.notas || '').toLowerCase().includes(query);
+                    const matchResp = (m.responsable || '').toLowerCase().includes(query);
+                    const matchMotivo = (m.motivo || '').toLowerCase().includes(query);
+                    if (!matchName && !matchNotes && !matchResp && !matchMotivo) return false;
+                }
+                return true;
+            });
+
+            this.renderMermasTable(filtered);
+        },
+
+        exportCSV() {
+            const list = this.mermas || [];
+            if (list.length === 0) {
+                alert("No hay mermas registradas para exportar.");
+                return;
+            }
+
+            let csv = "Fecha,Insumo,Cantidad,Unidad,Costo Unitario (CRC),Costo Perdida (CRC),Motivo,Responsable,Notas\n";
+            list.forEach(m => {
+                const f = m.fecha ? m.fecha.replace('T', ' ').substring(0, 19) : '';
+                const nom = (m.insumoNombre || m.insumoId || '').replace(/,/g, ' ');
+                const mot = (m.motivo || '').replace(/,/g, ' ');
+                const resp = (m.responsable || '').replace(/,/g, ' ');
+                const not = (m.notas || '').replace(/,/g, ' ').replace(/\n/g, ' ');
+                csv += `"${f}","${nom}",${m.cantidad},"${m.unidad || ''}",${m.costoUnitario || 0},${m.costoTotal || 0},"${mot}","${resp}","${not}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Bitacora_Mermas_Sr_Sra_Pinto_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     };
 
