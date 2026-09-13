@@ -778,7 +778,7 @@
                             <p style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 3px;">Cálculo automático de Renta e IVA en base a tus compras del trimestre para la actividad de Servicios de Alimentación.</p>
                         </div>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button class="btn-primary" onclick="FinancesManager.openATVGuideModal()" style="padding: 8px 14px; font-size: 0.8rem; background: rgba(52, 152, 219, 0.15); border: 1px solid #3498db; color: #3498db;"><i class="fas fa-list-ol"></i> Guía Casillas ATV</button>
+                            <button class="btn-primary" onclick="FinancesManager.openATVGuideModal()" style="padding: 8px 14px; font-size: 0.8rem; background: rgba(52, 152, 219, 0.15); border: 1px solid #3498db; color: #3498db;"><i class="fas fa-list-ol"></i> Guía Casillas Tribu CR</button>
                             <button class="btn-primary" onclick="FinancesManager.exportHaciendaReportPDF()" style="padding: 8px 14px; font-size: 0.8rem; background: transparent; border: 1px solid #2ecc71; color: #2ecc71;"><i class="fas fa-file-pdf"></i> Descargar Hoja D-105 (PDF)</button>
                         </div>
                     </div>
@@ -1285,20 +1285,21 @@
         </div>
     </div>
 
-    <!-- MODAL GUÍA DE CASILLAS ATV HACIENDA (D-105) -->
+    <!-- MODAL GUÍA DE CASILLAS TRIBU CR HACIENDA (D-105) -->
     <div id="hacienda-atv-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 650px;">
             <div class="modal-header">
-                <h2><i class="fas fa-landmark" style="color: #2ecc71;"></i> Guía de Llenado ATV Hacienda (D-105)</h2>
+                <h2><i class="fas fa-landmark" style="color: #2ecc71;"></i> Guía de Llenado Tribu CR Hacienda (D-105)</h2>
                 <button onclick="FinancesManager.closeATVGuideModal()" class="close-btn"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body">
                 <div style="background: rgba(46, 204, 113, 0.08); border: 1px solid rgba(46, 204, 113, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.5;">
-                    <strong>¿Cómo declarar en 3 minutos sin contador?</strong><br>
-                    1. Abre el portal ATV de Hacienda: <a href="https://atv.hacienda.go.cr/ATV/Login.aspx" target="_blank" style="color: #2ecc71; text-decoration: underline; font-weight: bold;">atv.hacienda.go.cr</a>.<br>
-                    2. Ve a <strong>Declaraciones > Declaración Jurada Régimen de Tributación Simplificada (D-105)</strong>.<br>
-                    3. Selecciona la actividad <strong>5610.0</strong> (Restaurantes y servicio móvil de comidas) y el trimestre a declarar.<br>
-                    4. Copia los montos de cada casilla mostrados a continuación dando click en <strong>"Copiar"</strong>.
+                    <strong>¿Cómo declarar en 3 minutos en la plataforma Tribu CR?</strong><br>
+                    <span style="color: #f1c40f; font-weight: 600; font-size: 0.8rem;"><i class="fas fa-info-circle"></i> Nota Oficial: El Ministerio de Hacienda migró la gestión de declaraciones a la nueva plataforma Tribu CR (Hacienda Digital), sustituyendo al antiguo sistema ATV.</span><br><br>
+                    1. Abre el nuevo portal <strong>Tribu CR</strong> de Hacienda: <a href="https://tribucr.hacienda.go.cr" target="_blank" style="color: #2ecc71; text-decoration: underline; font-weight: bold;">tribucr.hacienda.go.cr</a>.<br>
+                    2. Dirígete a <strong>Declaraciones > Declaración Régimen Simplificado (D-105)</strong>.<br>
+                    3. Selecciona la actividad <strong>5610.0</strong> (Restaurantes y servicio móvil de comidas) y el trimestre correspondiente.<br>
+                    4. Ingresa los montos exactos de cada casilla mostrados a continuación dando click en <strong>"Copiar"</strong>.
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -1355,8 +1356,8 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="FinancesManager.closeATVGuideModal()">Cerrar</button>
-                <a href="https://atv.hacienda.go.cr/ATV/Login.aspx" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; background: #2ecc71; color: #000; font-weight: 700;">
-                    <i class="fas fa-external-link-alt"></i> Ir al Portal ATV Hacienda
+                <a href="https://tribucr.hacienda.go.cr" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; background: #2ecc71; color: #000; font-weight: 700;">
+                    <i class="fas fa-external-link-alt"></i> Ir al Portal Tribu CR Hacienda
                 </a>
             </div>
         </div>

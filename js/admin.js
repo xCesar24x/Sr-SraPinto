@@ -3670,10 +3670,10 @@ Sr. & Sra. Pinto - El Sabor de ser Tico`;
 
                     <div style="background: #f9f9f9; border: 1px solid #eee; padding: 15px; border-radius: 6px; font-size: 11px; line-height: 1.5;">
                         <strong>Instrucciones para el contribuyente:</strong><br>
-                        1. Ingresa a la plataforma ATV de Hacienda (Costa Rica).<br>
+                        1. Ingresa a la nueva plataforma <strong>Tribu CR</strong> del Ministerio de Hacienda (Hacienda Digital - reemplazo oficial de ATV).<br>
                         2. Dirígete a la opción de presentar Declaración <strong>D-105 (Régimen de Tributación Simplificada)</strong>.<br>
                         3. En la casilla de compras del trimestre, traslada el monto exacto: <strong>${baseCompras}</strong>.<br>
-                        4. Verifica los montos resultantes calculados por el sistema de ATV y realiza el pago antes del día 15 posterior al trimestre.
+                        4. Verifica los montos resultantes calculados por el sistema Tribu CR y realiza el pago antes del día 15 posterior al trimestre.
                     </div>
                 </div>
             `;
