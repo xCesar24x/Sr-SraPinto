@@ -274,6 +274,43 @@ const CartManager = {
         document.getElementById('success-overlay').classList.add('active');
     },
 
+    async descontarInventarioPedido(items, db) {
+        if (!items || !Array.isArray(items) || items.length === 0 || !db) return;
+        try {
+            const deductions = {};
+            items.forEach(item => {
+                const recipe = window.getDishRecipe ? window.getDishRecipe(item, item.nombre) : (window.RECETAS ? (window.RECETAS[item.id] || []) : []);
+                const qtySold = item.cantidad || item.quantity || 1;
+                
+                recipe.forEach(ing => {
+                    const ingId = ing.inventarioId || ing.id;
+                    const ingCant = parseFloat(ing.cantidad || ing.cant) || 1;
+                    if (ingId) {
+                        deductions[ingId] = (deductions[ingId] || 0) + (ingCant * qtySold);
+                    }
+                });
+            });
+
+            const keys = Object.keys(deductions);
+            if (keys.length === 0) return;
+
+            const batch = db.batch();
+            keys.forEach(ingId => {
+                const docRef = db.collection('inventario').doc(ingId);
+                const decrementAmount = deductions[ingId];
+                batch.set(docRef, {
+                    cantidad: firebase.firestore.FieldValue.increment(-decrementAmount),
+                    actualizadoEn: new Date().toISOString()
+                }, { merge: true });
+            });
+
+            await batch.commit();
+            console.log("✅ Inventario descontado exitosamente por venta:", deductions);
+        } catch (err) {
+            console.error("Error al descontar inventario en venta:", err);
+        }
+    },
+
     async procesarPedido() {
         if (this.items.length === 0) return;
 
@@ -309,6 +346,7 @@ const CartManager = {
                     precio: item.precio
                 })),
                 estado: estadoInicial,
+                inventarioDescontado: true,
                 fecha: new Date().toISOString()
             };
 
@@ -391,6 +429,9 @@ const CartManager = {
                     );
                     console.log("✅ Pedido creado en Firebase");
                     window.lastProcessedOrder = { ...pedido, id: docRef.id };
+
+                    // Descontar automáticamente insumos del inventario
+                    await this.descontarInventarioPedido(pedido.items, db);
 
                     // Mostrar modal de éxito
                     const successOverlay = document.getElementById('success-overlay');

@@ -115,26 +115,48 @@
                     </div>
                 </div>
 
-                <div class="dashboard-stats">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-egg"></i></div>
-                        <div class="stat-info">
-                            <h3>Huevos</h3>
-                            <p id="stat-huevos">...</p>
+                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <!-- CARD 1: INSUMOS AGOTADOS -->
+                    <div class="stat-card" style="border-left: 4px solid #e74c3c; background: rgba(231, 76, 60, 0.08);">
+                        <div class="stat-icon" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c;">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="stat-info" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <h3>Insumos Agotados</h3>
+                                <p id="stat-agotados-count" style="color: #e74c3c; font-size: 1.6rem; font-weight: 900; margin: 0;">0</p>
+                            </div>
+                            <div id="stat-agotados-list" style="margin-top: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.7); display: flex; flex-wrap: wrap; gap: 4px; max-height: 55px; overflow-y: auto;">
+                                <span>Ninguno</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-cheese"></i></div>
-                        <div class="stat-info">
-                            <h3>Queso Frito</h3>
-                            <p id="stat-queso">...</p>
+
+                    <!-- CARD 2: INSUMOS POR AGOTARSE (RELLENAR URGENTE) -->
+                    <div class="stat-card warning" id="alerts-card" style="border-left: 4px solid #f39c12; background: rgba(243, 156, 18, 0.08);">
+                        <div class="stat-icon" style="background: rgba(243, 156, 18, 0.2); color: #f39c12;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <h3>Por Agotarse (Rellenar)</h3>
+                                <p id="stat-por-agotarse-count" style="color: #f39c12; font-size: 1.6rem; font-weight: 900; margin: 0;">0</p>
+                            </div>
+                            <div id="stat-por-agotarse-list" style="margin-top: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.7); display: flex; flex-wrap: wrap; gap: 4px; max-height: 55px; overflow-y: auto;">
+                                <span>Ninguno</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card warning" id="alerts-card">
-                        <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+
+                    <!-- CARD 3: STOCK SALUDABLE -->
+                    <div class="stat-card" style="border-left: 4px solid #2ecc71; background: rgba(46, 204, 113, 0.08);">
+                        <div class="stat-icon" style="background: rgba(46, 204, 113, 0.2); color: #2ecc71;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
                         <div class="stat-info">
-                            <h3>Alertas de Stock</h3>
-                            <p id="stat-alertas">0</p>
+                            <h3>Stock Saludable</h3>
+                            <p id="stat-optimos-count" style="color: #2ecc71; font-size: 1.6rem; font-weight: 900; margin: 0;">0</p>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">Insumos con stock suficiente</span>
                         </div>
                     </div>
                 </div>
@@ -913,9 +935,37 @@
                     </div>
                     <div class="form-group">
                         <label>Costo Unitario (₡)</label>
-                        <input type="number" id="stock-item-cost" placeholder="Ej: 150" min="0" step="1">
+                        <input type="number" id="stock-item-cost" placeholder="Ej: 150" min="0" step="0.01">
                     </div>
                 </div>
+
+                <!-- CALCULADORA DE BULTOS / RENDIMIENTO -->
+                <div style="background: rgba(241, 196, 15, 0.08); border: 1px dashed rgba(241, 196, 15, 0.4); border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 700; color: var(--mostaza); font-size: 0.85rem;">
+                            <i class="fas fa-calculator"></i> Calculadora por Bulto / Cartón / Paquete
+                        </span>
+                        <span style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">Ej: Cartón 30 huevos a ₡2,000</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1.2fr 1fr 0.9fr; gap: 8px;">
+                        <div>
+                            <label style="font-size: 0.72rem; color: rgba(255,255,255,0.7); display: block; margin-bottom: 2px;">Precio del Bulto (₡)</label>
+                            <input type="number" id="bulk-cost" placeholder="Ej: 2000" oninput="AdminManager.calcBulkYield()" style="font-size: 0.82rem; padding: 6px; width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.72rem; color: rgba(255,255,255,0.7); display: block; margin-bottom: 2px;">Rendimiento (Unid)</label>
+                            <input type="number" id="bulk-yield" placeholder="Ej: 30" oninput="AdminManager.calcBulkYield()" style="font-size: 0.82rem; padding: 6px; width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.72rem; color: rgba(255,255,255,0.7); display: block; margin-bottom: 2px;">Bultos</label>
+                            <input type="number" id="bulk-qty-packs" value="1" min="1" oninput="AdminManager.calcBulkYield()" style="font-size: 0.82rem; padding: 6px; width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; border-radius: 6px;">
+                        </div>
+                    </div>
+                    <div id="bulk-result-preview" style="margin-top: 8px; font-size: 0.75rem; color: #2ecc71; font-weight: 700; display: none;">
+                        <i class="fas fa-check-circle"></i> Costo Unitario: <span id="bulk-unit-cost-text">₡0</span> • Sumará al stock: <span id="bulk-stock-to-add">0</span> unidades
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Operación de Stock</label>
                     <div class="radio-group">

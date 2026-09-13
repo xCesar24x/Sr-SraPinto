@@ -201,19 +201,45 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updateStats(items) {
-        const huevos = items.find(i => i.id === 'huevos');
-        const queso = items.find(i => i.id === 'queso_frito');
-        
-        statHuevos.innerText = huevos ? huevos.cantidad : 'N/A';
-        statQueso.innerText = queso ? queso.cantidad : 'N/A';
+        const agotados = items.filter(i => (i.cantidad || 0) <= 0);
+        const porAgotarse = items.filter(i => (i.cantidad || 0) > 0 && (i.cantidad || 0) <= 10);
+        const optimos = items.filter(i => (i.cantidad || 0) > 10);
 
-        const bajas = items.filter(i => (i.cantidad || 0) <= 10).length;
-        statAlertas.innerText = bajas;
-        
-        // Efecto visual si hay alertas
+        const elAgotadosCount = document.getElementById('stat-agotados-count');
+        const elAgotadosList = document.getElementById('stat-agotados-list');
+        const elPorAgotarseCount = document.getElementById('stat-por-agotarse-count');
+        const elPorAgotarseList = document.getElementById('stat-por-agotarse-list');
+        const elOptimosCount = document.getElementById('stat-optimos-count');
+
+        if (elAgotadosCount) elAgotadosCount.innerText = agotados.length;
+        if (elPorAgotarseCount) elPorAgotarseCount.innerText = porAgotarse.length;
+        if (elOptimosCount) elOptimosCount.innerText = optimos.length;
+
+        if (elAgotadosList) {
+            if (agotados.length === 0) {
+                elAgotadosList.innerHTML = `<span style="color: rgba(255,255,255,0.4); font-style: italic;">Ninguno agotado</span>`;
+            } else {
+                elAgotadosList.innerHTML = agotados.map(item => {
+                    const nombre = item.nombre || item.id.replace(/_/g, ' ');
+                    return `<span onclick="AdminManager.openAddModal('${item.id}')" style="cursor: pointer; background: rgba(231, 76, 60, 0.25); color: #ff6b6b; border: 1px solid rgba(231, 76, 60, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Clic para rellenar stock">${nombre} (0) <i class="fas fa-plus" style="font-size: 0.65rem;"></i></span>`;
+                }).join('');
+            }
+        }
+
+        if (elPorAgotarseList) {
+            if (porAgotarse.length === 0) {
+                elPorAgotarseList.innerHTML = `<span style="color: rgba(255,255,255,0.4); font-style: italic;">Todos con stock suficiente</span>`;
+            } else {
+                elPorAgotarseList.innerHTML = porAgotarse.map(item => {
+                    const nombre = item.nombre || item.id.replace(/_/g, ' ');
+                    return `<span onclick="AdminManager.openAddModal('${item.id}')" style="cursor: pointer; background: rgba(243, 156, 18, 0.25); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.5); padding: 2px 7px; border-radius: 4px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Clic para rellenar stock">${nombre} (${item.cantidad}) <i class="fas fa-plus" style="font-size: 0.65rem;"></i></span>`;
+                }).join('');
+            }
+        }
+
         const alertEl = document.getElementById('alerts-card');
         if (alertEl) {
-            if (bajas > 0) {
+            if (agotados.length + porAgotarse.length > 0) {
                 alertEl.style.animation = "pulse 2s infinite";
             } else {
                 alertEl.style.animation = "none";
@@ -265,6 +291,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 selectItem.value = targetId;
                 this.onStockItemSelected(targetId);
             }
+            // Reset de calculadora por bulto
+            const bCost = document.getElementById('bulk-cost');
+            const bYield = document.getElementById('bulk-yield');
+            const bPacks = document.getElementById('bulk-qty-packs');
+            const bPreview = document.getElementById('bulk-result-preview');
+            if (bCost) bCost.value = '';
+            if (bYield) bYield.value = '';
+            if (bPacks) bPacks.value = '1';
+            if (bPreview) bPreview.style.display = 'none';
         },
 
         onStockItemSelected(id) {
@@ -274,6 +309,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 const tipoSelect = document.getElementById('stock-item-tipo');
                 if (costInput) costInput.value = item.costoUnitario || 0;
                 if (tipoSelect) tipoSelect.value = item.tipo || 'ingrediente';
+            }
+        },
+
+        calcBulkYield() {
+            const cost = parseFloat(document.getElementById('bulk-cost')?.value) || 0;
+            const yieldVal = parseFloat(document.getElementById('bulk-yield')?.value) || 0;
+            const packs = parseFloat(document.getElementById('bulk-qty-packs')?.value) || 1;
+            const preview = document.getElementById('bulk-result-preview');
+            const unitText = document.getElementById('bulk-unit-cost-text');
+            const stockText = document.getElementById('bulk-stock-to-add');
+            const costInput = document.getElementById('stock-item-cost');
+            const qtyInput = document.getElementById('stock-qty');
+            const radioAdd = document.querySelector('input[name="stock-op"][value="add"]');
+
+            if (cost > 0 && yieldVal > 0) {
+                const unitCost = Math.round((cost / yieldVal) * 100) / 100;
+                const totalStock = yieldVal * packs;
+
+                if (costInput) costInput.value = unitCost;
+                if (qtyInput) qtyInput.value = totalStock;
+                if (radioAdd) radioAdd.checked = true;
+
+                if (preview) preview.style.display = 'block';
+                if (unitText) unitText.innerText = `₡${unitCost.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                if (stockText) stockText.innerText = `+${totalStock}`;
+            } else {
+                if (preview) preview.style.display = 'none';
             }
         },
 
@@ -322,6 +384,38 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!isNaN(qty) && qty > 0) {
                         if (op === 'add') existing.cantidad = (existing.cantidad || 0) + qty;
                         else existing.cantidad = qty;
+                    }
+                }
+
+                // Recalcular y actualizar costo de platillos que contienen este insumo en tiempo real
+                if (window.VolioManager && Array.isArray(window.VolioManager.dishes)) {
+                    const affectedDishes = window.VolioManager.dishes.filter(dish => {
+                        const rec = (dish.recetaItems && dish.recetaItems.length > 0)
+                            ? dish.recetaItems
+                            : (window.VolioManager.deriveDefaultRecipe ? window.VolioManager.deriveDefaultRecipe(dish) : []);
+                        return rec.some(r => (r.inventarioId || r.id) === id);
+                    });
+
+                    affectedDishes.forEach(dish => {
+                        const rec = (dish.recetaItems && dish.recetaItems.length > 0)
+                            ? dish.recetaItems
+                            : window.VolioManager.deriveDefaultRecipe(dish);
+                        const newCost = window.VolioManager.calculateDishLiveCost(rec);
+                        dish.costo = newCost;
+                        // Persistir costo recalculado en Firestore
+                        db.collection('volio_platillos').doc(dish.id).update({
+                            costo: newCost,
+                            actualizadoEn: new Date().toISOString()
+                        }).catch(err => console.warn("Error actualizando costo en platillo:", err));
+
+                        if (typeof COSTOS_PRODUCTOS !== 'undefined') {
+                            COSTOS_PRODUCTOS[dish.id] = newCost;
+                        }
+                    });
+
+                    if (affectedDishes.length > 0 && typeof COSTOS_PRODUCTOS !== 'undefined') {
+                        db.collection('config').doc('costos').set(COSTOS_PRODUCTOS, { merge: true }).catch(console.warn);
+                        console.log(`✅ Costo recalculado para ${affectedDishes.length} platillos con el insumo ${id}`);
                     }
                 }
 

@@ -62,3 +62,76 @@ window.RECETAS = {
         { id: 'hidratante', cant: 1 }
     ]
 };
+
+// Función universal para obtener la receta de cualquier producto vendido o catalogado
+window.getDishRecipe = function(dishOrId, optDishName) {
+    if (!dishOrId) return [];
+
+    var dishId = typeof dishOrId === 'object' ? dishOrId.id : dishOrId;
+    var dishName = (typeof dishOrId === 'object' ? (dishOrId.nombre || optDishName) : optDishName) || '';
+
+    // 1. Si el objeto ya trae recetaItems explícita
+    if (typeof dishOrId === 'object' && Array.isArray(dishOrId.recetaItems) && dishOrId.recetaItems.length > 0) {
+        return dishOrId.recetaItems;
+    }
+
+    // 2. Buscar en catálogo en memoria (MenuController o VolioManager)
+    if (window.MenuController && Array.isArray(window.MenuController.volioDishes)) {
+        var foundVolio = window.MenuController.volioDishes.find(function(d) { return d.id === dishId; });
+        if (foundVolio && Array.isArray(foundVolio.recetaItems) && foundVolio.recetaItems.length > 0) {
+            return foundVolio.recetaItems;
+        }
+    }
+    if (window.VolioManager && Array.isArray(window.VolioManager.dishes)) {
+        var foundVolioMgr = window.VolioManager.dishes.find(function(d) { return d.id === dishId; });
+        if (foundVolioMgr && Array.isArray(foundVolioMgr.recetaItems) && foundVolioMgr.recetaItems.length > 0) {
+            return foundVolioMgr.recetaItems;
+        }
+    }
+
+    // 3. Buscar en RECETAS fijas predefinidas
+    if (window.RECETAS && window.RECETAS[dishId]) {
+        return window.RECETAS[dishId].map(function(r) {
+            return { inventarioId: r.id, cantidad: r.cant };
+        });
+    }
+
+    // 4. Deducción inteligente basada en el nombre del platillo
+    var nameLower = (dishName || dishId || '').toLowerCase();
+    var items = [];
+    if (nameLower.includes('pinto')) {
+        items.push({ inventarioId: 'pinto', cantidad: 1 }, { inventarioId: 'queso_frito', cantidad: 1 }, { inventarioId: 'huevos', cantidad: 1 }, { inventarioId: 'maduro', cantidad: 1 });
+    }
+    if (nameLower.includes('burrote') || nameLower.includes('burrito')) {
+        items.push({ inventarioId: 'tortilla_harina', cantidad: 1 }, { inventarioId: 'natilla', cantidad: 1 });
+    }
+    if (nameLower.includes('patacón') || nameLower.includes('patacon')) {
+        items.push({ inventarioId: 'patacones', cantidad: 1 }, { inventarioId: 'frijoles_molidos', cantidad: 1 }, { inventarioId: 'queso_rallado', cantidad: 1 });
+    }
+    if (nameLower.includes('hamburguesa')) {
+        items.push({ inventarioId: 'pan_hamburguesa', cantidad: 1 }, { inventarioId: 'torta_carne', cantidad: 1 }, { inventarioId: 'queso_mozzarella', cantidad: 1 }, { inventarioId: 'papas_fritas', cantidad: 1 });
+    }
+    if (nameLower.includes('empanada')) {
+        items.push({ inventarioId: 'masa_empanada', cantidad: 1 }, { inventarioId: 'carne_mechada', cantidad: 1 });
+    }
+    if (nameLower.includes('salchipapa')) {
+        items.push({ inventarioId: 'papas_fritas', cantidad: 1 }, { inventarioId: 'salchicha', cantidad: 1 });
+    }
+    if (nameLower.includes('café') || nameLower.includes('cafe')) {
+        items.push({ inventarioId: 'cafe', cantidad: 1 }, { inventarioId: 'vaso_cafe_tapa', cantidad: 1 });
+    }
+    if (nameLower.includes('agua')) {
+        items.push({ inventarioId: 'botella_agua', cantidad: 1 });
+    }
+    if (nameLower.includes('gaseosa')) {
+        items.push({ inventarioId: 'gaseosa', cantidad: 1 });
+    }
+    if (nameLower.includes('hidratante') || nameLower.includes('powerade')) {
+        items.push({ inventarioId: 'hidratante', cantidad: 1 });
+    }
+
+    if (items.length === 0) {
+        items.push({ inventarioId: 'pinto', cantidad: 1 });
+    }
+    return items;
+};

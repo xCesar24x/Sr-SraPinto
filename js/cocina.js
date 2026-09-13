@@ -210,28 +210,31 @@ window.CocinaManager = {
             if (orderSnap.exists) {
                 const orderData = orderSnap.data();
                 
-                // 2. Procesar inventario
-                if (window.RECETAS) {
+                // 2. Procesar inventario (sólo si no fue descontado previamente en la venta/caja)
+                if (!orderData.inventarioDescontado) {
                     const batch = db.batch();
                     let hasDecrements = false;
                     
                     orderData.items.forEach(item => {
-                        const receta = window.RECETAS[item.id];
-                        if (receta) {
+                        const receta = window.getDishRecipe ? window.getDishRecipe(item, item.nombre) : (window.RECETAS ? window.RECETAS[item.id] : null);
+                        if (receta && Array.isArray(receta)) {
                             receta.forEach(ing => {
-                                const inventarioRef = db.collection('inventario').doc(ing.id);
-                                // Usar set con merge para crearlo si no existe e incrementar negativamente
-                                batch.set(inventarioRef, {
-                                    cantidad: firebase.firestore.FieldValue.increment(-(ing.cant * item.cantidad)),
-                                    nombre: ing.id.replace(/_/g, ' ') // Para que se cree con un nombre si es nuevo
-                                }, { merge: true });
-                                hasDecrements = true;
+                                const ingId = ing.inventarioId || ing.id;
+                                const ingCant = parseFloat(ing.cantidad || ing.cant) || 1;
+                                if (ingId) {
+                                    const inventarioRef = db.collection('inventario').doc(ingId);
+                                    batch.set(inventarioRef, {
+                                        cantidad: firebase.firestore.FieldValue.increment(-(ingCant * (item.cantidad || 1))),
+                                        actualizadoEn: new Date().toISOString()
+                                    }, { merge: true });
+                                    hasDecrements = true;
+                                }
                             });
                         }
                     });
                     
                     if (hasDecrements) {
-                        await batch.commit().catch(err => console.error("Error al actualizar inventario:", err));
+                        await batch.commit().catch(err => console.error("Error al actualizar inventario desde cocina:", err));
                     }
                 }
             }
