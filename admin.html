@@ -1071,46 +1071,32 @@
                 <div class="form-group" style="margin-top: 15px;">
                     <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span><i class="fas fa-camera"></i> Foto del Producto</span>
-                        <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">Desde tu computadora o del catálogo</span>
+                        <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">Selecciona una imagen de tu computadora</span>
                     </label>
-                    <div style="display: flex; gap: 15px; align-items: flex-start;">
-                        <!-- Miniatura con botón de cambio -->
-                        <div style="position: relative; width: 68px; height: 68px; border-radius: 10px; overflow: hidden; border: 2px solid #e67e22; flex-shrink: 0; background: #222; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer;" onclick="document.getElementById('volio-dish-file').click()" title="Haz clic para seleccionar imagen de tu computadora">
+                    <div style="display: flex; gap: 15px; align-items: center; background: rgba(0,0,0,0.3); border: 1px dashed rgba(230, 126, 34, 0.4); border-radius: 10px; padding: 12px;">
+                        <!-- Miniatura grande interactiva -->
+                        <div style="position: relative; width: 75px; height: 75px; border-radius: 10px; overflow: hidden; border: 2px solid #e67e22; flex-shrink: 0; background: #222; box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer;" onclick="document.getElementById('volio-dish-file').click()" title="Haz clic para seleccionar imagen de tu computadora">
                             <img id="volio-dish-img-preview" src="images-catalogo/Señor Pinto.jpeg" style="width: 100%; height: 100%; object-fit: cover;" alt="Preview" onerror="this.src='logo-brand/PNG/Icono Mostaza.png'">
-                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); text-align: center; font-size: 0.65rem; color: #fff; padding: 2px 0;">
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.75); text-align: center; font-size: 0.65rem; color: #fff; padding: 3px 0; font-weight: 600;">
                                 <i class="fas fa-camera"></i> Cambiar
                             </div>
                         </div>
 
                         <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
-                            <!-- Botón destacado para abrir explorador de archivos de la PC -->
-                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                <input type="file" id="volio-dish-file" accept="image/*" style="display: none;" onchange="VolioManager.handleFileUpload(event)">
-                                <button type="button" class="btn-primary" onclick="document.getElementById('volio-dish-file').click()" style="background: linear-gradient(135deg, #e67e22, #d35400); border: none; padding: 8px 14px; font-size: 0.85rem; font-weight: 700; border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: white; box-shadow: 0 2px 6px rgba(230,126,34,0.4);">
+                            <input type="file" id="volio-dish-file" accept="image/*" style="display: none;" onchange="VolioManager.handleFileUpload(event)">
+                            <input type="hidden" id="volio-dish-img" value="images-catalogo/Señor Pinto.jpeg">
+                            
+                            <div>
+                                <button type="button" class="btn-primary" onclick="document.getElementById('volio-dish-file').click()" style="background: linear-gradient(135deg, #e67e22, #d35400); border: none; padding: 10px 16px; font-size: 0.9rem; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color: white; box-shadow: 0 3px 8px rgba(230,126,34,0.4);">
                                     <i class="fas fa-folder-open"></i> Seleccionar foto de mi computadora
                                 </button>
-                                <span id="volio-dish-file-status" style="font-size: 0.75rem; color: #2ecc71; font-weight: 600; display: none;">
-                                    <i class="fas fa-check-circle"></i> Imagen cargada
-                                </span>
                             </div>
-
-                            <!-- Opciones secundarias: elegir del catálogo o URL -->
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <select id="volio-dish-img-select" onchange="VolioManager.selectFromCatalog(this.value)" class="report-select" style="padding: 6px 10px; font-size: 0.78rem; flex: 1;">
-                                    <option value="">-- O elegir una imagen existente del catálogo --</option>
-                                    <option value="images-catalogo/Señor Pinto.jpeg">Señor Pinto (Gallo Pinto Tradicional)</option>
-                                    <option value="images-catalogo/BurrotedePinto.jpg">Burrote de Pinto</option>
-                                    <option value="images-catalogo/Sr. Patacón.jpeg">Sr. Patacón</option>
-                                    <option value="images-catalogo/Sra. Empanada Arreglada .jpeg">Sra. Empanada Arreglada</option>
-                                    <option value="images-catalogo/Hamburguesa.jpeg">Hamburguesa de la Casa</option>
-                                    <option value="images-catalogo/Sr. Cono de SalchiPapas.jpeg">Cono de Salchipapas</option>
-                                    <option value="images-catalogo/12onzas.jpg">Café Chorreado</option>
-                                    <option value="images-catalogo/hidratantes.jpg">Fresco Natural / Bebida</option>
-                                    <option value="images-catalogo/promo_quesopinto.jpg">Queso Pinto Especial</option>
-                                </select>
+                            <span id="volio-dish-file-status" style="font-size: 0.8rem; color: #2ecc71; font-weight: 600; display: none;">
+                                <i class="fas fa-check-circle"></i> Imagen cargada exitosamente
+                            </span>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.4);">
+                                Formatos admitidos: JPG, PNG, WEBP. La imagen se optimiza automáticamente para un rendimiento rápido.
                             </div>
-
-                            <input type="text" id="volio-dish-img" oninput="VolioManager.updateImgPreview()" placeholder="Ruta local o URL web (se llena automáticamente al subir foto)" style="font-size: 0.75rem; padding: 5px 8px; opacity: 0.7;">
                         </div>
                     </div>
                 </div>
@@ -1449,7 +1435,7 @@
     <script src="js/firebase-init.js"></script>
     
     <!-- ADMIN JS -->
-    <script src="js/admin.js?v=2.4"></script>
+    <script src="js/admin.js?v=2.5"></script>
 
 </body>
 </html>
