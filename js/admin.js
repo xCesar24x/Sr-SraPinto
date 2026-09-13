@@ -2091,10 +2091,99 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
 
+        handleFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert("Por favor selecciona un archivo de imagen válido (JPG, PNG, WEBP, etc.).");
+                return;
+            }
+
+            const statusEl = document.getElementById('volio-dish-file-status');
+            if (statusEl) {
+                statusEl.style.display = 'inline-flex';
+                statusEl.style.color = '#f1c40f';
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando foto...';
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    // Optimizar y redimensionar imagen en memoria para un almacenamiento ultra eficiente
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height = Math.round(height * (MAX_WIDTH / width));
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width = Math.round(width * (MAX_HEIGHT / height));
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convertir a JPEG 85% para excelente calidad y tamaño liviano (~50-80kb)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                    // Asignar al input y previsualización
+                    document.getElementById('volio-dish-img').value = dataUrl;
+                    const preview = document.getElementById('volio-dish-img-preview');
+                    if (preview) preview.src = dataUrl;
+
+                    if (document.getElementById('volio-dish-img-select')) {
+                        document.getElementById('volio-dish-img-select').value = '';
+                    }
+
+                    if (statusEl) {
+                        statusEl.style.display = 'inline-flex';
+                        statusEl.style.color = '#2ecc71';
+                        statusEl.innerHTML = `<i class="fas fa-check-circle"></i> "${this.sanitize(file.name)}" lista`;
+                    }
+                };
+                img.onerror = () => {
+                    alert("No se pudo procesar la imagen seleccionada.");
+                    if (statusEl) statusEl.style.display = 'none';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+
+        selectFromCatalog(val) {
+            if (!val) return;
+            document.getElementById('volio-dish-img').value = val;
+            this.updateImgPreview();
+            const statusEl = document.getElementById('volio-dish-file-status');
+            if (statusEl) {
+                statusEl.style.display = 'inline-flex';
+                statusEl.style.color = '#3498db';
+                statusEl.innerHTML = `<i class="fas fa-image"></i> Catálogo`;
+            }
+        },
+
         openDishModal(id = null) {
             const modal = document.getElementById('volio-dish-modal');
             const title = document.getElementById('volio-dish-modal-title');
             document.getElementById('volio-dish-id').value = id || '';
+
+            // Limpiar selector de archivo local
+            const fileInput = document.getElementById('volio-dish-file');
+            if (fileInput) fileInput.value = '';
+            const statusEl = document.getElementById('volio-dish-file-status');
+            if (statusEl) statusEl.style.display = 'none';
 
             if (id) {
                 const dish = this.dishes.find(d => d.id === id);
