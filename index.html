@@ -990,6 +990,71 @@
         }
         .mch-add-btn:hover { transform: scale(1.1); box-shadow: 0 6px 15px rgba(230, 104, 60, 0.6); }
 
+        /* ─── MENÚ SEMANAL PROGRAMADO (CLIENTES) ─── */
+        .weekly-day-box {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            padding: 20px;
+            margin-bottom: 22px;
+            transition: all 0.3s ease;
+        }
+        .weekly-day-box.is-today {
+            background: rgba(241, 196, 15, 0.04);
+            border: 1.5px solid rgba(241, 196, 15, 0.4);
+            box-shadow: 0 4px 30px rgba(241, 196, 15, 0.08);
+        }
+        .weekly-day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .weekly-day-box.is-today .weekly-day-header {
+            border-bottom: 1px solid rgba(241, 196, 15, 0.25);
+        }
+        .weekly-subcat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 16px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+        .weekly-subcat-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .weekly-subcat-badge {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+        }
+        .weekly-view-badge {
+            align-self: center;
+            flex-shrink: 0;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 20px;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
         /* ─── CARRITO PREMIUM ─── */
         .cart-fab {
             position: fixed; bottom: 90px; right: 15px;

@@ -860,7 +860,33 @@ const MenuController = {
     ],
 
     getProductById(id) {
-        return this.MENU_DATA.find(p => p.id === id);
+        let p = (this.MENU_DATA || []).find(item => item.id === id);
+        if (!p && this.volioDishes && this.volioDishes.length > 0) {
+            const v = this.volioDishes.find(item => item.id === id);
+            if (v) {
+                p = {
+                    id: v.id,
+                    categoria: v.categoria,
+                    nombre: v.nombre,
+                    desc: v.desc || '',
+                    ingredientes: v.ingredientes || '',
+                    precio: v.precio || 0,
+                    costo: v.costo || 0,
+                    img: v.img || 'images-catalogo/Señor Pinto.jpeg'
+                };
+            }
+        }
+        if (!p && this.ORIGINAL_MENU_DATA) {
+            p = this.ORIGINAL_MENU_DATA.find(item => item.id === id);
+        }
+        // Enriquecer ingredientes desde volioDishes si existen
+        if (p && this.volioDishes) {
+            const v = this.volioDishes.find(item => item.id === id);
+            if (v && v.ingredientes && !p.ingredientes) {
+                p.ingredientes = v.ingredientes;
+            }
+        }
+        return p;
     },
 
     CATEGORIAS: [
@@ -1150,7 +1176,7 @@ const MenuController = {
             }
         });
 
-        if (titleEl) titleEl.innerHTML = `📅 Menú y Programación Semanal<span>Conoce nuestras especialidades de Lunes a Viernes</span>`;
+        if (titleEl) titleEl.innerHTML = `📅 Menú de la Semana<span>Especialidades de Lunes a Viernes · Cocinamos fresco todos los días</span>`;
         if (countEl) countEl.innerText = 'Lunes a Viernes';
 
         const dayNames = [
@@ -1161,75 +1187,169 @@ const MenuController = {
             { key: 'viernes', name: 'Viernes', icon: '🎉' }
         ];
 
+        // Determinar si hoy es día de semana (o si se fuerza testDay por URL para pruebas)
+        const urlParams = new URLSearchParams(window.location.search);
+        const testDayParam = urlParams.get('testDay');
         const todayNum = new Date().getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mie, 4=Jue, 5=Vie, 6=Sab
         const dayMap = { 1: 'lunes', 2: 'martes', 3: 'miercoles', 4: 'jueves', 5: 'viernes' };
-        const currentTodayKey = dayMap[todayNum] || '';
+        const currentTodayKey = testDayParam || dayMap[todayNum] || '';
+        const todayNameObj = dayNames.find(d => d.key === currentTodayKey);
 
-        const allDishes = (this.volioDishes && this.volioDishes.length > 0)
-            ? this.volioDishes
-            : this.MENU_DATA;
+        const extractImgSrc = (img) => {
+            if (!img) return 'images-catalogo/Señor Pinto.jpeg';
+            if (typeof img === 'string') {
+                if (img.includes('src="')) {
+                    const match = img.match(/src="([^"]+)"/);
+                    if (match && match[1]) return match[1];
+                }
+                return img;
+            }
+            return 'images-catalogo/Señor Pinto.jpeg';
+        };
 
         let daysHtml = `
-            <div style="background: rgba(241, 196, 15, 0.08); border: 1px solid rgba(241, 196, 15, 0.25); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="background: rgba(241, 196, 15, 0.08); border: 1px solid rgba(241, 196, 15, 0.25); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div>
-                    <h4 style="margin: 0 0 4px 0; color: var(--mostaza); font-size: 1rem;"><i class="fas fa-calendar-alt"></i> Menú Semanal de Sr. & Sra. Pinto</h4>
-                    <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.75);">Descubre los platillos programados para cada día de la semana. ¡Cocinamos fresco todos los días!</p>
+                    <h4 style="margin: 0 0 4px 0; color: var(--mostaza); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-calendar-alt"></i> Menú Semanal de Sr. & Sra. Pinto
+                    </h4>
+                    <p style="margin: 0; font-size: 0.82rem; color: rgba(255,255,255,0.75);">
+                        ${currentTodayKey 
+                            ? `¡Hoy es <strong>${todayNameObj?.name}</strong>! Puedes agregar los platillos de hoy a tu orden. Los demás días se muestran para visualización y planificación.`
+                            : `Conoce las especialidades programadas de Lunes a Viernes. Los platillos del día activo permiten ordenar directamente al carrito.`
+                        }
+                    </p>
                 </div>
-                ${currentTodayKey ? `<span style="background: rgba(39, 174, 96, 0.25); color: #2ecc71; border: 1px solid rgba(39, 174, 96, 0.4); padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 800;"><i class="fas fa-circle" style="font-size: 0.5rem; vertical-align: middle;"></i> Hoy es ${currentTodayKey.toUpperCase()}</span>` : ''}
+                ${currentTodayKey ? `
+                    <span style="background: rgba(39, 174, 96, 0.25); color: #2ecc71; border: 1px solid rgba(39, 174, 96, 0.45); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Hoy es ${todayNameObj?.name.toUpperCase()} (Disponible para ordenar)
+                    </span>
+                ` : `
+                    <span style="background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-eye" style="color: #f1c40f;"></i> Modo Visualización Semanal
+                    </span>
+                `}
             </div>
-            <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
         `;
 
         dayNames.forEach(day => {
-            const isToday = day.key === currentTodayKey;
+            const isToday = (day.key === currentTodayKey);
             const scheduledIds = (this.volioSchedule && this.volioSchedule[day.key]) ? this.volioSchedule[day.key] : [];
-            const dayDishes = allDishes.filter(d => scheduledIds.includes(d.id));
+            const dayDishes = scheduledIds.map(id => this.getProductById(id)).filter(Boolean);
+
+            // Clasificar por secciones: Desayuno, Almuerzo, Snack
+            const desayunos = dayDishes.filter(d => {
+                const cat = (d.categoria || '').toLowerCase();
+                return cat === 'desayuno' || cat === 'pintos';
+            });
+
+            const almuerzos = dayDishes.filter(d => {
+                const cat = (d.categoria || '').toLowerCase();
+                return cat === 'almuerzo';
+            });
+
+            const snacks = dayDishes.filter(d => {
+                const cat = (d.categoria || '').toLowerCase();
+                return !['desayuno', 'pintos', 'almuerzo'].includes(cat);
+            });
+
+            const subCategories = [
+                { id: 'desayuno', title: 'Desayunos', icon: '🍳', color: '#f39c12', items: desayunos },
+                { id: 'almuerzo',  title: 'Almuerzos',  icon: '🍲', color: '#e67e22', items: almuerzos },
+                { id: 'snack',     title: 'Snacks & Antojos', icon: '🥟', color: '#e74c3c', items: snacks }
+            ];
+
+            const totalOptions = dayDishes.length;
 
             daysHtml += `
-                <div style="background: ${isToday ? 'rgba(241, 196, 15, 0.06)' : 'rgba(255, 255, 255, 0.03)'}; border: 1px solid ${isToday ? 'rgba(241, 196, 15, 0.4)' : 'rgba(255, 255, 255, 0.08)'}; border-radius: 14px; padding: 16px; transition: all 0.3s;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid ${isToday ? 'rgba(241, 196, 15, 0.2)' : 'rgba(255, 255, 255, 0.06)'}; padding-bottom: 8px;">
-                        <h4 style="margin: 0; font-size: 1.1rem; color: ${isToday ? 'var(--mostaza)' : '#fff'}; display: flex; align-items: center; gap: 8px;">
+                <div class="weekly-day-box ${isToday ? 'is-today' : ''}">
+                    <!-- Encabezado del Día -->
+                    <div class="weekly-day-header">
+                        <h4 style="margin: 0; font-size: 1.15rem; color: ${isToday ? 'var(--mostaza)' : '#fff'}; display: flex; align-items: center; gap: 8px;">
                             <span>${day.icon}</span> ${day.name}
-                            ${isToday ? '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">¡HOY!</span>' : ''}
+                            ${isToday 
+                                ? '<span style="background: #27ae60; color: white; font-size: 0.65rem; padding: 3px 9px; border-radius: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fas fa-check-circle"></i> ¡HOY! Puedes ordenar</span>' 
+                                : '<span style="background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); font-size: 0.65rem; padding: 3px 9px; border-radius: 12px; font-weight: 700; text-transform: uppercase;"><i class="fas fa-eye"></i> Solo visualización</span>'
+                            }
                         </h4>
-                        <span style="font-size: 0.78rem; color: rgba(255,255,255,0.5);">${dayDishes.length} opciones programadas</span>
+                        <span style="font-size: 0.78rem; color: rgba(255,255,255,0.55); font-weight: 600;">
+                            ${totalOptions} ${totalOptions === 1 ? 'platillo programado' : 'platillos programados'}
+                        </span>
                     </div>
-
-                    ${dayDishes.length > 0 ? `
-                        <div class="menu-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
-                            ${dayDishes.map(product => {
-                                const imgSrc = product.img && product.img.includes('src="')
-                                    ? product.img.match(/src="([^"]+)"/)?.[1]
-                                    : (product.img || 'images-catalogo/Señor Pinto.jpeg');
-                                return `
-                                    <div class="product-card-horizontal" style="margin: 0;">
-                                        <div class="product-thumb">
-                                            <img src="${imgSrc}" alt="${product.nombre}" class="img-fit">
-                                        </div>
-                                        <div class="product-details">
-                                            <h4 class="product-title">${product.nombre}</h4>
-                                            <p class="product-desc" style="font-size: 0.75rem;">${product.desc || ''}</p>
-                                            <div class="product-footer">
-                                                <div class="product-price">₡${(product.precio || 0).toLocaleString()}</div>
-                                                <button class="btn-add-cart" onclick="CartManager.addItem('${product.id}')" title="Agregar a la orden">
-                                                    <i class="fas fa-plus"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    ` : `
-                        <div style="padding: 12px; text-align: center; color: rgba(255,255,255,0.45); font-size: 0.82rem; font-style: italic;">
-                            🍳 Opciones tradicionales a la carta disponibles (Pintos, Desayunos, Snacks y Bebidas)
-                        </div>
-                    `}
-                </div>
             `;
+
+            if (totalOptions === 0) {
+                daysHtml += `
+                    <div style="padding: 16px; text-align: center; color: rgba(255,255,255,0.4); font-size: 0.82rem; font-style: italic; background: rgba(255,255,255,0.015); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.08);">
+                        <i class="fas fa-utensils" style="margin-right: 6px;"></i> Sin platillos especiales programados para este día. ¡Nuestras opciones tradicionales a la carta están disponibles!
+                    </div>
+                `;
+            } else {
+                // Renderizar cada sub-sección (Desayuno, Almuerzo, Snack)
+                subCategories.forEach(subCat => {
+                    if (subCat.items.length === 0) return;
+
+                    daysHtml += `
+                        <div class="weekly-subcat-header">
+                            <span class="weekly-subcat-title" style="color: ${subCat.color};">
+                                <span>${subCat.icon}</span> ${subCat.title}
+                            </span>
+                            <span class="weekly-subcat-badge">${subCat.items.length} ${subCat.items.length === 1 ? 'opción' : 'opciones'}</span>
+                        </div>
+                        <div class="menu-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+                    `;
+
+                    subCat.items.forEach(product => {
+                        const imgSrc = extractImgSrc(product.img);
+                        const ingredientesText = product.ingredientes || product.desc || '';
+                        const isAgotado = this.inventario[product.id] === false;
+
+                        // Si es hoy, permitir agregar al carrito
+                        const cartItem = CartManager.items.find(i => i.id === product.id);
+                        const btnContent = cartItem ? `<span style="font-weight: 900; font-size: 1.1rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
+
+                        daysHtml += `
+                            <div class="menu-card-h card-visible ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" style="opacity: 1; transform: none; padding: 12px 14px; gap: 14px; margin: 0; background: ${isToday ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)'}; border: 1px solid ${isToday ? 'rgba(241, 196, 15, 0.22)' : 'rgba(255,255,255,0.05)'};">
+                                <div class="mch-img" style="width: 85px; height: 85px; min-width: 85px; max-width: 85px; max-height: 85px; border-radius: 12px; overflow: hidden; background: #130406; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+                                    <img src="${imgSrc}" alt="${product.nombre}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" onerror="this.src='images-catalogo/Señor Pinto.jpeg'">
+                                </div>
+                                <div class="mch-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                                    <div class="mch-title" style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.25;">
+                                        ${product.nombre}
+                                        ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''}
+                                        ${isAgotado ? '<span style="color: #ff3b30; font-weight: 900; font-size: 0.72rem; margin-left: 6px; padding: 2px 6px; border: 1px solid #ff3b30; border-radius: 4px;">AGOTADO</span>' : ''}
+                                    </div>
+                                    ${ingredientesText ? `
+                                        <div class="mch-desc" style="font-size: 0.74rem; color: rgba(255,255,255,0.68); line-height: 1.35;">
+                                            <strong style="color: #f1c40f; font-weight: 700;">Ingredientes:</strong> ${ingredientesText}
+                                        </div>
+                                    ` : ''}
+                                    <div class="mch-price-row" style="margin-top: 2px;">
+                                        <span class="mch-price" style="font-size: 1rem; color: var(--mostaza); font-weight: 900;">₡${(product.precio || 0).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                ${isToday ? `
+                                    <button class="mch-add-btn" id="add-btn-${product.id}" ${isAgotado ? 'disabled style="background: #555; color: #888;"' : ''} onclick="CartManager.addItem('${product.id}')" title="Agregar a mi orden" style="align-self: center; width: 42px; height: 42px; border-radius: 50%; font-size: 1.2rem; flex-shrink: 0;">
+                                        ${isAgotado ? '<i class="fas fa-ban"></i>' : btnContent}
+                                    </button>
+                                ` : `
+                                    <div class="weekly-view-badge" title="Disponible el ${day.name}">
+                                        <i class="fas fa-eye" style="color: rgba(241, 196, 15, 0.75); font-size: 0.75rem;"></i> Visualizar
+                                    </div>
+                                `}
+                            </div>
+                        `;
+                    });
+
+                    daysHtml += `</div>`; // cierre .menu-list
+                });
+            }
+
+            daysHtml += `</div>`; // cierre .weekly-day-box
         });
 
-        daysHtml += `</div>`;
+        daysHtml += `</div>`; // cierre flex column
         container.innerHTML = daysHtml;
     },
 
