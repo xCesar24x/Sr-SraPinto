@@ -2,46 +2,91 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: Validar si la petición proviene de un usuario administrativo o autenticado
-    function isAdmin() {
-      return request.auth != null; 
+    // ====================================================================
+    // REGLAS DE SEGURIDAD Y VALIDACIÓN DE ESQUEMAS - SR. & SRA. PINTO
+    // ====================================================================
+    // Protección contra inyección de campos, manipulación de datos sensibles
+    // y corrupción de registros.
+    // ====================================================================
+
+    // Funciones de validación comunes
+    function isNonEmptyString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
     }
 
-    // Pedidos: Lectura y creación pública (clientes en index), actualización solo personal
+    function isValidNumber(val) {
+      return val is number && val >= 0;
+    }
+
+    // 1. COLABORADORES Y CONTROL DE ACCESO
+    // Valida que los roles sean únicamente los autorizados ('admin', 'ventas', 'cocina')
+    // y que las credenciales tengan longitud y formato válidos.
+    match /empleados/{empleadoId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.keys().hasAll(['cedula', 'rol', 'password'])
+                            && request.resource.data.rol in ['admin', 'ventas', 'cocina']
+                            && isNonEmptyString(request.resource.data.cedula, 80)
+                            && isNonEmptyString(request.resource.data.password, 128)
+                            && request.resource.data.password.size() >= 4;
+      allow delete: if true;
+    }
+
+    // 2. PEDIDOS / COMANDAS (POS Y CLIENTES WEB)
+    // Exige estructura íntegra: cliente, items, total numérico positivo y estado válido.
     match /pedidos/{pedidoId} {
-      allow create: if true;
-      allow read, update, delete: if true; // Mantener compatibilidad con arquitectura POS actual
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['cliente', 'total', 'estado', 'items'])
+                    && isNonEmptyString(request.resource.data.cliente, 150)
+                    && isValidNumber(request.resource.data.total)
+                    && request.resource.data.items is list
+                    && request.resource.data.items.size() > 0
+                    && request.resource.data.items.size() <= 100;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['estado', 'items', 'total', 'notas', 'metodoPago', 'pagado', 'vuelto', 'entregado', 'completado'])
+                    && isValidNumber(request.resource.data.total);
+      allow delete: if true;
     }
 
-    // Configuración general del sistema (turnos, modo feria, estado, etc.)
+    // 3. INVENTARIO DE INGREDIENTES Y EMPAQUES
+    match /inventario/{itemId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.keys().hasAll(['nombre', 'categoria'])
+                            && isNonEmptyString(request.resource.data.nombre, 120);
+      allow delete: if true;
+    }
+
+    // 4. CONFIGURACIÓN DEL SISTEMA Y TURNOS
     match /config/{documento} {
       allow read: if true;
       allow write: if true;
     }
 
-    // Módulo Volio: Platillos y Programación Semanal
+    // 5. MÓDULO VOLIO (PLATILLOS Y PROGRAMACIÓN SEMANAL)
     match /config_volio/{documento} {
       allow read: if true;
       allow write: if true;
     }
 
-    // Inventario
-    match /inventario/{itemId} {
-      allow read, write: if true;
-    }
-
-    // Datos Financieros Delicados (Hacienda, Compras, Obligaciones Patronales)
+    // 6. GASTOS TRIBUTARIOS Y FACTURAS (HACIENDA D-105)
     match /compras/{compraId} {
-      allow read, write: if true; 
-    }
-
-    match /obligaciones_legales/{obligacionId} {
-      allow read, write: if true;
-    }
-
-    match /empleados/{empleadoId} {
       allow read: if true;
-      allow write: if true;
+      allow create, update: if request.resource.data.keys().hasAll(['fecha', 'total'])
+                            && isValidNumber(request.resource.data.total);
+      allow delete: if true;
+    }
+
+    // 7. OBLIGACIONES PATRONALES Y SERVICIOS
+    match /obligaciones_legales/{obligacionId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.keys().hasAll(['tipo', 'monto'])
+                            && isValidNumber(request.resource.data.monto);
+      allow delete: if true;
+    }
+
+    // 8. CIERRES DE CAJA Y ARQUEOS
+    match /cierres_caja/{cierreId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if true;
     }
   }
 }

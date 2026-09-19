@@ -2089,13 +2089,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
             userList.innerHTML = users.map(user => {
                 const isMasked = userMaskState[user.id] !== false;
-                const passwordDisplay = isMasked ? '••••' : user.password;
+                const isHash = String(user.password || '').startsWith('sha256:');
+                const escape = (window.Security && window.Security.escapeHTML) ? window.Security.escapeHTML : (s => s);
+                
+                let passwordDisplay = '••••••••';
+                if (!isMasked) {
+                    passwordDisplay = isHash 
+                        ? '<span style="font-size: 0.75rem; color: #2ecc71;"><i class="fas fa-shield-alt"></i> Cifrada SHA-256</span>'
+                        : `<span style="color: #e67e22;" title="Texto plano pendiente de migrar">${escape(user.password)}</span>`;
+                }
                 const eyeIcon = isMasked ? 'fa-eye' : 'fa-eye-slash';
 
                 return `
                     <tr>
-                        <td><strong>${user.cedula}</strong></td>
-                        <td><span class="user-badge badge-${user.rol}">${user.rol}</span></td>
+                        <td><strong>${escape(user.cedula)}</strong></td>
+                        <td><span class="user-badge badge-${user.rol}">${escape(user.rol)}</span></td>
                         <td>
                             <div class="password-container">
                                 <span class="password-masked">${passwordDisplay}</span>
@@ -2106,10 +2114,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         </td>
                         <td>
                             <div style="display: flex; gap: 15px;">
-                                <button class="btn-edit" onclick="UsersManager.openEditModal('${user.id}', '${user.cedula}', '${user.rol}', '${user.password}')" title="Editar datos">
+                                <button class="btn-edit" onclick="UsersManager.openEditModal('${user.id}', '${escape(user.cedula)}', '${user.rol}', '${user.password}')" title="Editar datos">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn-delete" onclick="UsersManager.deleteUser('${user.id}', '${user.cedula}')" title="Eliminar colaborador">
+                                <button class="btn-delete" onclick="UsersManager.deleteUser('${user.id}', '${escape(user.cedula)}')" title="Eliminar colaborador">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </div>
@@ -2129,7 +2137,13 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('user-edit-id').value = "";
             document.getElementById('user-username').value = "";
             document.getElementById('user-username').disabled = false;
-            document.getElementById('user-password').value = "";
+            const passInput = document.getElementById('user-password');
+            passInput.value = "";
+            passInput.placeholder = "Ej: 1002";
+            delete passInput.dataset.existingHash;
+            passInput.type = "password";
+            const toggleBtn = document.getElementById('btn-toggle-modal-pass');
+            if (toggleBtn) toggleBtn.querySelector('i').className = 'fas fa-eye';
             document.getElementById('user-role').value = "ventas";
             userModal.classList.add('active');
         },
@@ -2139,7 +2153,20 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('user-edit-id').value = id;
             document.getElementById('user-username').value = cedula;
             document.getElementById('user-username').disabled = true;
-            document.getElementById('user-password').value = password;
+            const passInput = document.getElementById('user-password');
+            const isHash = String(password || '').startsWith('sha256:');
+            if (isHash) {
+                passInput.value = "";
+                passInput.placeholder = "Dejar en blanco para conservar clave actual";
+                passInput.dataset.existingHash = password;
+            } else {
+                passInput.value = password || "";
+                passInput.placeholder = "Ej: 1002";
+                delete passInput.dataset.existingHash;
+            }
+            passInput.type = "password";
+            const toggleBtn = document.getElementById('btn-toggle-modal-pass');
+            if (toggleBtn) toggleBtn.querySelector('i').className = 'fas fa-eye';
             document.getElementById('user-role').value = rol;
             userModal.classList.add('active');
         },
@@ -2152,16 +2179,29 @@ document.addEventListener("DOMContentLoaded", () => {
             const editId = document.getElementById('user-edit-id').value;
             const username = document.getElementById('user-username').value.trim();
             const role = document.getElementById('user-role').value;
-            const password = document.getElementById('user-password').value.trim();
+            const passInput = document.getElementById('user-password');
+            const password = passInput.value.trim();
+            const existingHash = passInput.dataset.existingHash;
 
-            if (!username || !password) {
-                alert("Por favor completa todos los campos del formulario.");
+            if (!username) {
+                alert("Por favor completa el nombre o identificación del colaborador.");
                 return;
             }
 
-            if (password.length < 4) {
-                alert("La contraseña debe tener un PIN o clave de al menos 4 caracteres.");
-                return;
+            let finalPasswordHash = '';
+            if (editId && !password && existingHash) {
+                // Conservar hash existente si no se escribió nueva contraseña
+                finalPasswordHash = existingHash;
+            } else {
+                if (!password) {
+                    alert("Por favor ingresa una contraseña o PIN.");
+                    return;
+                }
+                if (password.length < 4) {
+                    alert("La contraseña debe tener un PIN o clave de al menos 4 caracteres.");
+                    return;
+                }
+                finalPasswordHash = window.Security ? await window.Security.hashPassword(password) : password;
             }
 
             const submitBtn = document.getElementById('btn-user-submit');
@@ -2170,10 +2210,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 if (editId) {
-                    await db.collection('empleados').doc(editId).update({
+                    await db.collection('empleados').doc(editId).set({
+                        cedula: username,
                         rol: role,
-                        password: password
-                    });
+                        password: finalPasswordHash
+                    }, { merge: true });
                 } else {
                     const newDocId = username.toLowerCase().replace(/[^a-z0-9]/g, '_');
                     
@@ -2188,14 +2229,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     await db.collection('empleados').doc(newDocId).set({
                         cedula: username,
                         rol: role,
-                        password: password
+                        password: finalPasswordHash
                     });
                 }
                 
                 this.closeModal();
+                alert(`✅ Colaborador "${username}" guardado con clave protegida exitosamente.`);
             } catch (error) {
                 console.error("Error al guardar colaborador:", error);
-                alert("Ocurrió un error al guardar los cambios.");
+                alert("Ocurrió un error al guardar los cambios: " + (error.message || error));
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = "Guardar Colaborador";

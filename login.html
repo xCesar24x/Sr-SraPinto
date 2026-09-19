@@ -40,7 +40,7 @@
 
         <div id="error-msg" class="error-msg">Cédula o contraseña incorrectos.</div>
 
-        <button class="btn-login" onclick="LoginManager.iniciarSesion()">Ingresar <i class="fas fa-arrow-right"></i></button>
+        <button id="btn-submit-login" class="btn-login" onclick="LoginManager.iniciarSesion()">Ingresar <i class="fas fa-arrow-right"></i></button>
         
         <div style="margin-top: 20px; text-align: center;">
             <a href="index.html" style="color: rgba(255,255,255,0.3); text-decoration: none; font-size: 0.8rem;"><i class="fas fa-arrow-left"></i> Volver al Menú</a>
@@ -51,6 +51,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="js/firebase-init.js"></script>
+    <script src="js/security.js"></script>
     <script src="js/login.js"></script>
 
 </body>
