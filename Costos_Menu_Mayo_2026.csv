@@ -1,0 +1,27 @@
+﻿Categoría,ID Sistema,Nombre del Producto,Precio Venta Original (₡),Costo de Producción (₡),Margen Bruto (₡),Margen Bruto (%),Food Cost (%),Ingredientes y Componentes Principales
+  CATEGORÍA: PINTOS,,,,,,,,
+Pintos,p-senor-pinto,Señor Pinto,3500.0,1200.0,,,,"Gallo pinto tradicional, queso frito, huevo y maduros"
+Pintos,c-senor-pinto-cafe,Combo: Señor Pinto + Café,4000.0,1450.0,,,,Señor Pinto + Café Premium Grande
+Pintos,p-burrote,Burrote de Pinto,3000.0,1000.0,,,,"Gallo pinto, queso, huevo, natilla en tortilla de harina"
+Pintos,c-burrote-cafe,Combo: Burrote de Pinto + Café,3500.0,1250.0,,,,Burrote de Pinto + Café Premium Grande
+Pintos,p-empanada-pinto,Empanada de Pinto,2500.0,750.0,,,,Empanada de maíz crujiente rellena de gallo pinto
+Pintos,p-sra-empanada-m1,Sra. Empanada Arreglada (Pinto),3500.0,1100.0,,,,"Empanada de pinto con ensalada, carne mechada y salsas"
+Pintos,p-queso-pinto,Queso Pinto,3500.0,1100.0,,,,Gallo pinto con doble porción de queso frito
+  CATEGORÍA: SNACKS & ANTOJOS,,,,,,,,
+Snacks & Antojos,p-sr-patacon,Sr. Patacón,4000.0,1300.0,,,,Patacones crujientes con frijoles molidos y queso
+Snacks & Antojos,p-sra-quesadilla,Sra. Quesadilla,4000.0,1400.0,,,,Tortilla de harina con queso fundido y carne
+Snacks & Antojos,p-sra-hamburguesa,Sra. Hamburguesa con Papas,5000.0,1900.0,,,,Hamburguesa casera con papas fritas crujientes
+Snacks & Antojos,p-empanada-carne,Empanada de Carne,2500.0,800.0,,,,Empanada artesanal rellena de carne mechada
+Snacks & Antojos,p-empanada-queso,Empanada de Queso Mozzarella,2500.0,750.0,,,,Empanada artesanal con queso mozzarella derretido
+Snacks & Antojos,p-empanada-carne-queso,Empanada de Carne y Queso,2500.0,850.0,,,,Empanada mixta con carne mechada y mozzarella
+Snacks & Antojos,p-empanada-birria,Empanada de Birria,2500.0,900.0,,,,Empanada artesanal rellena de birria de res
+Snacks & Antojos,p-sra-empanada-m2,Sra. Empanada Arreglada (Snack),3500.0,1050.0,,,,Empanada crujiente con repollo arreglado y salsas
+Snacks & Antojos,c-empanada-cafe,Combo: Empanada + Café,3000.0,1100.0,,,,Empanada artesanal a elegir + Café Premium
+Snacks & Antojos,p-cono-salchipapa,Sr. Cono de SalchiPapas,3000.0,950.0,,,,Papas fritas en cono con salchicha y aderezos
+Snacks & Antojos,p-sr-papi-carne,Sr. Papi Carne,3500.0,1200.0,,,,Papas fritas crujientes con porción de carne mechada
+  CATEGORÍA: BEBIDAS,,,,,,,,
+Bebidas,b-cafe-premium,Café Premium Grande (12 oz),1000.0,300.0,,,,Café costarricense premium de 12 oz con vaso y tapa
+Bebidas,b-agua,Agua Embotellada (600 ml),1000.0,200.0,,,,Botella de agua purificada 600 ml
+Bebidas,b-gaseosas,Gaseosas (600 ml),1200.0,450.0,,,,Botella de refresco gaseoso surtido 600 ml
+Bebidas,b-hidratante,Bebidas Hidratantes (Powerade),1300.0,500.0,,,,Bebida isotónica hidratante botella 600 ml
+,,PROMEDIOS GENERALES:,,,,,,

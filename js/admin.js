@@ -3672,11 +3672,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 {
                     tipo: 'INS',
-                    titulo: 'Póliza Riesgos del Trabajo INS',
-                    fechaVencimiento: new Date(y, m + 1, 10).toISOString().split('T')[0],
-                    recurrencia: 'semestral',
+                    titulo: 'Póliza Riesgos del Trabajo INS (Trimestral)',
+                    fechaVencimiento: new Date(y, Math.floor(m / 3) * 3 + 3, 10).toISOString().split('T')[0],
+                    recurrencia: 'trimestral',
                     monto: 18000,
-                    notas: 'Póliza laboral',
+                    notas: 'Póliza laboral trimestral',
+                    pagado: false
+                },
+                {
+                    tipo: 'Salarios',
+                    titulo: 'Pago de Salarios / Planilla Semanal',
+                    fechaVencimiento: new Date(y, m, now.getDate() + ((5 - now.getDay() + 7) % 7 || 7)).toISOString().split('T')[0],
+                    recurrencia: 'semanal',
+                    monto: 0,
+                    notas: 'Pago semanal a colaboradores',
                     pagado: false
                 },
                 {
@@ -4202,6 +4211,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 'Agua': '💧',
                 'CCSS': '🏥',
                 'INS': '🛡️',
+                'Salarios': '💼',
                 'Patente': '🏛️',
                 'Hacienda D-105': '📋',
                 'Alquiler': '🏠',
@@ -4210,6 +4220,7 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             const recurrenceMap = {
+                'semanal': '📅 Semanal (Cada semana)',
                 'dia_15': '📅 Vence el 15 de cada mes',
                 'mensual': '📅 Mensual (Fin de mes)',
                 'trimestral': '📅 Trimestral',
@@ -4357,9 +4368,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 recSelect.value = 'mensual';
                 notesInput.value = 'Último día hábil de mes';
             } else if (type === 'INS') {
-                titleInput.value = 'Póliza Riesgos del Trabajo INS';
-                recSelect.value = 'semestral';
-                notesInput.value = 'Póliza de Riesgos de Trabajo';
+                titleInput.value = 'Póliza Riesgos del Trabajo INS (Trimestral)';
+                recSelect.value = 'trimestral';
+                notesInput.value = 'Póliza de Riesgos de Trabajo (Trimestral)';
+                const currentQuarter = Math.floor(now.getMonth() / 3);
+                const nextQuarterMonth = (currentQuarter + 1) * 3;
+                dateInput.value = new Date(now.getFullYear(), nextQuarterMonth, 10).toISOString().split('T')[0];
+            } else if (type === 'Salarios') {
+                titleInput.value = 'Pago de Salarios / Planilla Semanal';
+                recSelect.value = 'semanal';
+                notesInput.value = 'Pago semanal a colaboradores';
+                const dayOfWeek = now.getDay();
+                const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
+                const nextFriday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilFriday);
+                dateInput.value = nextFriday.toISOString().split('T')[0];
             } else if (type === 'Patente') {
                 titleInput.value = 'Patente Municipal Comercial';
                 recSelect.value = 'trimestral';
@@ -4804,9 +4826,43 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById('finance-salary-modal').classList.add('active');
             document.getElementById('fin-salary-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('fin-salary-employee').value = '';
-            document.getElementById('fin-salary-period').value = 'Semana en curso';
+            
+            const freqSelect = document.getElementById('fin-salary-frequency');
+            if (freqSelect) freqSelect.value = 'semanal';
+            
+            const now = new Date();
+            const day = now.getDay() || 7;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() - day + 1);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+            const weekStr = `Semana del ${monday.getDate()} ${months[monday.getMonth()]} al ${sunday.getDate()} ${months[sunday.getMonth()]}`;
+            
+            document.getElementById('fin-salary-period').value = weekStr;
             document.getElementById('fin-salary-amount').value = '';
             document.getElementById('fin-salary-notes').value = '';
+        },
+
+        handleSalaryFrequencyChange() {
+            const freq = document.getElementById('fin-salary-frequency')?.value || 'semanal';
+            const periodInput = document.getElementById('fin-salary-period');
+            if (!periodInput) return;
+            const now = new Date();
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+            if (freq === 'semanal') {
+                const day = now.getDay() || 7;
+                const monday = new Date(now);
+                monday.setDate(now.getDate() - day + 1);
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+                periodInput.value = `Semana del ${monday.getDate()} ${months[monday.getMonth()]} al ${sunday.getDate()} ${months[sunday.getMonth()]}`;
+            } else if (freq === 'quincenal') {
+                const isFirstHalf = now.getDate() <= 15;
+                periodInput.value = isFirstHalf ? `1era Quincena ${months[now.getMonth()]} (1 al 15)` : `2da Quincena ${months[now.getMonth()]} (16 al fin de mes)`;
+            } else if (freq === 'mensual') {
+                periodInput.value = `Mes de ${months[now.getMonth()]} ${now.getFullYear()}`;
+            }
         },
 
         closeAddSalaryModal() {
@@ -4816,6 +4872,7 @@ document.addEventListener("DOMContentLoaded", () => {
         async saveSalary() {
             const fechaPago = document.getElementById('fin-salary-date').value;
             const empleado = document.getElementById('fin-salary-employee').value.trim();
+            const frecuencia = document.getElementById('fin-salary-frequency')?.value || 'semanal';
             const periodo = document.getElementById('fin-salary-period').value.trim();
             const metodo = document.getElementById('fin-salary-method').value;
             const monto = parseFloat(document.getElementById('fin-salary-amount').value);
@@ -4829,6 +4886,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const salaryData = {
                 fechaPago,
                 empleado,
+                frecuencia,
                 periodo: periodo || 'Semanal',
                 metodo,
                 monto,

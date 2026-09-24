@@ -1535,7 +1535,8 @@
                         <option value="Luz">💡 Recibo de Luz Eléctrica (CNFL / ICE)</option>
                         <option value="Agua">💧 Recibo de Agua Potable (AyA / ESPH)</option>
                         <option value="CCSS">🏥 CCSS (Caja - Planilla Mensual)</option>
-                        <option value="INS">🛡️ Póliza de Riesgos de Trabajo (INS)</option>
+                        <option value="INS">🛡️ Póliza de Riesgos de Trabajo (INS - Trimestral)</option>
+                        <option value="Salarios">💼 Salarios / Planilla (Semanal)</option>
                         <option value="Patente">🏛️ Patente Municipal (Trimestral)</option>
                         <option value="Hacienda D-105">📋 Hacienda D-105 (Régimen Simplificado)</option>
                         <option value="Alquiler">🏠 Alquiler de Local / Cocina</option>
@@ -1555,9 +1556,10 @@
                     <div class="form-group">
                         <label>Recurrencia del Pago</label>
                         <select id="fin-legal-recurrence" class="report-select" style="width: 100%; padding: 8px;">
+                            <option value="semanal">Semanal (Cada semana)</option>
                             <option value="dia_15">Día 15 de cada mes (Luz)</option>
                             <option value="mensual">Mensual (Fin de mes)</option>
-                            <option value="trimestral">Trimestral (Mar, Jun, Set, Dic)</option>
+                            <option value="trimestral" selected>Trimestral (Mar, Jun, Set, Dic)</option>
                             <option value="semestral">Semestral</option>
                             <option value="anual">Anual</option>
                             <option value="unica">Fecha fija única</option>
@@ -1598,9 +1600,19 @@
                     <label>Colaborador / Empleado</label>
                     <input type="text" id="fin-salary-employee" placeholder="Ej: Vendedor 1, Cocinero, Bryan...">
                 </div>
-                <div class="form-group">
-                    <label>Período / Semana Trabajada</label>
-                    <input type="text" id="fin-salary-period" placeholder="Ej: Semana del 8 al 14 Septiembre">
+                <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Frecuencia de Pago</label>
+                        <select id="fin-salary-frequency" onchange="FinancesManager.handleSalaryFrequencyChange()">
+                            <option value="semanal" selected>🗓️ Pago Semanal</option>
+                            <option value="quincenal">🗓️ Pago Quincenal</option>
+                            <option value="mensual">🗓️ Pago Mensual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Período / Semana Trabajada</label>
+                        <input type="text" id="fin-salary-period" placeholder="Ej: Semana del 8 al 14 Septiembre">
+                    </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">

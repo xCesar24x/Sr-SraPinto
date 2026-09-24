@@ -205,41 +205,7 @@ window.CocinaManager = {
             const db = window.FirebaseDB;
             const docRef = db.collection("pedidos").doc(id);
             
-            // 1. Obtener la orden para saber qué descontar
-            const orderSnap = await docRef.get();
-            if (orderSnap.exists) {
-                const orderData = orderSnap.data();
-                
-                // 2. Procesar inventario (sólo si no fue descontado previamente en la venta/caja)
-                if (!orderData.inventarioDescontado) {
-                    const batch = db.batch();
-                    let hasDecrements = false;
-                    
-                    orderData.items.forEach(item => {
-                        const receta = window.getDishRecipe ? window.getDishRecipe(item, item.nombre) : (window.RECETAS ? window.RECETAS[item.id] : null);
-                        if (receta && Array.isArray(receta)) {
-                            receta.forEach(ing => {
-                                const ingId = ing.inventarioId || ing.id;
-                                const ingCant = parseFloat(ing.cantidad || ing.cant) || 1;
-                                if (ingId) {
-                                    const inventarioRef = db.collection('inventario').doc(ingId);
-                                    batch.set(inventarioRef, {
-                                        cantidad: firebase.firestore.FieldValue.increment(-(ingCant * (item.cantidad || 1))),
-                                        actualizadoEn: new Date().toISOString()
-                                    }, { merge: true });
-                                    hasDecrements = true;
-                                }
-                            });
-                        }
-                    });
-                    
-                    if (hasDecrements) {
-                        await batch.commit().catch(err => console.error("Error al actualizar inventario desde cocina:", err));
-                    }
-                }
-            }
-
-            // 3. Actualizar el estado en Firebase a listo
+            // Actualizar el estado en Firebase a listo
             await docRef.update({ 
                 estado: "listo",
                 fechaListo: new Date().toISOString()
