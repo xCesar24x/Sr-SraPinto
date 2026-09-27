@@ -300,7 +300,7 @@ const CartManager = {
 
         try {
             const isSalesPOS = window.location.pathname.includes('ventas.html');
-            const estadoInicial = isSalesPOS ? 'pendiente' : 'pendiente_aprobacion';
+            const estadoInicial = isSalesPOS ? 'listo' : 'pendiente_aprobacion';
 
             const pedido = {
                 cliente: this.customerName || 'Cliente sin nombre',
@@ -327,10 +327,10 @@ const CartManager = {
                         metodoPago: pedido.metodoPago,
                         total: pedido.total,
                         items: pedido.items,
-                        estado: 'pendiente', // Al modificarlo va directo a cocina
+                        estado: 'listo', // Al modificarlo va directo a completado
                         fechaModificacion: new Date().toISOString()
                     });
-                    console.log("✅ Pedido modificado y enviado a cocina");
+                    console.log("✅ Pedido modificado y completado");
                     
                     // Recuperar el comanda ID o usar fallback para el ticket
                     const originalSnap = await db.collection("pedidos").doc(this.editingOrderId).get();
@@ -347,7 +347,7 @@ const CartManager = {
                         successOverlay.classList.add('active');
                         const textEl = successOverlay.querySelector('.success-text');
                         if(textEl) {
-                            textEl.innerHTML = `La comanda fue modificada con éxito.<br>Los cambios se enviaron directamente a la cocina.<br>¡Buen trabajo!`;
+                            textEl.innerHTML = `La venta fue modificada con éxito.<br>Los cambios se guardaron correctamente en el sistema.<br>¡Buen trabajo!`;
                         }
                     }
                     this.editingOrderId = null;
@@ -405,7 +405,7 @@ const CartManager = {
                         if(textEl) {
                             if (isSalesPOS) {
                                 const displayNum = pedido.num_pedido ? `#${pedido.num_pedido}` : `#${docRef.id.slice(-5).toUpperCase()}`;
-                                textEl.innerHTML = `El pedido fue enviado directamente a la cocina con la comanda <strong>${displayNum}</strong>.<br>En breves momentos comenzará su preparación.<br>¡Buen provecho!`;
+                                textEl.innerHTML = `Venta registrada con éxito bajo el tiquete <strong>${displayNum}</strong>.<br>¡Buen trabajo!`;
                             } else {
                                 textEl.innerHTML = `Tu pedido fue guardado y enviado por WhatsApp.<br>Espera la aprobación por parte de la caja.<br>¡Gracias por preferir a Sr. & Sra. Pinto!`;
                             }
@@ -843,6 +843,19 @@ const MenuController = {
         if (!p && this.ORIGINAL_MENU_DATA) {
             p = this.ORIGINAL_MENU_DATA.find(item => item.id === id);
         }
+        if (p) {
+            // Garantizar el precio más actualizado: Catálogo Maestro siempre toma prioridad
+            if (this.volioDishes && this.volioDishes.length > 0) {
+                const vd = this.volioDishes.find(item => item.id === id);
+                if (vd && vd.precio !== undefined && !isNaN(vd.precio)) {
+                    p.precio = vd.precio;
+                } else if (this.customPrices && this.customPrices[id] !== undefined) {
+                    p.precio = this.customPrices[id];
+                }
+            } else if (this.customPrices && this.customPrices[id] !== undefined) {
+                p.precio = this.customPrices[id];
+            }
+        }
         // Enriquecer ingredientes desde volioDishes si existen
         if (p && this.volioDishes) {
             const v = this.volioDishes.find(item => item.id === id);
@@ -1048,7 +1061,12 @@ const MenuController = {
             let activeVolioDishes = [];
             if (this.volioDishes && this.volioDishes.length > 0) {
                 if (scheduledIds.length > 0) {
-                    activeVolioDishes = this.volioDishes.filter(d => scheduledIds.includes(d.id));
+                    const scheduledDishes = this.volioDishes.filter(d => scheduledIds.includes(d.id));
+                    // Si una categoría (como snacks o bebidas) no tiene platillos programados para hoy,
+                    // mantener disponibles los platillos del catálogo de esa categoría para no dejarla vacía
+                    const scheduledCategories = new Set(scheduledDishes.map(d => d.categoria));
+                    const unscheduledCategoriesDishes = this.volioDishes.filter(d => !scheduledCategories.has(d.categoria));
+                    activeVolioDishes = [...scheduledDishes, ...unscheduledCategoriesDishes];
                 } else {
                     // Si no hay programación específica aún, mostrar todos los platillos activos
                     activeVolioDishes = this.volioDishes;
@@ -1070,13 +1088,37 @@ const MenuController = {
             if (!['desayuno', 'almuerzo', 'snacks', 'bebidas'].includes(StateManager.currentCategory)) {
                 StateManager.setCategory('desayuno');
             }
+        } else {
+            // Sincronizar catálogo maestro con el menú general (precios, descripciones, nombres e imágenes)
+            if (this.volioDishes && this.volioDishes.length > 0) {
+                this.volioDishes.forEach(vd => {
+                    const item = this.MENU_DATA.find(p => p.id === vd.id);
+                    if (item) {
+                        if (vd.precio !== undefined && vd.precio !== null && !isNaN(vd.precio)) item.precio = vd.precio;
+                        if (vd.nombre) item.nombre = vd.nombre;
+                        if (vd.desc) item.desc = vd.desc;
+                        if (vd.ingredientes) item.ingredientes = vd.ingredientes;
+                        if (vd.img) item.img = vd.img.startsWith('<') ? vd.img : `<img src="${vd.img}" alt="${vd.nombre}" class="img-fit">`;
+                    }
+                });
+            }
         }
 
-        // 4. Aplicar Precios Manuales (sobreescriben cualquier precio anterior)
+        // 4. Aplicar Precios Manuales de contingencia
         if (this.customPrices) {
             this.MENU_DATA.forEach(p => {
                 if (this.customPrices[p.id] !== undefined) {
                     p.precio = this.customPrices[p.id];
+                }
+            });
+        }
+
+        // 5. El Catálogo Maestro (volio_platillos) es la fuente definitiva y en tiempo real
+        if (this.volioDishes && this.volioDishes.length > 0) {
+            this.MENU_DATA.forEach(p => {
+                const vd = this.volioDishes.find(d => d.id === p.id);
+                if (vd && vd.precio !== undefined && vd.precio !== null && !isNaN(vd.precio)) {
+                    p.precio = vd.precio;
                 }
             });
         }

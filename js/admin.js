@@ -2524,6 +2524,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     this.dishes.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
                     this.renderDishesTable();
                     this.renderDaySchedule();
+
+                    // Sincronizar automáticamente config/precios con los precios vigentes del Catálogo Maestro
+                    const priceSync = {};
+                    this.dishes.forEach(d => {
+                        if (d.precio !== undefined && d.precio !== null && !isNaN(d.precio)) {
+                            priceSync[d.id] = d.precio;
+                        }
+                    });
+                    if (Object.keys(priceSync).length > 0) {
+                        db.collection('config').doc('precios').set(priceSync, { merge: true }).catch(err => console.warn("Sync precios:", err));
+                    }
                 }
             });
 
@@ -3523,12 +3534,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 const db = window.FirebaseDB;
+                const dishId = id || ('v-' + Date.now());
                 if (id) {
                     await db.collection('volio_platillos').doc(id).update(dishData);
                 } else {
-                    const newId = 'v-' + Date.now();
-                    await db.collection('volio_platillos').doc(newId).set(dishData);
+                    await db.collection('volio_platillos').doc(dishId).set(dishData);
                 }
+
+                // Sincronizar precio y costo inmediatamente en config global para el menú de clientes y ventas
+                await db.collection('config').doc('precios').set({
+                    [dishId]: precio
+                }, { merge: true }).catch(err => console.warn("Error sincronizando precio:", err));
+
+                if (costo > 0) {
+                    await db.collection('config').doc('costos').set({
+                        [dishId]: costo
+                    }, { merge: true }).catch(err => console.warn("Error sincronizando costo:", err));
+                }
+
                 this.closeDishModal();
             } catch (err) {
                 console.error("Error al guardar platillo Volio:", err);

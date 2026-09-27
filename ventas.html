@@ -1478,7 +1478,7 @@
             <span id="cart-total">₡0</span>
         </div>
         <button id="btn-checkout" class="btn-checkout" onclick="CartManager.procesarPedido()">
-            <i class="fas fa-paper-plane"></i> Enviar a Cocina
+            <i class="fas fa-cash-register"></i> Cobrar / Registrar Venta
         </button>
     </div>
 </div>
@@ -1489,7 +1489,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=2.0"></script>
+<script src="js/main.js?v=2.1"></script>
 
 <script>
 /**
@@ -1660,7 +1660,7 @@ if(slides.length > 0) {
     </div>
 </div>
 
-<div id="sale-details-modal" class="dashboard-modal" style="z-index: 1100;">
+<div id="sale-details-modal" class="dashboard-modal" style="z-index: 10100;">
     <div class="dashboard-modal-content" style="max-width: 500px; width: 95%;">
         <div class="dashboard-modal-header">
             <h3 class="dashboard-modal-title" style="font-family: 'Gotham', sans-serif; font-size: 1.35rem; font-weight: 800; text-transform: uppercase; color: var(--mostaza);"><i class="fas fa-receipt" style="color: #3498db; font-size: 1.25rem;"></i> Detalle de Venta</h3>
@@ -1933,9 +1933,9 @@ const SalesDashboard = {
 
             let statusBadge = '';
             if (order.estado === 'pendiente') {
-                statusBadge = '<span style="color:#f1c40f; margin-left:5px;" title="En cocina"><i class="fas fa-fire"></i></span>';
+                statusBadge = '<span style="color:#f1c40f; margin-left:5px;" title="Pendiente"><i class="fas fa-clock"></i></span>';
             } else if (order.estado === 'listo' || order.estado === 'retirado') {
-                statusBadge = '<span style="color:#2ecc71; margin-left:5px;" title="Entregado/Listo"><i class="fas fa-check-double"></i></span>';
+                statusBadge = '<span style="color:#2ecc71; margin-left:5px;" title="Venta Completada"><i class="fas fa-check-double"></i></span>';
             } else if (order.estado === 'regresado') {
                 statusBadge = '<span style="color:#e74c3c; margin-left:5px;" title="Devuelto"><i class="fas fa-undo"></i></span>';
             } else if (order.estado === 'cancelado') {
@@ -2019,6 +2019,12 @@ const SalesDashboard = {
             await db.collection('config').doc('precios').set({
                 [productId]: price
             }, { merge: true });
+
+            // Sincronizar también en catálogo de volio_platillos
+            await db.collection('volio_platillos').doc(productId).update({
+                precio: price,
+                actualizadoEn: new Date().toISOString()
+            }).catch(() => {});
             
             console.log(`✅ Precio actualizado en la nube para ${productId}: ₡${price}`);
             
@@ -2080,7 +2086,7 @@ const SalesDashboard = {
                     </div>
                     <div class="ticket-actions-row">
                         <button onclick="SalesDashboard.aprobarPedido('${order.id}')" class="ticket-btn-approve">
-                            <i class="fas fa-check-circle"></i> Aprobar y Mandar a Cocina
+                            <i class="fas fa-check-circle"></i> Aprobar Venta
                         </button>
                         <button onclick="CartManager.imprimirTiquete(${JSON.stringify(order).replace(/"/g, '&quot;')})" class="ticket-btn-reject" style="flex: 0 0 50px; display: flex; align-items: center; justify-content: center; background: rgba(247, 183, 49, 0.15); border-color: #f7b731; color: #f7b731; padding: 12px; border-radius: 10px;" title="Imprimir Ticket">
                             <i class="fas fa-print" style="font-size: 1.1rem;"></i>
@@ -2196,7 +2202,7 @@ const SalesDashboard = {
             }
 
             await db.collection("pedidos").doc(id).update({
-                estado: "pendiente",
+                estado: "listo",
                 num_pedido: numPedido,
                 fechaAprobacion: new Date().toISOString()
             });
@@ -2214,7 +2220,7 @@ const SalesDashboard = {
         try {
             const db = window.FirebaseDB;
             await db.collection("pedidos").doc(id).update({
-                estado: "pendiente",
+                estado: "listo",
                 fechaAprobacion: new Date().toISOString()
             });
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
