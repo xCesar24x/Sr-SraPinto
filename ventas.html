@@ -8,6 +8,7 @@
         if (window.location.search.includes('test=true')) {
             window.confirm = () => true;
             window.alert = () => true;
+            try { localStorage.setItem('srsrapinto_auth', 'ventas'); } catch(e) {}
         }
         const r = localStorage.getItem('srsrapinto_auth');
         if (r !== 'ventas' && r !== 'admin') {
@@ -1215,246 +1216,972 @@
             }
         }
 
-    </style>
+        /* ==================================================== */
+        /* ─── TERMINAL PUNTO DE VENTA (POS) MODERNO Y RÁPIDO ─── */
+        /* ==================================================== */
+        #pos-top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 65px;
+            background: rgba(20, 5, 8, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+            z-index: 9990;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
 
+        .pos-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pos-brand img {
+            height: 42px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .pos-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pos-brand-title {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: var(--blanco);
+            letter-spacing: 0.5px;
+        }
+
+        .pos-brand-tag {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--mostaza);
+            background: rgba(247, 183, 49, 0.15);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: fit-content;
+        }
+
+        .pos-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pos-nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: white;
+            padding: 8px 14px;
+            font-family: 'Gotham', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            user-select: none;
+        }
+
+        .pos-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .pos-nav-btn.btn-in-progress {
+            background: rgba(230, 126, 34, 0.15);
+            border-color: rgba(230, 126, 34, 0.5);
+            color: #f39c12;
+        }
+
+        .pos-nav-btn.btn-in-progress:hover {
+            background: rgba(230, 126, 34, 0.3);
+        }
+
+        .pos-nav-btn.btn-history {
+            background: rgba(52, 152, 219, 0.15);
+            border-color: rgba(52, 152, 219, 0.4);
+            color: #3498db;
+        }
+
+        .pos-nav-btn.btn-web {
+            background: rgba(37, 211, 102, 0.15);
+            border-color: rgba(37, 211, 102, 0.4);
+            color: #25d366;
+        }
+
+        .pos-nav-btn.btn-inventory {
+            background: rgba(247, 183, 49, 0.15);
+            border-color: rgba(247, 183, 49, 0.4);
+            color: #f7b731;
+        }
+
+        .pos-nav-btn.btn-logout {
+            background: rgba(255, 68, 68, 0.15);
+            border-color: rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+        }
+
+        .pos-badge {
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            padding: 0 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 900;
+        }
+
+        .badge-in-progress {
+            background: #f39c12;
+            color: #000;
+        }
+
+        .badge-history {
+            background: #3498db;
+            color: #fff;
+        }
+
+        .badge-web {
+            background: #25d366;
+            color: #000;
+        }
+
+        @keyframes pulse-amber {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(243, 156, 18, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
+        }
+
+        /* ─── WORKSPACE DUAL PANEL ─── */
+        .pos-workspace-container {
+            display: flex;
+            height: calc(100vh - 65px);
+            margin-top: 65px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+        }
+
+        .pos-catalog-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        /* BARRA DE CATEGORÍAS */
+        .pos-categories-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.45);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .pos-cat-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.85);
+            font-family: 'Gotham', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .pos-cat-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+        }
+
+        .pos-cat-btn.active {
+            background: linear-gradient(135deg, #f7b731, #f39c12);
+            border-color: #f7b731;
+            color: #2B0A11;
+            box-shadow: 0 4px 15px rgba(247, 183, 49, 0.35);
+        }
+
+        .pos-search-wrap {
+            margin-left: auto;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .pos-search-wrap input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 8px 12px 8px 34px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.85rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .pos-search-wrap input:focus {
+            border-color: var(--mostaza);
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .pos-search-wrap i {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+        }
+
+        /* GRID DE PLATILLOS (CUADRICULA TÁCTIL) */
+        .pos-dish-grid-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .pos-dish-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+            gap: 12px;
+        }
+
+        .pos-dish-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.09);
+            border-radius: 14px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+            overflow: hidden;
+        }
+
+        .pos-dish-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(247, 183, 49, 0.4);
+        }
+
+        .pos-dish-card:active {
+            transform: scale(0.95);
+        }
+
+        .pos-dish-card.in-cart {
+            border-color: #f7b731;
+            background: rgba(247, 183, 49, 0.08);
+            box-shadow: 0 0 15px rgba(247, 183, 49, 0.2);
+        }
+
+        .pos-dish-card.agotado {
+            opacity: 0.45;
+            filter: grayscale(0.8);
+            cursor: not-allowed;
+        }
+
+        .pos-dish-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            animation: popBadge 0.2s ease-out;
+        }
+
+        @keyframes popBadge {
+            0% { transform: scale(0.5); }
+            80% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .pos-dish-img-wrap {
+            width: 72px;
+            height: 72px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+            flex-shrink: 0;
+        }
+
+        .pos-dish-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .pos-dish-name {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.25;
+            height: 32px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 6px;
+        }
+
+        .pos-dish-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        .pos-dish-price {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #2ecc71;
+        }
+
+        .pos-dish-agotado-tag {
+            font-size: 0.65rem;
+            color: #ff3b30;
+            background: rgba(255, 59, 48, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+        }
+
+        /* ─── SIDEBAR DEL TICKET DE VENTA (COMANDAS) ─── */
+        .pos-ticket-sidebar {
+            width: 380px;
+            min-width: 350px;
+            max-width: 400px;
+            height: 100%;
+            background: rgba(14, 3, 6, 0.97);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .pos-ticket-header {
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .pos-ticket-title {
+            font-size: 1rem;
+            font-weight: 900;
+            color: var(--mostaza);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+        }
+
+        .pos-ticket-clear-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .pos-ticket-clear-btn:hover {
+            background: rgba(255, 68, 68, 0.2);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .pos-ticket-client-box {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pos-ticket-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: white;
+            font-size: 0.9rem;
+            font-family: inherit;
+            font-weight: 700;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .pos-ticket-input:focus {
+            border-color: var(--mostaza);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .pos-ticket-items-wrap {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .pos-ticket-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .pos-ticket-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .pos-ticket-item-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.25;
+        }
+
+        .pos-ticket-btn-del {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 2px;
+            transition: 0.2s;
+        }
+
+        .pos-ticket-btn-del:hover {
+            color: #ff4444;
+        }
+
+        .pos-ticket-item-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pos-ticket-item-price {
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: var(--mostaza);
+        }
+
+        .pos-ticket-stepper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 2px 4px;
+        }
+
+        .pos-ticket-stepper button {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: 0.2s;
+        }
+
+        .pos-ticket-stepper button:hover {
+            background: var(--mostaza);
+            color: #000;
+        }
+
+        .pos-ticket-stepper span {
+            font-size: 0.85rem;
+            font-weight: 900;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .pos-ticket-footer {
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pos-ticket-pay-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pos-ticket-pay-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .pos-ticket-pay-options .pay-chip {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: 0.2s;
+        }
+
+        .pos-ticket-pay-options .pay-chip.active {
+            background: rgba(46, 204, 113, 0.2);
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+
+        .pos-ticket-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .pos-ticket-total-label {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .pos-ticket-total-val {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #2ecc71;
+        }
+
+        .pos-ticket-btn-submit {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #25d366, #20bf6b);
+            color: #0b2212;
+            font-family: 'Gotham', sans-serif;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .pos-ticket-btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.5);
+        }
+
+        .pos-ticket-btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* ─── MODAL COMANDAS EN PROCESO ─── */
+        .in-progress-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(243, 156, 18, 0.35);
+            border-left: 5px solid #f39c12;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .in-progress-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: #f39c12;
+        }
+
+        .in-progress-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+        }
+
+        .in-progress-number {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #f39c12;
+        }
+
+        .in-progress-customer {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .in-progress-time {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .in-progress-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 6px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+
+        .in-progress-total {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #2ecc71;
+        }
+
+        .in-progress-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .btn-mark-delivered {
+            flex: 1;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: #0b2212;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: 'Gotham', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-mark-delivered:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(46, 204, 113, 0.45);
+        }
+
+        .btn-in-progress-print {
+            background: rgba(247, 183, 49, 0.15);
+            border: 1px solid #f7b731;
+            color: #f7b731;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .btn-in-progress-print:hover {
+            background: #f7b731;
+            color: #000;
+        }
+
+        .btn-in-progress-edit {
+            background: rgba(52, 152, 219, 0.15);
+            border: 1px solid #3498db;
+            color: #3498db;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .btn-in-progress-edit:hover {
+            background: #3498db;
+            color: #fff;
+        }
+
+        /* ─── RESPONSIVE MOBILE BAR ─── */
+        .pos-mobile-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(20, 5, 8, 0.96);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 16px;
+            z-index: 9980;
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 900px) {
+            .pos-ticket-sidebar {
+                position: fixed;
+                right: 0;
+                top: 65px;
+                height: calc(100vh - 65px);
+                z-index: 9985;
+                transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+                width: 90%;
+                max-width: 380px;
+            }
+            .pos-ticket-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            .pos-mobile-bar {
+                display: flex;
+            }
+            .pos-dish-grid-wrap {
+                padding-bottom: 75px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            #pos-top-nav {
+                padding: 0 10px;
+            }
+            .pos-brand-text {
+                display: none;
+            }
+            .pos-nav-btn span {
+                display: none;
+            }
+            .pos-nav-btn {
+                padding: 8px 10px;
+            }
+            .pos-dish-grid {
+                grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+                gap: 8px;
+            }
+            .pos-dish-img-wrap {
+                width: 58px;
+                height: 58px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- FLOATING SALES DASHBOARD BAR -->
-<div id="sales-dashboard-bar" style="position: fixed; top: 60px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px; display: flex; justify-content: center; gap: 15px; z-index: 9990; pointer-events: auto;">
-    <button id="btn-web-orders" onclick="SalesDashboard.openWebOrders()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.85); border: 1.5px solid rgba(37, 211, 102, 0.4); border-radius: 15px; color: white; padding: 12px 18px; font-family: 'Gotham', sans-serif; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
-        <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.2rem;"></i>
-        <span>Pedidos Web</span>
-        <span id="web-orders-count" class="dashboard-badge" style="background: #25d366; color: black; min-width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; margin-left: auto;">0</span>
-    </button>
-    
-    <button id="btn-returned-orders" onclick="SalesDashboard.openReturnedOrders()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.85); border: 1.5px solid rgba(233, 19, 80, 0.4); border-radius: 15px; color: white; padding: 12px 18px; font-family: 'Gotham', sans-serif; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
-        <i class="fas fa-undo" style="color: #E91350; font-size: 1.1rem;"></i>
-        <span>Cambios en Comanda</span>
-        <span id="returned-orders-count" class="dashboard-badge" style="background: #E91350; color: white; min-width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; margin-left: auto;">0</span>
-    </button>
+<!-- TOP NAVIGATION POS -->
+<nav id="pos-top-nav">
+    <div class="pos-brand">
+        <img src="logo-brand/PNG/Logo Blanco Horizontal.png" alt="Sr. & Sra. Pinto">
+        <div class="pos-brand-text">
+            <span class="pos-brand-title">SR. & SRA. PINTO</span>
+            <span class="pos-brand-tag"><i class="fas fa-cash-register"></i> Terminal POS</span>
+        </div>
+    </div>
 
-    <button id="btn-inventory" onclick="SalesDashboard.openInventory()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.85); border: 1.5px solid rgba(247, 183, 49, 0.4); border-radius: 15px; color: white; padding: 12px 18px; font-family: 'Gotham', sans-serif; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
-        <i class="fas fa-boxes" style="color: #f7b731; font-size: 1.1rem;"></i>
-        <span>Inventario</span>
-    </button>
+    <div class="pos-nav-actions">
+        <button id="btn-in-progress" class="pos-nav-btn btn-in-progress" onclick="SalesDashboard.openInProgressOrders()" title="Comandas en Proceso">
+            <i class="fas fa-clock" style="color: #f39c12;"></i>
+            <span>En Proceso</span>
+            <span id="in-progress-orders-count" class="pos-badge badge-in-progress">0</span>
+        </button>
 
-    <button id="btn-sales-history" onclick="SalesDashboard.openSalesHistory()" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; background: rgba(0,0,0,0.85); border: 1.5px solid rgba(52, 152, 219, 0.4); border-radius: 15px; color: white; padding: 12px 18px; font-family: 'Gotham', sans-serif; font-size: 0.9rem; font-weight: 800; cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
-        <i class="fas fa-history" style="color: #3498db; font-size: 1.1rem;"></i>
-        <span>Historial</span>
-        <span id="sales-history-count" class="dashboard-badge" style="background: #3498db; color: white; min-width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; margin-left: auto;">0</span>
-    </button>
-</div>
+        <button id="btn-sales-history" class="pos-nav-btn btn-history" onclick="SalesDashboard.openSalesHistory()" title="Historial de Ventas del Día">
+            <i class="fas fa-history" style="color: #3498db;"></i>
+            <span>Historial</span>
+            <span id="sales-history-count" class="pos-badge badge-history">0</span>
+        </button>
+
+        <button id="btn-web-orders" class="pos-nav-btn btn-web" onclick="SalesDashboard.openWebOrders()" title="Pedidos Web de Clientes">
+            <i class="fab fa-whatsapp" style="color: #25d366;"></i>
+            <span>Pedidos Web</span>
+            <span id="web-orders-count" class="pos-badge badge-web">0</span>
+        </button>
+
+        <button id="btn-returned-orders" class="pos-nav-btn" onclick="SalesDashboard.openReturnedOrders()" style="background: rgba(233, 19, 80, 0.15); border-color: rgba(233, 19, 80, 0.4); color: #E91350;" title="Comandas Devueltas por Cocina">
+            <i class="fas fa-undo"></i>
+            <span>Devueltas</span>
+            <span id="returned-orders-count" class="pos-badge" style="background: #E91350; color: white;">0</span>
+        </button>
+
+        <button id="btn-inventory" class="pos-nav-btn btn-inventory" onclick="SalesDashboard.openInventory()" title="Control de Inventario y Precios">
+            <i class="fas fa-boxes" style="color: #f7b731;"></i>
+            <span>Inventario</span>
+        </button>
+
+        <button class="pos-nav-btn btn-logout" onclick="logout()" title="Cerrar Sesión">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Salir</span>
+        </button>
+    </div>
+</nav>
 
 <!-- FLOATING EDITING ORDER BANNER -->
-<div id="editing-order-banner" style="display: none; background: linear-gradient(135deg, #e67e22, #d35400); color: white; padding: 12px 20px; font-weight: 800; font-size: 0.9rem; text-align: center; border-radius: 12px; margin: 0 auto; max-width: 500px; box-shadow: 0 8px 25px rgba(230, 126, 34, 0.4); align-items: center; justify-content: space-between; gap: 10px; position: fixed; top: 130px; left: 50%; transform: translateX(-50%); z-index: 9989; border: 2px solid var(--mostaza); width: 90%;">
+<div id="editing-order-banner" style="display: none; background: linear-gradient(135deg, #e67e22, #d35400); color: white; padding: 10px 20px; font-weight: 800; font-size: 0.9rem; text-align: center; border-radius: 12px; margin: 0 auto; max-width: 600px; box-shadow: 0 8px 25px rgba(230, 126, 34, 0.4); align-items: center; justify-content: space-between; gap: 10px; position: fixed; top: 75px; left: 50%; transform: translateX(-50%); z-index: 9989; border: 2px solid var(--mostaza); width: 90%;">
     <span><i class="fas fa-edit"></i> Modificando Comanda de <strong id="editing-customer-name"></strong></span>
-    <button onclick="SalesDashboard.cancelEditing()" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 900; transition: 0.2s; font-family: inherit;">Cancelar</button>
+    <button onclick="SalesDashboard.cancelEditing()" style="background: rgba(255,255,255,0.25); border: none; color: white; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 900; transition: 0.2s; font-family: inherit;">Cancelar</button>
 </div>
-
-<!-- INDICADOR DE PERFIL Y SALIR -->
-<div style="position: fixed; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(247, 183, 49, 0.15); border: 1px solid var(--mostaza, #f7b731); color: var(--mostaza, #f7b731); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; z-index: 9999; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px;">
-    <i class="fas fa-cash-register"></i> Ventas
-</div>
-
-<button onclick="logout()" style="position: fixed; top: 15px; right: 15px; background: rgba(255, 68, 68, 0.15); border: 1px solid #ff4444; color: #ff4444; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; z-index: 9999; cursor: pointer; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 8px; transition: 0.3s;">
-    <i class="fas fa-sign-out-alt"></i> Salir
-</button>
 
 <!-- Pantalla de Carga -->
 <div id="loader">
     <div class="loader-logo-wrap">
-        <!-- Capa base (siluetiada/oscura) -->
         <img class="loader-logo-base" src="logo-brand/PNG/Logo BLanco Vertical.png" alt="">
-        <!-- Capa de relleno (se revela de izquierda a derecha) -->
         <img class="loader-logo-fill" src="logo-brand/PNG/Logo BLanco Vertical.png" alt="Sr. y Sra. Pinto">
     </div>
-    <div class="loader-tagline">Preparando el sabor tico...</div>
+    <div class="loader-tagline">Preparando el terminal de ventas...</div>
 </div>
 
-<div id="view-hub" class="view active">
-    <div class="hub-container">
-        <div class="hub-left">
-            <!-- Accesos ocultos para personal -->
-            <div style="opacity: 0.1; display: flex; justify-content: center; gap: 15px; margin-top: 15px;">
-                <a href="login.html?r=ventas" style="color: white; font-size: 0.8rem;"><i class="fas fa-cash-register"></i></a>
-                <a href="pantalla.html?rotate=true" style="color: white; font-size: 0.8rem;"><i class="fas fa-tv"></i></a>
-                <a href="login.html?r=cocina" style="color: white; font-size: 0.8rem;"><i class="fas fa-utensils"></i></a>
-                <a href="login.html?r=admin" style="color: white; font-size: 0.8rem;"><i class="fas fa-cog"></i></a>
-            </div>
-
-            <div class="logo-wrapper">
-                <!-- Ajuste visual: Se mueve ligeramente a la izquierda (-5%) para compensar el peso de los personajes -->
-                <img src="logo-brand/PNG/Logo BLanco Vertical.png" alt="Sr. y Sra. Pinto Official" style="width: 100%; max-width: 420px; height: auto; display: block; margin: 0 auto; transform: translateX(-4%);">
-            </div>
-
-            <div class="status-badge">
-                <span class="status-dot" id="status-dot"></span>
-                <span id="status-text">Calculando...</span>
-            </div>
-
-            <div class="footer-hub" style="margin-top: 20px;">
-                <div class="footer-location"><i class="fas fa-map-marker-alt"></i> EL PURO SABOR</div>
-                <div class="footer-address">Auténtica Gastronomía Costarricense</div>
-                <div class="schedule-grid" style="grid-template-columns: 1fr;">
-                    <div class="sched-item" style="text-align: center; border-color: rgba(37, 211, 102, 0.4); background: rgba(37, 211, 102, 0.05);">
-                        <div class="sched-day" style="font-size: 1.1rem; margin-bottom: 5px; color: var(--blanco);">ABIERTOS FINES DE SEMANA</div>
-                        <div class="sched-hour" style="color: #25d366; font-size: 1rem;">¡Te esperamos!</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="copyright">
-                Sr. & Sra. Pinto © 2025-2026 • Hecho en CR
+<!-- POS WORKSPACE DUAL PANEL -->
+<main id="pos-workspace" class="pos-workspace-container">
+    <!-- PANEL IZQUIERDO: CATÁLOGO Y PLATILLOS -->
+    <section class="pos-catalog-section">
+        <!-- BARRA DE CATEGORÍAS -->
+        <div class="pos-categories-nav">
+            <button class="pos-cat-btn active" data-cat="todos" onclick="PosManager.setCategory('todos')">
+                <i class="fas fa-border-all"></i> Todos
+            </button>
+            <button class="pos-cat-btn" data-cat="desayuno" onclick="PosManager.setCategory('desayuno')">
+                <span>🍳</span> Desayunos
+            </button>
+            <button class="pos-cat-btn" data-cat="almuerzo" onclick="PosManager.setCategory('almuerzo')">
+                <span>🍲</span> Almuerzos
+            </button>
+            <button class="pos-cat-btn" data-cat="snacks" onclick="PosManager.setCategory('snacks')">
+                <span>🥟</span> Snacks
+            </button>
+            <button class="pos-cat-btn" data-cat="bebidas" onclick="PosManager.setCategory('bebidas')">
+                <span>☕</span> Bebidas
+            </button>
+            <div class="pos-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar platillo..." oninput="PosManager.setSearch(this.value)">
             </div>
         </div>
 
-        <div class="hub-right">
-            <!-- Hero Carousel -->
-            <div class="hero-card" id="hero-carousel">
-                <div class="carousel-slide active">
-                    <img src="images-catalogo/Señor Pinto.jpeg" alt="El Arte de Sr. Pinto">
-                    <div class="hero-overlay">🔥 EL ARTE DE SR. PINTO</div>
-                </div>
-                <div class="carousel-slide">
-                    <img src="images-catalogo/BurrotedePinto.jpg" alt="Burrote de Pinto">
-                    <div class="hero-overlay">🌯 BURROTE - ¡PURO SABOR!</div>
-                </div>
-                <div class="carousel-slide">
-                    <img src="images-catalogo/señorpintocombo.jpeg" alt="Combo Señor Pinto">
-                    <div class="hero-overlay">☕ COMBOS COMPLETOS</div>
-                </div>
-                <div class="carousel-slide">
-                    <img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra Empanada Arreglada">
-                    <div class="hero-overlay">🥟 EMPANADAS ARREGLADAS</div>
-                </div>
-                <div class="carousel-slide">
-                    <img src="images-catalogo/Sr. Patacón.jpeg" alt="Sr Patacón">
-                    <div class="hero-overlay">🍌 SR. PATACÓN CRUJIENTE</div>
-                </div>
-                <div class="carousel-slide">
-                    <img src="images-catalogo/Sra. Hamburguesa con Papas.jpeg" alt="Sra Hamburguesa">
-                    <div class="hero-overlay">🍔 SRA. HAMBURGUESA</div>
-                </div>
-            </div>
-
-            <!-- 4 Buttons Grid -->
-            <div class="hub-buttons-grid">
-                <button onclick="UIController.showMenu()" class="hub-btn btn-menu">
-                    <i class="fas fa-utensils"></i>
-                    <div class="btn-text">
-                        <strong>VER MENÚ SR & SRA PINTO</strong>
-                        <span>Ordena Acá</span>
-                    </div>
-                </button>
-                <a href="https://www.instagram.com/srysrapinto1" class="hub-btn btn-instagram" target="_blank">
-                    <i class="fab fa-instagram"></i>
-                    <div class="btn-text">
-                        <strong>INSTAGRAM</strong>
-                        <span>Videos y fotos diarias</span>
-                    </div>
-                </a>
-                <a href="https://www.facebook.com/share/1YZgUMp16x/" class="hub-btn btn-facebook" target="_blank">
-                    <i class="fab fa-facebook"></i>
-                    <div class="btn-text">
-                        <strong>FACEBOOK</strong>
-                        <span>Unite a la comunidad</span>
-                    </div>
-                </a>
-                <a href="https://wa.me/50688224763" class="hub-btn btn-whatsapp" target="_blank">
-                    <i class="fab fa-whatsapp"></i>
-                    <div class="btn-text">
-                        <strong>¡PEDIR POR WHATSAPP!</strong>
-                        <span>Respuesta inmediata</span>
-                    </div>
-                </a>
-            </div>
-            
-            <!-- Botón de Eventos Especiales -->
-            <a href="https://wa.me/50688224763?text=Hola!%20Me%20gustar%C3%ADa%20m%C3%A1s%20informaci%C3%B3n%20sobre%20eventos%20especiales%20🎉" class="btn-eventos" target="_blank">
-                <i class="fas fa-star"></i>
-                <span>Contáctanos para tus eventos especiales</span>
-                <i class="fab fa-whatsapp"></i>
-            </a>
-        </div>
-    </div>
-</div>
-
-<div id="view-menu" class="view hidden">
-    <div class="menu-header">
-        <button onclick="UIController.showHub()" class="back-btn"><i class="fas fa-arrow-left"></i> Inicio</button>
-        <div style="display:flex; align-items:center; margin-left:20px; gap:10px;">
-            <img src="logo-brand/PNG/Logo Blanco Horizontal.png" style="height:65px; border-radius:4px;">
-        </div>
-    </div>
-    
-    <div class="menu-banner">
-        <img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Banner Pinto">
-    </div>
-    
-    <div class="menu-layout">
-        <div class="menu-sidebar">
-            <div class="sidebar-title">CATEGORÍAS</div>
-            <div id="sidebar-categories" style="display:flex; flex-direction:column; gap:8px;">
-                <!-- Se llena vía JS -->
+        <!-- GRID DE PLATILLOS TÁCTILES -->
+        <div class="pos-dish-grid-wrap">
+            <div id="pos-dish-grid" class="pos-dish-grid">
+                <!-- Se llena dinámicamente con los cuadros de platillos -->
             </div>
         </div>
-        
-        <div class="menu-list-container">
-            <div class="category-header">
-                <h3 id="current-category-title">🥘 Categoría</h3>
-                <span id="current-category-count" class="options-count">0 opciones</span>
+    </section>
+
+    <!-- PANEL DERECHO: TICKET DE VENTA / COMANDA -->
+    <aside id="pos-ticket-sidebar" class="pos-ticket-sidebar">
+        <div class="pos-ticket-header">
+            <div class="pos-ticket-title">
+                <i class="fas fa-receipt" style="color: var(--mostaza);"></i> Comanda Actual
+                <span id="pos-ticket-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 700; margin-left: 5px;">0 items</span>
             </div>
-            
-            <div id="menu-dynamic-content" class="menu-list">
-                <!-- Se llena vía JS (Horizontal cards) -->
+            <button class="pos-ticket-clear-btn" onclick="PosManager.clearCart()" title="Vaciar orden">
+                <i class="fas fa-trash-alt"></i> Vaciar
+            </button>
+        </div>
+
+        <!-- BANNER DE EDICIÓN INTERNO -->
+        <div id="cart-edit-banner" style="display: none; background: rgba(230, 126, 34, 0.15); border-bottom: 2px solid #e67e22; padding: 8px 16px; font-size: 0.85rem; font-weight: bold; color: #ff9f43; align-items: center; gap: 8px;">
+            <i class="fas fa-edit"></i> <span id="cart-edit-banner-text">Modificando Comanda</span>
+        </div>
+
+        <!-- CAJA DE DATOS DEL CLIENTE -->
+        <div class="pos-ticket-client-box">
+            <input type="text" id="order-name" class="pos-ticket-input" placeholder="👤 Nombre del cliente / Mesa..." oninput="CartManager.updateName(this.value)">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: rgba(255,255,255,0.7); cursor: pointer;">
+                    <input type="checkbox" id="has-allergies" style="accent-color: var(--mostaza); width: 14px; height: 14px;" onchange="CartManager.toggleAllergies(this.checked)">
+                    <span>Notas / Alergias</span>
+                </label>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- BOTÓN FLOTANTE CARRITO -->
-<button id="cart-fab" class="cart-fab">
-    <i class="fas fa-shopping-basket"></i>
-    <span id="cart-fab-total" class="cart-fab-total">₡0</span>
-    <span id="cart-count" class="cart-count">0</span>
-</button>
-
-<!-- DRAWER DEL CARRITO -->
-<div id="cart-drawer" class="cart-drawer hidden">
-    <div class="cart-header">
-        <h2>Mi Pedido</h2>
-        <button id="cart-close-btn" class="chat-close-btn"><i class="fas fa-times"></i></button>
-    </div>
-    
-    <!-- BANNER DE EDICIÓN INTERNO -->
-    <div id="cart-edit-banner" style="display: none; background: rgba(230, 126, 34, 0.15); border-bottom: 2px solid #e67e22; padding: 10px 20px; font-size: 0.85rem; font-weight: bold; color: #ff9f43; align-items: center; gap: 8px;">
-        <i class="fas fa-edit"></i> <span id="cart-edit-banner-text">Modificando Comanda</span>
-    </div>
-    
-    <div id="cart-items-container" class="cart-items">
-        <!-- Se llena dinámicamente -->
-    </div>
-
-    <div class="cart-footer">
-        <!-- NOMBRE DEL CLIENTE -->
-        <div class="order-name-section">
-            <h4 class="payment-title">¿A nombre de quién?</h4>
-            <input type="text" id="order-name" class="name-input" placeholder="Tu nombre aquí..." oninput="CartManager.updateName(this.value)">
+            <textarea id="allergies-text" class="pos-ticket-input" style="display: none; height: 50px; resize: none; font-size: 0.8rem;" placeholder="Ej: Sin cebolla, extra salsa..." oninput="CartManager.updateAllergies(this.value)"></textarea>
         </div>
 
-        <!-- ALERGIAS -->
-        <div class="allergies-section" style="margin-top: 15px; text-align: left;">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #fff; cursor: pointer;">
-                <input type="checkbox" id="has-allergies" style="accent-color: var(--mostaza, #f7b731); width: 16px; height: 16px;" onchange="CartManager.toggleAllergies(this.checked)">
-                <span>Alergias o restricciones</span>
-            </label>
-            <textarea id="allergies-text" class="name-input" style="display: none; margin-top: 10px; resize: none; height: 60px; font-family: inherit; width: 100%; box-sizing: border-box;" placeholder="Ej: Sin cebolla, alérgico al maní..." oninput="CartManager.updateAllergies(this.value)"></textarea>
+        <!-- ITEMS SELECCIONADOS -->
+        <div id="pos-ticket-items" class="pos-ticket-items-wrap">
+            <!-- Se llena dinámicamente con los items de la orden -->
         </div>
 
-        <div class="payment-section">
-            <h4 class="payment-title">Método de Pago:</h4>
-            <div id="payment-options" class="payment-options">
+        <!-- PIE DE TICKET: PAGO Y COBRAR -->
+        <div class="pos-ticket-footer">
+            <span class="pos-ticket-pay-title">Método de Pago</span>
+            <div id="payment-options" class="pos-ticket-pay-options">
                 <div class="pay-chip active" data-method="Efectivo" onclick="CartManager.setPaymentMethod('Efectivo')">
                     <i class="fas fa-money-bill-wave"></i> Efectivo
                 </div>
@@ -1471,10 +2198,30 @@
                     <i class="fas fa-gift"></i> Regalía
                 </div>
             </div>
-        </div>
 
-        <div class="total-row" style="margin-top: 20px;">
-            <span>Total:</span>
+            <div class="pos-ticket-total-row">
+                <span class="pos-ticket-total-label">Total:</span>
+                <span id="pos-ticket-total" class="pos-ticket-total-val">₡0</span>
+                <span id="cart-total" style="display: none;">₡0</span>
+            </div>
+
+            <button id="btn-checkout" class="pos-ticket-btn-submit" onclick="CartManager.procesarPedido()">
+                <i class="fas fa-bolt"></i> Cobrar / Guardar Comanda
+            </button>
+        </div>
+    </aside>
+</main>
+
+<!-- BARRA MÓVIL INFERIOR -->
+<div id="pos-mobile-bar" class="pos-mobile-bar">
+    <div style="display: flex; flex-direction: column;">
+        <span style="font-size: 0.75rem; color: rgba(255,255,255,0.6);"><span id="pos-mob-bar-count">0</span> productos</span>
+        <span id="pos-mob-bar-total" style="font-size: 1.15rem; font-weight: 900; color: #2ecc71;">₡0</span>
+    </div>
+    <button onclick="document.getElementById('pos-ticket-sidebar').classList.toggle('mobile-open')" style="background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 900; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+        <i class="fas fa-receipt"></i> Ver Comanda
+    </button>
+</div>            <span>Total:</span>
             <span id="cart-total">₡0</span>
         </div>
         <button id="btn-checkout" class="btn-checkout" onclick="CartManager.procesarPedido()">
@@ -1502,101 +2249,281 @@ window.addEventListener('load', () => {
 });
 
 /**
- * CONTROL DE PESTAÑAS (MENÚ)
+ * ========================================================
+ * CONTROLADOR PRINCIPAL DEL TERMINAL POS (PosManager)
+ * ========================================================
  */
-function showCategory(cat) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`.tab-btn[onclick="showCategory('${cat}')"]`).classList.add('active');
-    
-    MenuController.renderCategory(cat);
-}
+const PosManager = {
+    currentCategory: 'todos',
+    searchQuery: '',
 
+    init() {
+        this.renderDishes();
+        this.syncCartUI();
+    },
 
-/**
- * LÓGICA DE HORARIO (STATUS ENGINE EN TIEMPO REAL DESDE FIRESTORE)
- */
-if (window.FirebaseDB) {
-    window.FirebaseDB.collection('config').doc('estado').onSnapshot((doc) => {
-        const dot = document.getElementById('status-dot');
-        const text = document.getElementById('status-text');
-        if (!dot || !text) return;
-        
-        if (doc.exists && doc.data().abierto === true) {
-            dot.style.color = "#25d366";
-            dot.style.background = "#25d366";
-            dot.style.boxShadow = "0 0 15px #25d366";
-            text.innerText = "Abierto ahora • ¡Hace tu pedido!";
-        } else {
-            dot.style.color = "#ff2200";
-            dot.style.background = "#ff2200";
-            dot.style.boxShadow = "0 0 15px #ff2200";
-            text.innerText = "Cerrado ahora • Revisá el horario";
+    setCategory(cat) {
+        this.currentCategory = cat;
+        document.querySelectorAll('.pos-cat-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.cat === cat);
+        });
+        this.renderDishes();
+        if (navigator.vibrate) navigator.vibrate(30);
+    },
+
+    setSearch(query) {
+        this.searchQuery = (query || '').toLowerCase().trim();
+        this.renderDishes();
+    },
+
+    matchesCategory(dish, cat) {
+        if (cat === 'todos') return true;
+        const dishCat = (dish.categoria || '').toLowerCase();
+        if (cat === 'desayuno') {
+            return dishCat === 'desayuno' || dishCat === 'pintos';
         }
-    });
-}
+        if (cat === 'almuerzo') {
+            return dishCat === 'almuerzo';
+        }
+        if (cat === 'snacks') {
+            return dishCat === 'snacks' || dishCat === 'snack' || dishCat === 'combos';
+        }
+        if (cat === 'bebidas') {
+            return dishCat === 'bebidas' || dishCat === 'bebida';
+        }
+        return dishCat === cat;
+    },
 
-// EFECTO GLOW DINÁMICO
-document.querySelectorAll('.link-card').forEach(card => {
-    card.addEventListener('mousemove', e => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty('--x', `${e.clientX - rect.left}px`);
-        card.style.setProperty('--y', `${e.clientY - rect.top}px`);
-    });
-});
+    getAllDishes() {
+        if (!window.MenuController) return [];
+        let list = [...(window.MenuController.MENU_DATA || [])];
+        if (window.MenuController.volioDishes && window.MenuController.volioDishes.length > 0) {
+            const existingIds = new Set(list.map(d => d.id));
+            window.MenuController.volioDishes.forEach(vd => {
+                if (!existingIds.has(vd.id)) {
+                    list.push({
+                        id: vd.id,
+                        categoria: vd.categoria,
+                        nombre: vd.nombre,
+                        desc: vd.desc || '',
+                        precio: vd.precio || 0,
+                        costo: vd.costo || 0,
+                        img: vd.img && vd.img.startsWith('<') ? vd.img : `<img src="${vd.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${vd.nombre}" class="img-fit">`
+                    });
+                    existingIds.add(vd.id);
+                }
+            });
+        }
+        return list;
+    },
 
-/**
- * HERO CAROUSEL
- */
-let currentSlide = 0;
-const slides = document.querySelectorAll('.carousel-slide');
-if(slides.length > 0) {
-    setInterval(() => {
-        slides[currentSlide].classList.remove('active');
-        currentSlide = (currentSlide + 1) % slides.length;
-        slides[currentSlide].classList.add('active');
-    }, 7000);
-}
+    renderDishes() {
+        const grid = document.getElementById('pos-dish-grid');
+        if (!grid) return;
 
+        const allDishes = this.getAllDishes();
+        const inventario = (window.MenuController && window.MenuController.inventario) || {};
+        const cartItems = (window.CartManager && window.CartManager.items) || [];
+
+        const filtered = allDishes.filter(dish => {
+            const matchCat = this.matchesCategory(dish, this.currentCategory);
+            const matchSearch = !this.searchQuery || dish.nombre.toLowerCase().includes(this.searchQuery);
+            return matchCat && matchSearch;
+        });
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; opacity: 0.5;">
+                    <i class="fas fa-search" style="font-size: 2.5rem; margin-bottom: 12px; color: var(--mostaza);"></i>
+                    <p style="font-size: 1rem; font-weight: 700;">No se encontraron platillos en esta categoría.</p>
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = filtered.map(dish => {
+            const isAgotado = inventario[dish.id] === false;
+            const qtyInCart = cartItems.filter(i => i.id === dish.id).reduce((sum, i) => sum + i.quantity, 0);
+
+            let imgSrc = 'images-catalogo/Señor Pinto.jpeg';
+            if (dish.img) {
+                if (dish.img.startsWith('<img') || dish.img.includes('src="')) {
+                    const match = dish.img.match(/src="([^"]+)"/);
+                    if (match) imgSrc = match[1];
+                } else {
+                    imgSrc = dish.img;
+                }
+            }
+
+            return `
+                <div class="pos-dish-card ${qtyInCart > 0 ? 'in-cart' : ''} ${isAgotado ? 'agotado' : ''}" 
+                     onclick="PosManager.handleDishClick('${dish.id}')"
+                     id="pos-card-${dish.id}"
+                     title="${dish.nombre}">
+                    ${qtyInCart > 0 ? `<div class="pos-dish-badge">x${qtyInCart}</div>` : ''}
+                    <div class="pos-dish-img-wrap">
+                        <img src="${imgSrc}" alt="${dish.nombre}" class="pos-dish-img" loading="lazy" onerror="this.src='images-catalogo/Señor Pinto.jpeg'">
+                    </div>
+                    <div class="pos-dish-name">${dish.nombre}</div>
+                    <div class="pos-dish-footer">
+                        <span class="pos-dish-price">₡${(dish.precio || 0).toLocaleString()}</span>
+                        ${isAgotado ? '<span class="pos-dish-agotado-tag">Agotado</span>' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    handleDishClick(dishId) {
+        if (!window.CartManager) return;
+        const inventario = (window.MenuController && window.MenuController.inventario) || {};
+        if (inventario[dishId] === false) {
+            alert("Este producto se encuentra marcado como Agotado en el inventario.");
+            return;
+        }
+
+        const product = window.MenuController ? window.MenuController.getProductById(dishId) : null;
+        if (!product) return;
+
+        if (product.requiresOptions) {
+            UIController.showOptionsModal(product);
+        } else {
+            CartManager.addItem(dishId);
+        }
+
+        if (navigator.vibrate) navigator.vibrate(30);
+    },
+
+    syncCartUI() {
+        const cartItems = (window.CartManager && window.CartManager.items) || [];
+        
+        // 1. Sincronizar badges en el grid de platillos
+        const allCards = document.querySelectorAll('.pos-dish-card');
+        allCards.forEach(card => {
+            const dishId = card.id.replace('pos-card-', '');
+            const qty = cartItems.filter(i => i.id === dishId).reduce((sum, i) => sum + i.quantity, 0);
+            const badge = card.querySelector('.pos-dish-badge');
+            if (qty > 0) {
+                card.classList.add('in-cart');
+                if (badge) {
+                    badge.textContent = `x${qty}`;
+                } else {
+                    const b = document.createElement('div');
+                    b.className = 'pos-dish-badge';
+                    b.textContent = `x${qty}`;
+                    card.prepend(b);
+                }
+            } else {
+                card.classList.remove('in-cart');
+                if (badge) badge.remove();
+            }
+        });
+
+        // 2. Sincronizar items en el ticket lateral
+        const ticketList = document.getElementById('pos-ticket-items');
+        if (ticketList) {
+            if (cartItems.length === 0) {
+                ticketList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 10px; opacity: 0.4;">
+                        <i class="fas fa-cash-register" style="font-size: 2.5rem; margin-bottom: 12px; color: var(--mostaza);"></i>
+                        <p style="font-size: 0.95rem; font-weight: 700;">Comanda vacía</p>
+                        <span style="font-size: 0.8rem;">Toca cualquier platillo para sumarlo a la orden</span>
+                    </div>
+                `;
+            } else {
+                ticketList.innerHTML = cartItems.map(item => `
+                    <div class="pos-ticket-item">
+                        <div class="pos-ticket-item-top">
+                            <span class="pos-ticket-item-name">${item.nombre}</span>
+                            <button class="pos-ticket-btn-del" onclick="CartManager.deleteItem('${item.cartId || item.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="pos-ticket-item-bottom">
+                            <span class="pos-ticket-item-price">₡${(item.precio * item.quantity).toLocaleString()}</span>
+                            <div class="pos-ticket-stepper">
+                                <button onclick="CartManager.removeItem('${item.cartId || item.id}')"><i class="fas fa-minus"></i></button>
+                                <span>${item.quantity}</span>
+                                <button onclick="CartManager.addItem('${item.id}', ${item.option ? `'${item.option}'` : 'null'})"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // 3. Sincronizar totales
+        const total = window.CartManager ? window.CartManager.getTotal() : 0;
+        const count = window.CartManager ? window.CartManager.getCount() : 0;
+        
+        const totalEl = document.getElementById('pos-ticket-total');
+        if (totalEl) totalEl.textContent = `₡${total.toLocaleString()}`;
+
+        const countEl = document.getElementById('pos-ticket-count');
+        if (countEl) countEl.textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+
+        const mobBarTotal = document.getElementById('pos-mob-bar-total');
+        if (mobBarTotal) mobBarTotal.textContent = `₡${total.toLocaleString()}`;
+
+        const mobBarCount = document.getElementById('pos-mob-bar-count');
+        if (mobBarCount) mobBarCount.textContent = count;
+    },
+
+    clearCart() {
+        if (!window.CartManager || window.CartManager.items.length === 0) return;
+        if (confirm("¿Deseas vaciar todos los platillos de la comanda actual?")) {
+            CartManager.items = [];
+            CartManager.save();
+            CartManager.updateCartUI();
+        }
+    }
+};
+
+window.PosManager = PosManager;
 </script>
-    <!-- MODAL DE ÉXITO -->
+    <!-- MODAL DE ÉXITO VENTAS POS -->
     <div id="success-overlay" class="success-overlay">
         <div class="success-modal">
-            <div class="success-icon">
+            <div class="success-icon" style="background: linear-gradient(135deg, #25d366, #20bf6b);">
                 <i class="fas fa-check"></i>
             </div>
-            <h2 class="success-title">¡PEDIDO ENVIADO!</h2>
+            <h2 class="success-title">¡VENTA REGISTRADA!</h2>
             <div class="success-text">
-                Tu pedido fue enviado al local por WhatsApp.<br>
-                Espera la confirmación de disponibilidad.<br>
-                Una vez confirmado, te avisamos para que vengas a pagar.
+                Comanda guardada con éxito.<br>
+                Disponible en <strong>Comandas en Proceso</strong> e <strong>Historial</strong>.
             </div>
             <div class="success-methods">
-                <span style="font-size: 0.7rem; color: var(--mostaza); display: block; margin-bottom: 8px; text-transform: uppercase; opacity: 0.6;">MÉTODOS DE PAGO</span>
-                <div style="display: flex; justify-content: center; gap: 10px; font-size: 0.8rem;">
-                    <span>💵 Efectivo</span>
-                    <span>💳 Sinpe Móvil</span>
-                    <span>💳 Tarjeta</span>
-                </div>
+                <span style="font-size: 0.7rem; color: var(--mostaza); display: block; margin-bottom: 8px; text-transform: uppercase; opacity: 0.6;">ACCIONES RÁPIDAS</span>
             </div>
             <button class="success-btn" onclick="CartManager.imprimirTiquete(window.lastProcessedOrder)" style="background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="fas fa-print"></i> IMPRIMIR TIQUETE
             </button>
             <button class="success-btn" onclick="CartManager.resetAndClose()">
-                <i class="fas fa-redo"></i> HACER OTRO PEDIDO
+                <i class="fas fa-plus-circle"></i> REGISTRAR OTRA VENTA
             </button>
         </div>
     </div>
 
 <script>
-    // Inyectar clase para ocultar modal inicialmente
     document.getElementById('success-overlay').addEventListener('click', (e) => {
         if(e.target === document.getElementById('success-overlay')) {
-            // CartManager.resetAndClose();
+            CartManager.resetAndClose();
         }
     });
 </script>
 
 <!-- MODALES DE CONTROL DASHBOARD VENTAS -->
+<!-- 1. MODAL COMANDAS EN PROCESO -->
+<div id="in-progress-orders-modal" class="dashboard-modal">
+    <div class="dashboard-modal-content" style="max-width: 650px; width: 95%;">
+        <div class="dashboard-modal-header">
+            <h3 class="dashboard-modal-title"><i class="fas fa-clock" style="color: #f39c12;"></i> Comandas en Proceso</h3>
+            <button onclick="SalesDashboard.closeInProgressOrders()" class="dashboard-modal-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="in-progress-orders-list" class="dashboard-modal-body" style="padding: 15px; overflow-y: auto; max-height: 75vh;">
+            <!-- Se llena dinámicamente con SalesDashboard.renderInProgressOrders() -->
+        </div>
+    </div>
+</div>
+
 <div id="web-orders-modal" class="dashboard-modal">
     <div class="dashboard-modal-content">
         <div class="dashboard-modal-header">
@@ -1678,6 +2605,7 @@ const SalesDashboard = {
     allOrders: [],
     webOrders: [],
     returnedOrders: [],
+    inProgressOrders: [],
     todayOrdersCount: 0,
     lastWebOrdersCount: 0,
     lastReturnedOrdersCount: 0,
@@ -1719,7 +2647,12 @@ const SalesDashboard = {
             this.returnedOrders.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
             this.renderReturnedOrders();
 
-            // 3. Filtrar pedidos de hoy
+            // 3. Filtrar comandas activas en proceso
+            this.inProgressOrders = this.allOrders.filter(o => o.estado === 'en_proceso' || o.estado === 'pendiente');
+            this.inProgressOrders.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            this.renderInProgressOrders();
+
+            // 4. Filtrar pedidos de hoy
             const now = new Date();
             const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
             const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
@@ -1731,7 +2664,7 @@ const SalesDashboard = {
             });
             this.todayOrdersCount = todayOrders.length;
 
-            // 4. Renderizar historial
+            // 5. Renderizar historial
             this.renderSalesHistory();
 
             this.updateBadges();
@@ -1751,9 +2684,20 @@ const SalesDashboard = {
     },
 
     updateBadges() {
+        const inProgBadge = document.getElementById('in-progress-orders-count');
         const webBadge = document.getElementById('web-orders-count');
         const retBadge = document.getElementById('returned-orders-count');
         const historyBadge = document.getElementById('sales-history-count');
+
+        if (inProgBadge) {
+            const count = this.inProgressOrders ? this.inProgressOrders.length : 0;
+            inProgBadge.innerText = count;
+            if (count > 0) {
+                inProgBadge.style.animation = 'pulse-amber 1.8s infinite';
+            } else {
+                inProgBadge.style.animation = 'none';
+            }
+        }
 
         if (webBadge) {
             webBadge.innerText = this.webOrders.length;
@@ -1775,6 +2719,111 @@ const SalesDashboard = {
 
         if (historyBadge) {
             historyBadge.innerText = this.todayOrdersCount;
+        }
+    },
+
+    openInProgressOrders() {
+        document.getElementById('in-progress-orders-modal').classList.add('active');
+        this.renderInProgressOrders();
+        if (navigator.vibrate) navigator.vibrate(50);
+    },
+
+    closeInProgressOrders() {
+        document.getElementById('in-progress-orders-modal').classList.remove('active');
+    },
+
+    renderInProgressOrders() {
+        const container = document.getElementById('in-progress-orders-list');
+        if (!container) return;
+
+        if (!this.inProgressOrders || this.inProgressOrders.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 10px; opacity: 0.5;">
+                    <i class="fas fa-check-circle" style="font-size: 3rem; color: #2ecc71; margin-bottom: 15px;"></i>
+                    <p style="font-size: 1rem; font-weight: bold;">¡No hay comandas pendientes!</p>
+                    <span style="font-size: 0.85rem;">Todas las órdenes han sido entregadas o no hay ninguna en cocina.</span>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.inProgressOrders.map(order => {
+            const timeObj = new Date(order.fecha);
+            const timeStr = timeObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+            
+            const elapsedMinutes = Math.floor((new Date() - timeObj) / 60000);
+            const elapsedText = elapsedMinutes <= 0 ? 'Recién ingresada' : `Hace ${elapsedMinutes} min`;
+
+            let allergiesHtml = '';
+            if (order.alergias && order.alergias.trim() !== '') {
+                allergiesHtml = `
+                    <div style="background: rgba(231, 76, 60, 0.15); border-left: 3px solid #e74c3c; padding: 8px 12px; border-radius: 4px; font-size: 0.85rem; font-weight: 700; color: #ff6b6b; margin: 8px 0;">
+                        <i class="fas fa-exclamation-triangle"></i> Alergias / Notas: ${order.alergias}
+                    </div>
+                `;
+            }
+
+            const itemsHtml = order.items.map(item => `
+                <li style="display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.06); padding-bottom: 4px;">
+                    <span><strong style="color: var(--mostaza); font-weight: 800;">${item.cantidad}x</strong> ${item.nombre}</span>
+                    <span style="font-weight: 700; opacity: 0.8;">₡${(item.precio * item.cantidad).toLocaleString()}</span>
+                </li>
+            `).join('');
+
+            const orderJson = JSON.stringify(order).replace(/"/g, '&quot;');
+            const itemsJson = JSON.stringify(order.items).replace(/"/g, '&quot;');
+
+            return `
+                <div class="in-progress-card">
+                    <div class="in-progress-card-header">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="in-progress-number">#${order.num_pedido || order.id.slice(-5).toUpperCase()}</span>
+                            <span class="in-progress-customer">${order.cliente}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="in-progress-time" title="${timeStr}"><i class="far fa-clock"></i> ${elapsedText}</span>
+                        </div>
+                    </div>
+
+                    ${allergiesHtml}
+
+                    <ul style="list-style: none; padding: 0; margin: 12px 0;">
+                        ${itemsHtml}
+                    </ul>
+
+                    <div class="in-progress-meta">
+                        <span style="font-size: 0.85rem; opacity: 0.8;"><i class="fas fa-money-bill-wave"></i> ${order.metodoPago || 'Efectivo'}</span>
+                        <span class="in-progress-total">₡${(order.total || 0).toLocaleString()}</span>
+                    </div>
+
+                    <div class="in-progress-actions">
+                        <button class="btn-mark-delivered" onclick="SalesDashboard.markOrderDelivered('${order.id}')">
+                            <i class="fas fa-check-circle"></i> Marcar Entregado
+                        </button>
+                        <button class="btn-in-progress-print" onclick="CartManager.imprimirTiquete(${orderJson})" title="Reimprimir Tiquete">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="btn-in-progress-edit" onclick="SalesDashboard.iniciarModificacion('${order.id}', '${order.cliente}', '${order.alergias || ''}', '${order.metodoPago}', ${itemsJson}, ${order.num_pedido || 0})" title="Modificar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    async markOrderDelivered(orderId) {
+        try {
+            const db = window.FirebaseDB;
+            await db.collection("pedidos").doc(orderId).update({
+                estado: "listo",
+                fechaEntrega: new Date().toISOString()
+            });
+            console.log("✅ Comanda marcada como entregada:", orderId);
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        } catch (err) {
+            console.error("Error al marcar entregado:", err);
+            alert("No se pudo marcar la comanda como entregada.");
         }
     },
 
@@ -1844,8 +2893,9 @@ const SalesDashboard = {
             `;
         }
 
-        let statusText = 'Pendiente';
-        let statusColor = '#f1c40f';
+        const isPending = order.estado === 'en_proceso' || order.estado === 'pendiente';
+        let statusText = 'En Proceso';
+        let statusColor = '#f39c12';
         if (order.estado === 'listo' || order.estado === 'retirado') {
             statusText = 'Listo / Entregado';
             statusColor = '#2ecc71';
@@ -1882,6 +2932,11 @@ const SalesDashboard = {
                 </div>
                 
                 <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; width: 100%;">
+                    ${isPending ? `
+                        <button onclick="SalesDashboard.markOrderDelivered('${order.id}'); SalesDashboard.closeSaleDetails();" style="flex: 1; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #2ecc71, #27ae60); color: #0b2212; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
+                            <i class="fas fa-check-circle"></i> Entregado
+                        </button>
+                    ` : ''}
                     <button onclick="CartManager.imprimirTiquete(SalesDashboard.selectedOrderDetailOrder)" style="flex: 1; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
                         <i class="fas fa-print"></i> Reimprimir
                     </button>
@@ -1932,14 +2987,14 @@ const SalesDashboard = {
             if (detailsText.length > 40) detailsText = detailsText.substring(0, 37) + '...';
 
             let statusBadge = '';
-            if (order.estado === 'pendiente') {
-                statusBadge = '<span style="color:#f1c40f; margin-left:5px;" title="Pendiente"><i class="fas fa-clock"></i></span>';
+            if (order.estado === 'en_proceso' || order.estado === 'pendiente') {
+                statusBadge = '<span style="background: rgba(243, 156, 18, 0.2); color:#f39c12; padding: 2px 7px; border-radius: 4px; font-size: 0.72rem; margin-left:6px; font-weight: 800;" title="En Proceso"><i class="fas fa-clock"></i> En Proceso</span>';
             } else if (order.estado === 'listo' || order.estado === 'retirado') {
-                statusBadge = '<span style="color:#2ecc71; margin-left:5px;" title="Venta Completada"><i class="fas fa-check-double"></i></span>';
+                statusBadge = '<span style="background: rgba(46, 204, 113, 0.2); color:#2ecc71; padding: 2px 7px; border-radius: 4px; font-size: 0.72rem; margin-left:6px; font-weight: 800;" title="Entregado"><i class="fas fa-check-double"></i> Entregado</span>';
             } else if (order.estado === 'regresado') {
-                statusBadge = '<span style="color:#e74c3c; margin-left:5px;" title="Devuelto"><i class="fas fa-undo"></i></span>';
+                statusBadge = '<span style="background: rgba(233, 19, 80, 0.2); color:#e74c3c; padding: 2px 7px; border-radius: 4px; font-size: 0.72rem; margin-left:6px; font-weight: 800;" title="Devuelto"><i class="fas fa-undo"></i> Devuelto</span>';
             } else if (order.estado === 'cancelado') {
-                statusBadge = '<span style="color:#95a5a6; margin-left:5px;" title="Cancelado"><i class="fas fa-times-circle"></i></span>';
+                statusBadge = '<span style="background: rgba(149, 165, 166, 0.2); color:#95a5a6; padding: 2px 7px; border-radius: 4px; font-size: 0.72rem; margin-left:6px; font-weight: 800;" title="Cancelado"><i class="fas fa-times-circle"></i> Cancelado</span>';
             }
 
             const payMethod = order.metodoPago || 'Efectivo';
@@ -2306,11 +3361,14 @@ const SalesDashboard = {
         }
 
         this.closeReturnedOrders();
+        this.closeInProgressOrders();
 
-        UIController.showMenu();
-        setTimeout(() => {
-            UIController.toggleCart();
-        }, 300);
+        const sidebar = document.getElementById('pos-ticket-sidebar');
+        if (sidebar) sidebar.classList.add('mobile-open');
+
+        if (nameInput) {
+            nameInput.focus();
+        }
 
         if (navigator.vibrate) navigator.vibrate(50);
     },
@@ -2328,7 +3386,8 @@ const SalesDashboard = {
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         SalesDashboard.init();
-    }, 1000);
+        if (window.PosManager) window.PosManager.init();
+    }, 600);
 });
 </script>
 </body>

@@ -143,6 +143,11 @@ const CartManager = {
         if (fabTotal) {
             fabTotal.textContent = this.getTotal() > 0 ? `₡${this.getTotal().toLocaleString()}` : '₡0';
         }
+
+        // Sincronizar UI del nuevo panel táctil POS si está activo
+        if (window.PosManager && typeof window.PosManager.syncCartUI === 'function') {
+            window.PosManager.syncCartUI();
+        }
         
         if (cartContent) {
             if (this.items.length === 0) {
@@ -299,8 +304,8 @@ const CartManager = {
         btn.style.pointerEvents = 'none';
 
         try {
-            const isSalesPOS = window.location.pathname.includes('ventas.html');
-            const estadoInicial = isSalesPOS ? 'listo' : 'pendiente_aprobacion';
+            const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+            const estadoInicial = isSalesPOS ? 'en_proceso' : 'pendiente_aprobacion';
 
             const pedido = {
                 cliente: this.customerName || 'Cliente sin nombre',
@@ -327,10 +332,10 @@ const CartManager = {
                         metodoPago: pedido.metodoPago,
                         total: pedido.total,
                         items: pedido.items,
-                        estado: 'listo', // Al modificarlo va directo a completado
+                        estado: 'en_proceso', // Al modificarlo queda en proceso activo
                         fechaModificacion: new Date().toISOString()
                     });
-                    console.log("✅ Pedido modificado y completado");
+                    console.log("✅ Pedido modificado y guardado en proceso");
                     
                     // Recuperar el comanda ID o usar fallback para el ticket
                     const originalSnap = await db.collection("pedidos").doc(this.editingOrderId).get();
@@ -405,7 +410,7 @@ const CartManager = {
                         if(textEl) {
                             if (isSalesPOS) {
                                 const displayNum = pedido.num_pedido ? `#${pedido.num_pedido}` : `#${docRef.id.slice(-5).toUpperCase()}`;
-                                textEl.innerHTML = `Venta registrada con éxito bajo el tiquete <strong>${displayNum}</strong>.<br>¡Buen trabajo!`;
+                                textEl.innerHTML = `Venta registrada con éxito bajo la comanda <strong>${displayNum}</strong>.<br>Guardada en <em>Comandas en Proceso</em> e <em>Historial</em>.<br>¡Buen trabajo!`;
                             } else {
                                 textEl.innerHTML = `Tu pedido fue guardado y enviado por WhatsApp.<br>Espera la aprobación por parte de la caja.<br>¡Gracias por preferir a Sr. & Sra. Pinto!`;
                             }
@@ -1132,6 +1137,9 @@ const MenuController = {
         // Sincronizar UI del panel de ventas
         if (window.SalesDashboard && typeof window.SalesDashboard.renderInventory === 'function') {
             window.SalesDashboard.renderInventory();
+        }
+        if (window.PosManager && typeof window.PosManager.renderDishes === 'function') {
+            window.PosManager.renderDishes();
         }
         // Sincronizar UI del carrito
         if (window.CartManager && typeof window.CartManager.updateCartUI === 'function') {
