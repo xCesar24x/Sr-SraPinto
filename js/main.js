@@ -270,7 +270,7 @@ const CartManager = {
         message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
         message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
         
-        message += `🔗 Visítanos en: https://sr-sra-pinto.vercel.app/\n`;
+        message += `🔗 Visítanos en: https://srysrapinto.com/\n`;
 
         const url = `https://wa.me/50688224763?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
@@ -430,7 +430,7 @@ const CartManager = {
                         message += `📝 *Detalle del pedido:*\n${itemsList}\n`;
                         message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
                         message += `💳 *Método de pago:* ${this.selectedPaymentMethod}\n\n`;
-                        message += `🔗 Visítanos en: https://sr-sra-pinto.vercel.app/\n`;
+                        message += `🔗 Visítanos en: https://srysrapinto.com/\n`;
 
                         const url = `https://wa.me/50688224763?text=${encodeURIComponent(message)}`;
                         window.open(url, '_blank');
