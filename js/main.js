@@ -932,7 +932,7 @@ const MenuController = {
     CATEGORIAS: [
         { id: 'pintos',  nombre: 'Desayunos',  icon: '🍳', subtitle: 'Gallo pinto hecho con amor, igual de malo pa\u2019 la dieta 😉' },
         { id: 'snacks',  nombre: 'Snacks',  icon: '🥟', subtitle: 'Empanadas, patacones y más antojos irresistibles' },
-        { id: 'bebidas', nombre: 'Bebidas', icon: '☕' }
+        { id: 'bebidas', nombre: 'Bebidas', icon: '☕', subtitle: 'Café fresquito y bebidas frías' }
     ],
 
     inventario: {},
@@ -1109,7 +1109,7 @@ const MenuController = {
                 { id: 'desayuno', nombre: 'Desayunos', icon: '🍳', subtitle: 'Deliciosos desayunos tradicionales para arrancar el día' },
                 { id: 'almuerzo',  nombre: 'Almuerzos',  icon: '🍲', subtitle: 'Casados completos y platillos del día preparados con amor casero' },
                 { id: 'snacks',    nombre: 'Snacks',    icon: '🥟', subtitle: 'Empanadas arregladas, patacones y antojos irresistibles' },
-                { id: 'bebidas',   nombre: 'Bebidas',   icon: '☕', subtitle: 'Café chorreado, frescos naturales y bebidas frías' }
+                { id: 'bebidas',   nombre: 'Bebidas',   icon: '☕', subtitle: 'Café fresquito y bebidas frías' }
             ];
 
             // Identificar día actual de la semana en Costa Rica (0: Domingo, 1: Lunes, ..., 5: Viernes, 6: Sábado)
