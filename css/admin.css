@@ -11,7 +11,17 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Gotham', sans-serif; }
-body { background: var(--negro); color: var(--blanco); min-height: 100vh; }
+body { 
+    background-color: var(--negro); 
+    background-image: 
+        linear-gradient(to bottom, rgba(20, 5, 8, 0.92), rgba(61, 1, 12, 0.98)),
+        url('../images-catalogo/fondogeneral.jpg');
+    background-size: 350px;
+    background-repeat: repeat;
+    background-attachment: fixed;
+    color: var(--blanco); 
+    min-height: 100vh; 
+}
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--negro); }
 ::-webkit-scrollbar-thumb { background: var(--carbon); border-radius: 10px; }
