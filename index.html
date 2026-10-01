@@ -65,13 +65,27 @@
             overflow-x: hidden;
             position: relative;
             background-color: var(--negro);
-            /* Branded Pattern Background */
+            /* Branded Pattern Background - Versión Horizontal para Desktop */
             background-image: 
-                linear-gradient(to bottom, rgba(20, 5, 8, 0.92), rgba(61, 1, 12, 0.98)),
-                url('images-catalogo/fondogeneral.jpg');
-            background-size: 350px;
-            background-repeat: repeat;
+                linear-gradient(to bottom, rgba(15, 2, 5, 0.55), rgba(25, 3, 8, 0.70)),
+                url('images-catalogo/fondo-patron.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
             background-attachment: fixed;
+        }
+
+        /* Versión Vertical para Celulares y Pantallas en Modo Vertical */
+        @media (max-width: 900px), (orientation: portrait) {
+            body {
+                background-image: 
+                    linear-gradient(to bottom, rgba(15, 2, 5, 0.45), rgba(25, 3, 8, 0.60)),
+                    url('images-catalogo/fondo-patron-vertical.jpg');
+                background-size: cover;
+                background-position: center top;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }
         }
 
         /* CAPA DE EFECTO DE LUZ SUTIL (Neuro-ventas) */
@@ -830,7 +844,7 @@
 
         /* MENU VIEW */
         #view-menu { 
-            background: var(--negro); min-height: 100vh; 
+            background: transparent; min-height: 100vh; 
             overflow-y: auto; overflow-x: hidden; width: 100%;
         }
         .menu-header {
