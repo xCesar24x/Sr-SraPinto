@@ -529,14 +529,17 @@ const CartManager = {
 
         const empleadoName = localStorage.getItem('srsrapinto_cedula') || 'Cajero';
         const numComanda = pedido.num_pedido ? `#${pedido.num_pedido}` : (pedido.id ? `#${pedido.id.slice(-5).toUpperCase()}` : '#1');
+        const fechaObj = pedido.fecha ? new Date(pedido.fecha) : new Date();
+        const fechaStr = fechaObj.toLocaleDateString('es-CR');
+        const horaStr = fechaObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
         
         // Formato térmico 30 columnas estándar (58mm) sin dependencias ni lag para Sunmi V2
         let t = "";
         t += "        SR & SRA PINTO\n";
         t += "     EL SABOR DE SER TICO\n";
         t += "------------------------------\n";
-        t += `Empleado: ${empleadoName}\n`;
-        t += `TPV: POS Terminal\n`;
+        t += `Fecha: ${fechaStr}  ${horaStr}\n`;
+        t += `Cajero: ${empleadoName}\n`;
         t += `COMANDA: ${numComanda}\n`;
         if (pedido.cliente && pedido.cliente.trim() !== '') {
             t += `Cliente: ${pedido.cliente}\n`;
@@ -544,6 +547,8 @@ const CartManager = {
         if (pedido.alergias && pedido.alergias.trim() !== '') {
             t += `* ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
         }
+        t += "------------------------------\n";
+        t += "CANT  PRODUCTO          TOTAL\n";
         t += "------------------------------\n";
         const items = pedido.items || [];
         items.forEach(item => {
@@ -571,12 +576,9 @@ const CartManager = {
         t += metStr + " ".repeat(espM) + pagoStr + "\n";
         t += "------------------------------\n";
         t += "    Gracias por tu compra!\n";
-        t += "     Dios te bendiga :)\n";
-        
-        const fechaObj = pedido.fecha ? new Date(pedido.fecha) : new Date();
-        const fechaStr = fechaObj.toLocaleDateString('es-CR');
-        const horaStr = fechaObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
-        t += `      ${fechaStr} ${horaStr}\n\n\n\n`;
+        t += "     Dios te bendiga :)\n\n";
+        t += "  WhatsApp: +506 8822-4763\n";
+        t += "      srysrapinto.com\n\n\n\n";
 
         try {
             const encodedText = btoa(unescape(encodeURIComponent(t)));
