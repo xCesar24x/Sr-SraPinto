@@ -527,7 +527,7 @@ const CartManager = {
             return;
         }
 
-        const printMethod = localStorage.getItem('pos_print_method') || 'native';
+        const printMethod = localStorage.getItem('pos_print_method') || 'rawbt';
 
         if (printMethod === 'rawbt') {
             const empleadoName = localStorage.getItem('srsrapinto_cedula') || 'Cajero';
@@ -583,20 +583,24 @@ const CartManager = {
             t += "      srysrapinto.com\n\n\n\n";
 
             try {
-                const encodedText = btoa(unescape(encodeURIComponent(t)));
-                const intentUrl = 'intent:base64,' + encodeURIComponent(encodedText) + '#Intent;' +
-                    'scheme=rawbt;' +
+                // Enviar texto directamente via Android Intent SEND a RawBT (sin codificación base64 corrupta)
+                const intentUrl = 'intent:#Intent;' +
+                    'action=android.intent.action.SEND;' +
+                    'type=text/plain;' +
+                    'S.android.intent.extra.TEXT=' + encodeURIComponent(t) + ';' +
                     'package=ru.a402d.rawbtprinter;' +
                     'end;';
+                
+                console.log("🖨️ Enviando ticket directo por Intent SEND a RawBT...");
                 window.location.href = intentUrl;
             } catch (error) {
-                console.error("Error RawBT:", error);
+                console.error("Error al enviar Intent a RawBT:", error);
                 this.imprimirTiqueteNativo(pedido);
             }
             return;
         }
 
-        // Método por defecto: Impresión Térmica Nativa 58mm (100% Gratis de por vida)
+        // Opción nativa del sistema
         this.imprimirTiqueteNativo(pedido);
     },
 

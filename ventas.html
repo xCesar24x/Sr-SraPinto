@@ -2303,8 +2303,11 @@
                 color: #000 !important;
             }
             /* Ocultar la app completa en el momento de imprimir */
-            body > *:not(#thermal-receipt-area) {
+            body > *:not(#thermal-receipt-area),
+            #success-overlay, .success-overlay, .dashboard-modal, #pos-top-nav, #pos-mobile-bar, #pos-main-container, .modal {
                 display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
             }
             #thermal-receipt-area {
                 display: block !important;
@@ -2519,7 +2522,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=2.4"></script>
+<script src="js/main.js?v=2.5"></script>
 
 <script>
 /**
