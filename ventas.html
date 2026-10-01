@@ -2236,6 +2236,40 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* ─── OPTIMIZACIÓN DE RENDIMIENTO SUNMI V2 & DISPOSITIVOS TÁCTILES ─── */
+        @media (max-width: 900px), (hover: none) and (pointer: coarse) {
+            *, *::before, *::after {
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+        }
+
+        /* MODO RÁPIDO / ULTRA LIVIANO SUNMI */
+        body.pos-fast-mode .pos-dish-img-wrap {
+            display: none !important;
+        }
+        body.pos-fast-mode .pos-dish-card {
+            padding: 14px 8px !important;
+            min-height: 75px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+        }
+        body.pos-fast-mode .pos-dish-name {
+            font-size: 0.85rem !important;
+            height: auto !important;
+            max-height: 40px !important;
+            line-height: 1.25 !important;
+            margin-bottom: 6px !important;
+            font-weight: 800 !important;
+        }
+        body.pos-fast-mode .pos-dish-price {
+            font-size: 1rem !important;
+            color: #2ecc71 !important;
+        }
     </style>
 </head>
 <body>
@@ -2267,6 +2301,10 @@
             <i class="fab fa-whatsapp" style="color: #25d366;"></i>
             <span>Pedidos Web</span>
             <span id="web-orders-count" class="pos-badge badge-web">0</span>
+        </button>
+        <button id="btn-fast-mode" class="pos-nav-btn" onclick="PosManager.toggleFastMode()" title="Modo Ultra Rápido Sunmi (sin imágenes, máxima fluidez)">
+            <i class="fas fa-bolt" style="color: #f7b731;"></i>
+            <span id="fast-mode-label">Rápido</span>
         </button>
         <button id="btn-inventory" class="pos-nav-btn btn-inventory" onclick="SalesDashboard.openInventory()" title="Control de Inventario y Precios">
             <i class="fas fa-boxes" style="color: #f7b731;"></i>
@@ -2391,6 +2429,13 @@
                 <span id="cart-total" style="display: none;">₡0</span>
             </div>
 
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding: 0 2px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.74rem; color: rgba(255,255,255,0.75); cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="chk-auto-print" style="accent-color: #2ecc71; width: 15px; height: 15px; cursor: pointer;">
+                    <span><i class="fas fa-print" style="color: var(--mostaza);"></i> Auto-imprimir ticket</span>
+                </label>
+            </div>
+
             <button id="btn-checkout" class="pos-ticket-btn-submit" onclick="CartManager.procesarPedido()">
                 <i class="fas fa-bolt"></i> Cobrar / Guardar Comanda
             </button>
@@ -2410,21 +2455,21 @@
 </div>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=2.1"></script>
+<script src="js/main.js?v=2.2"></script>
 
 <script>
 /**
- * SISTEMA DE CARGA (LOADER)
+ * SISTEMA DE CARGA RÁPIDO
  */
 window.addEventListener('load', () => {
     setTimeout(() => {
-        document.getElementById('loader').classList.add('hidden');
-    }, 1200);
+        const loader = document.getElementById('loader');
+        if (loader) loader.classList.add('hidden');
+    }, 250);
 });
 
 /**
@@ -2437,8 +2482,45 @@ const PosManager = {
     searchQuery: '',
 
     init() {
+        this.loadPreferences();
         this.renderDishes();
         this.syncCartUI();
+    },
+
+    toggleFastMode() {
+        const isFast = document.body.classList.toggle('pos-fast-mode');
+        localStorage.setItem('pos_fast_mode', isFast ? 'true' : 'false');
+        const label = document.getElementById('fast-mode-label');
+        if (label) label.textContent = isFast ? 'Rápido: ON' : 'Rápido';
+        const btn = document.getElementById('btn-fast-mode');
+        if (btn) {
+            btn.style.borderColor = isFast ? '#f7b731' : 'rgba(255,255,255,0.12)';
+            btn.style.background = isFast ? 'rgba(247, 183, 49, 0.25)' : 'rgba(255, 255, 255, 0.05)';
+        }
+    },
+
+    loadPreferences() {
+        const isFast = localStorage.getItem('pos_fast_mode') === 'true';
+        if (isFast) {
+            document.body.classList.add('pos-fast-mode');
+            const label = document.getElementById('fast-mode-label');
+            if (label) label.textContent = 'Rápido: ON';
+            const btn = document.getElementById('btn-fast-mode');
+            if (btn) {
+                btn.style.borderColor = '#f7b731';
+                btn.style.background = 'rgba(247, 183, 49, 0.25)';
+            }
+        }
+
+        const autoPrintVal = localStorage.getItem('pos_auto_print');
+        const autoPrint = autoPrintVal === null ? true : (autoPrintVal === 'true');
+        const chk = document.getElementById('chk-auto-print');
+        if (chk) {
+            chk.checked = autoPrint;
+            chk.addEventListener('change', () => {
+                localStorage.setItem('pos_auto_print', chk.checked ? 'true' : 'false');
+            });
+        }
     },
 
     setCategory(cat) {
