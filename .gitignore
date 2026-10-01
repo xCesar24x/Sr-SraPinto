@@ -11,6 +11,7 @@ PDF/
 *.log
 backup/
 backups/
+respaldo_*.json
 
 # Logs y caches de sistema
 npm-debug.log*
