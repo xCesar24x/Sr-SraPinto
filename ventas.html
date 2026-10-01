@@ -2284,9 +2284,55 @@
             font-size: 1rem !important;
             color: #2ecc71 !important;
         }
+
+        /* ─── ESTILOS DE IMPRESIÓN TÉRMICA NATIVA 58MM (OPCIÓN GRATUITA SUNMI) ─── */
+        #thermal-receipt-area {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: 58mm auto;
+                margin: 0;
+            }
+            html, body {
+                width: 58mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+                color: #000 !important;
+            }
+            /* Ocultar la app completa en el momento de imprimir */
+            body > *:not(#thermal-receipt-area) {
+                display: none !important;
+            }
+            #thermal-receipt-area {
+                display: block !important;
+                width: 54mm !important;
+                max-width: 54mm !important;
+                margin: 0 auto !important;
+                padding: 3mm 2mm 14mm 2mm !important;
+                font-family: 'Courier New', Courier, monospace !important;
+                font-size: 11px !important;
+                line-height: 1.25 !important;
+                color: #000 !important;
+                background: #fff !important;
+                box-sizing: border-box !important;
+            }
+            .ticket-logo {
+                display: block !important;
+                width: 125px !important;
+                max-width: 80% !important;
+                margin: 0 auto 6px auto !important;
+                filter: brightness(0) !important;
+            }
+        }
     </style>
 </head>
 <body>
+
+<!-- CONTENEDOR TÉRMICO DE IMPRESIÓN NATIVA 58MM -->
+<div id="thermal-receipt-area"></div>
 
 <!-- TOP NAVIGATION POS -->
 <nav id="pos-top-nav">
@@ -2473,7 +2519,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=2.2"></script>
+<script src="js/main.js?v=2.3"></script>
 
 <script>
 /**

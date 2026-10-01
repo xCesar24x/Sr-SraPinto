@@ -527,72 +527,169 @@ const CartManager = {
             return;
         }
 
+        const printMethod = localStorage.getItem('pos_print_method') || 'native';
+
+        if (printMethod === 'rawbt') {
+            const empleadoName = localStorage.getItem('srsrapinto_cedula') || 'Cajero';
+            const numComanda = pedido.num_pedido ? `#${pedido.num_pedido}` : (pedido.id ? `#${pedido.id.slice(-5).toUpperCase()}` : '#1');
+            const fechaObj = pedido.fecha ? new Date(pedido.fecha) : new Date();
+            const fechaStr = fechaObj.toLocaleDateString('es-CR');
+            const horaStr = fechaObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+            
+            let t = "";
+            t += "        SR & SRA PINTO\n";
+            t += "     EL SABOR DE SER TICO\n";
+            t += "------------------------------\n";
+            t += `Fecha: ${fechaStr}  ${horaStr}\n`;
+            t += `Cajero: ${empleadoName}\n`;
+            t += `COMANDA: ${numComanda}\n`;
+            if (pedido.cliente && pedido.cliente.trim() !== '') {
+                t += `Cliente: ${pedido.cliente}\n`;
+            }
+            if (pedido.alergias && pedido.alergias.trim() !== '') {
+                t += `* ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
+            }
+            t += "------------------------------\n";
+            t += "CANT  PRODUCTO          TOTAL\n";
+            t += "------------------------------\n";
+            const items = pedido.items || [];
+            items.forEach(item => {
+                let nombre = (item.nombre || '').toUpperCase();
+                if (nombre.length > 18) nombre = nombre.substring(0, 18);
+                const cant = item.quantity || item.cantidad || 1;
+                const precio = item.precio || 0;
+                const totalItem = `c.${(precio * cant).toLocaleString()}`;
+                let esp = 30 - nombre.length - totalItem.length;
+                if (esp < 1) esp = 1;
+                t += nombre + " ".repeat(esp) + totalItem + "\n";
+                t += `  ${cant} x c.${precio.toLocaleString()}\n`;
+            });
+            t += "------------------------------\n";
+            const total = pedido.total || 0;
+            let totalStr = `c.${total.toLocaleString()}`;
+            let espT = 30 - 6 - totalStr.length;
+            if (espT < 1) espT = 1;
+            t += "TOTAL:" + " ".repeat(espT) + totalStr + "\n";
+            
+            let pagoStr = `c.${total.toLocaleString()}`;
+            let metStr = (pedido.metodoPago || 'EFECTIVO').toUpperCase();
+            let espM = 30 - metStr.length - pagoStr.length;
+            if (espM < 1) espM = 1;
+            t += metStr + " ".repeat(espM) + pagoStr + "\n";
+            t += "------------------------------\n";
+            t += "    Gracias por tu compra!\n";
+            t += "     Dios te bendiga :)\n\n";
+            t += "  WhatsApp: +506 8822-4763\n";
+            t += "      srysrapinto.com\n\n\n\n";
+
+            try {
+                const encodedText = btoa(unescape(encodeURIComponent(t)));
+                const intentUrl = 'intent:base64,' + encodeURIComponent(encodedText) + '#Intent;' +
+                    'scheme=rawbt;' +
+                    'package=ru.a402d.rawbtprinter;' +
+                    'end;';
+                window.location.href = intentUrl;
+            } catch (error) {
+                console.error("Error RawBT:", error);
+                this.imprimirTiqueteNativo(pedido);
+            }
+            return;
+        }
+
+        // Método por defecto: Impresión Térmica Nativa 58mm (100% Gratis de por vida)
+        this.imprimirTiqueteNativo(pedido);
+    },
+
+    imprimirTiqueteNativo(pedido) {
         const empleadoName = localStorage.getItem('srsrapinto_cedula') || 'Cajero';
         const numComanda = pedido.num_pedido ? `#${pedido.num_pedido}` : (pedido.id ? `#${pedido.id.slice(-5).toUpperCase()}` : '#1');
         const fechaObj = pedido.fecha ? new Date(pedido.fecha) : new Date();
         const fechaStr = fechaObj.toLocaleDateString('es-CR');
         const horaStr = fechaObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
-        
-        // Formato térmico 30 columnas estándar (58mm) sin dependencias ni lag para Sunmi V2
-        let t = "";
-        t += "        SR & SRA PINTO\n";
-        t += "     EL SABOR DE SER TICO\n";
-        t += "------------------------------\n";
-        t += `Fecha: ${fechaStr}  ${horaStr}\n`;
-        t += `Cajero: ${empleadoName}\n`;
-        t += `COMANDA: ${numComanda}\n`;
-        if (pedido.cliente && pedido.cliente.trim() !== '') {
-            t += `Cliente: ${pedido.cliente}\n`;
+        const total = pedido.total || 0;
+        const metodoPago = (pedido.metodoPago || 'EFECTIVO').toUpperCase();
+
+        let receiptEl = document.getElementById('thermal-receipt-area');
+        if (!receiptEl) {
+            receiptEl = document.createElement('div');
+            receiptEl.id = 'thermal-receipt-area';
+            document.body.appendChild(receiptEl);
         }
-        if (pedido.alergias && pedido.alergias.trim() !== '') {
-            t += `* ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
-        }
-        t += "------------------------------\n";
-        t += "CANT  PRODUCTO          TOTAL\n";
-        t += "------------------------------\n";
-        const items = pedido.items || [];
-        items.forEach(item => {
-            let nombre = (item.nombre || '').toUpperCase();
-            if (nombre.length > 18) nombre = nombre.substring(0, 18);
+
+        let itemsHtml = '';
+        (pedido.items || []).forEach(item => {
             const cant = item.quantity || item.cantidad || 1;
             const precio = item.precio || 0;
-            const totalItem = `c.${(precio * cant).toLocaleString()}`;
-            let esp = 30 - nombre.length - totalItem.length;
-            if (esp < 1) esp = 1;
-            t += nombre + " ".repeat(esp) + totalItem + "\n";
-            t += `  ${cant} x c.${precio.toLocaleString()}\n`;
+            const subtotal = precio * cant;
+            itemsHtml += `
+                <div style="margin-bottom: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 11px;">
+                        <span style="max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${(item.nombre || '').toUpperCase()}</span>
+                        <span>₡${subtotal.toLocaleString()}</span>
+                    </div>
+                    <div style="font-size: 9.5px; color: #333;">${cant} x ₡${precio.toLocaleString()}</div>
+                </div>
+            `;
         });
-        t += "------------------------------\n";
-        const total = pedido.total || 0;
-        let totalStr = `c.${total.toLocaleString()}`;
-        let espT = 30 - 6 - totalStr.length;
-        if (espT < 1) espT = 1;
-        t += "TOTAL:" + " ".repeat(espT) + totalStr + "\n";
-        
-        let pagoStr = `c.${total.toLocaleString()}`;
-        let metStr = (pedido.metodoPago || 'EFECTIVO').toUpperCase();
-        let espM = 30 - metStr.length - pagoStr.length;
-        if (espM < 1) espM = 1;
-        t += metStr + " ".repeat(espM) + pagoStr + "\n";
-        t += "------------------------------\n";
-        t += "    Gracias por tu compra!\n";
-        t += "     Dios te bendiga :)\n\n";
-        t += "  WhatsApp: +506 8822-4763\n";
-        t += "      srysrapinto.com\n\n\n\n";
 
-        try {
-            const encodedText = btoa(unescape(encodeURIComponent(t)));
-            const intentUrl = 'intent:base64,' + encodeURIComponent(encodedText) + '#Intent;' +
-                'scheme=rawbt;' +
-                'package=ru.a402d.rawbtprinter;' +
-                'end;';
-            
-            console.log("🖨️ Enviando ticket térmico a RawBT (Sunmi V2)...");
-            window.location.href = intentUrl;
-        } catch (error) {
-            console.error("Error al disparar la impresión rápida de RawBT:", error);
-            alert("Error al enviar el ticket a la impresora. Revisa que la app RawBT esté instalada.");
-        }
+        receiptEl.innerHTML = `
+            <div style="text-align: center; margin-bottom: 6px;">
+                <img src="logo-brand/PNG/Logo vertical Rojo.png" class="ticket-logo" style="width: 125px; margin: 0 auto; display: block; filter: brightness(0);" alt="Logo">
+                <div style="font-size: 13px; font-weight: 900; letter-spacing: 0.5px; margin-top: 3px;">SR. & SRA. PINTO</div>
+                <div style="font-size: 9px; font-weight: bold; letter-spacing: 0.5px;">EL SABOR DE SER TICO</div>
+            </div>
+
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <div style="font-size: 10.5px; line-height: 1.35;">
+                <div><strong>Fecha:</strong> ${fechaStr} ${horaStr}</div>
+                <div><strong>Cajero:</strong> ${empleadoName}</div>
+                <div style="margin-top: 2px;"><strong>COMANDA:</strong> <span style="font-size: 13.5px; font-weight: 900;">${numComanda}</span></div>
+                ${pedido.cliente && pedido.cliente.trim() !== '' ? `<div><strong>Cliente:</strong> ${pedido.cliente}</div>` : ''}
+                ${pedido.alergias && pedido.alergias.trim() !== '' ? `
+                    <div style="border: 1px solid #000; padding: 2px 4px; margin-top: 3px; font-weight: 900; font-size: 10px;">
+                        ⚠️ ALERGIAS: ${pedido.alergias.toUpperCase()}
+                    </div>
+                ` : ''}
+            </div>
+
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <div style="font-size: 10.5px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 900; margin-bottom: 4px; border-bottom: 1px dotted #999; padding-bottom: 2px;">
+                    <span>PRODUCTO</span>
+                    <span>TOTAL</span>
+                </div>
+                ${itemsHtml}
+            </div>
+
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <div style="font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 13.5px;">
+                    <span>TOTAL:</span>
+                    <span>₡${total.toLocaleString()}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 3px; font-size: 11px;">
+                    <span>PAGO (${metodoPago}):</span>
+                    <span>₡${total.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <div style="text-align: center; font-size: 10.5px; margin-top: 6px;">
+                <div>¡Muchas gracias por su compra!</div>
+                <div style="margin-top: 2px; font-weight: bold;">Dios le bendiga :)</div>
+                <div style="margin-top: 6px; font-size: 10px;">WhatsApp: +506 8822-4763</div>
+                <div style="font-size: 10px; font-weight: bold; margin-top: 1px;">srysrapinto.com</div>
+            </div>
+            <div style="height: 12mm;"></div>
+        `;
+
+        setTimeout(() => {
+            window.print();
+        }, 150);
     }
 };
 
