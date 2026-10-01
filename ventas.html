@@ -1998,49 +1998,242 @@
             justify-content: space-between;
         }
 
-        @media (max-width: 900px) {
-            .pos-ticket-sidebar {
-                position: fixed;
-                right: 0;
-                top: 65px;
-                height: calc(100vh - 65px);
-                z-index: 9985;
-                transform: translateX(100%);
-                transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-                width: 90%;
-                max-width: 380px;
-            }
-            .pos-ticket-sidebar.mobile-open {
-                transform: translateX(0);
-            }
-            .pos-mobile-bar {
-                display: flex;
-            }
-            .pos-dish-grid-wrap {
-                padding-bottom: 75px;
-            }
-        }
-
-        @media (max-width: 600px) {
+        /* ─── RESPONSIVE MÓVIL Y VERTICAL (PORTRAIT / TABLET / CELULAR) ─── */
+        @media (max-width: 900px), (orientation: portrait) {
             #pos-top-nav {
+                height: 56px;
                 padding: 0 10px;
+                gap: 8px;
             }
-            .pos-brand-text {
+            .pos-brand img {
+                height: 32px;
+            }
+            .pos-brand-tag {
                 display: none;
             }
-            .pos-nav-btn span {
-                display: none;
+            .pos-brand-title {
+                font-size: 0.9rem;
             }
             .pos-nav-btn {
+                padding: 6px 10px;
+                font-size: 0.78rem;
+                gap: 5px;
+            }
+            .pos-nav-btn span {
+                display: inline-block;
+            }
+            .pos-workspace-container {
+                display: flex !important;
+                flex-direction: row !important;
+                height: calc(100vh - 56px) !important;
+                margin-top: 56px !important;
+                width: 100% !important;
+                overflow: hidden !important;
+            }
+
+            /* CATÁLOGO A LA IZQUIERDA: 2 COLUMNAS */
+            .pos-catalog-section {
+                flex: 1 1 53% !important;
+                min-width: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
+            }
+            .pos-categories-nav {
                 padding: 8px 10px;
+                gap: 6px;
+            }
+            .pos-cat-btn {
+                padding: 6px 12px;
+                font-size: 0.78rem;
+                gap: 5px;
+                border-radius: 8px;
+            }
+            .pos-search-wrap {
+                min-width: 110px;
+                max-width: 150px;
+                margin-left: auto;
+            }
+            .pos-search-wrap input {
+                padding: 6px 8px 6px 26px;
+                font-size: 0.78rem;
+            }
+            .pos-search-wrap i {
+                left: 8px;
+                font-size: 0.75rem;
+            }
+            .pos-dish-grid-wrap {
+                padding: 10px 8px !important;
+                flex: 1;
+                overflow-y: auto;
             }
             .pos-dish-grid {
-                grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
-                gap: 8px;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+            }
+            .pos-dish-card {
+                padding: 8px 6px;
+                border-radius: 12px;
             }
             .pos-dish-img-wrap {
                 width: 58px;
                 height: 58px;
+                margin-bottom: 6px;
+            }
+            .pos-dish-name {
+                font-size: 0.76rem;
+                height: 28px;
+                line-height: 1.2;
+                margin-bottom: 4px;
+            }
+            .pos-dish-price {
+                font-size: 0.88rem;
+            }
+
+            /* COMANDA A LA DERECHA: SIEMPRE VISIBLE Y SIN TAPAR */
+            .pos-ticket-sidebar {
+                position: relative !important;
+                transform: none !important;
+                right: auto !important;
+                top: auto !important;
+                height: 100% !important;
+                width: 47% !important;
+                min-width: 210px !important;
+                max-width: 360px !important;
+                flex-shrink: 0 !important;
+                box-shadow: -4px 0 15px rgba(0, 0, 0, 0.4) !important;
+                border-left: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+                display: flex !important;
+                flex-direction: column !important;
+                z-index: 20 !important;
+            }
+            .pos-ticket-header {
+                padding: 10px 12px;
+            }
+            .pos-ticket-title {
+                font-size: 0.85rem;
+                gap: 6px;
+            }
+            .pos-ticket-clear-btn {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            .pos-ticket-client-box {
+                padding: 8px 12px;
+                gap: 6px;
+            }
+            .pos-ticket-input {
+                padding: 7px 10px;
+                font-size: 0.82rem;
+            }
+            .pos-ticket-items-wrap {
+                padding: 8px 10px;
+                gap: 6px;
+            }
+            .pos-ticket-item {
+                padding: 7px 8px;
+                gap: 4px;
+            }
+            .pos-ticket-item-name {
+                font-size: 0.78rem;
+            }
+            .pos-ticket-item-price {
+                font-size: 0.82rem;
+            }
+            .pos-ticket-stepper button {
+                width: 22px;
+                height: 22px;
+                font-size: 0.7rem;
+            }
+            .pos-ticket-stepper span {
+                font-size: 0.8rem;
+                min-width: 14px;
+            }
+            .pos-ticket-footer {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .pos-ticket-pay-title {
+                font-size: 0.68rem;
+            }
+            .pos-ticket-pay-options {
+                gap: 4px;
+            }
+            .pos-ticket-pay-options .pay-chip {
+                padding: 5px 8px;
+                font-size: 0.7rem;
+                gap: 4px;
+            }
+            .pos-ticket-total-row {
+                padding: 2px 0;
+            }
+            .pos-ticket-total-label {
+                font-size: 0.95rem;
+            }
+            .pos-ticket-total-val {
+                font-size: 1.25rem;
+            }
+            .pos-ticket-btn-submit {
+                padding: 11px 10px;
+                font-size: 0.88rem;
+                border-radius: 10px;
+            }
+
+            /* No se necesita barra inferior flotante porque la comanda ya está fija a la derecha */
+            .pos-mobile-bar {
+                display: none !important;
+            }
+        }
+
+        /* Pantallas muy estrechas (teléfonos celulares angostos < 480px) */
+        @media (max-width: 480px) {
+            #pos-top-nav {
+                padding: 0 6px;
+                gap: 4px;
+            }
+            .pos-brand-text {
+                display: none;
+            }
+            .pos-nav-btn {
+                padding: 6px 7px;
+                font-size: 0.72rem;
+            }
+            .pos-nav-btn span {
+                display: none;
+            }
+            .pos-categories-nav {
+                padding: 6px 8px;
+            }
+            .pos-cat-btn {
+                padding: 5px 9px;
+                font-size: 0.72rem;
+            }
+            .pos-search-wrap {
+                min-width: 85px;
+                max-width: 110px;
+            }
+            .pos-ticket-sidebar {
+                width: 48% !important;
+                min-width: 175px !important;
+            }
+            .pos-dish-img-wrap {
+                width: 46px;
+                height: 46px;
+            }
+            .pos-dish-name {
+                font-size: 0.7rem;
+                height: 24px;
+            }
+            .pos-dish-price {
+                font-size: 0.78rem;
+            }
+            .pos-ticket-pay-options .pay-chip {
+                padding: 4px 6px;
+                font-size: 0.65rem;
+            }
+            .pos-ticket-btn-submit {
+                padding: 9px 6px;
+                font-size: 0.8rem;
             }
         }
     </style>
