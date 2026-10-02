@@ -41,6 +41,25 @@ window.RECETAS = {
     'p-sra-empanada-m2': [
         { id: 'masa_empanada', cant: 1 }, { id: 'ensalada', cant: 1 }
     ],
+    // 6 OPCIONES OFICIALES DE EMPANADAS
+    'p-empanada-sencilla': [
+        { id: 'masa_empanada', cant: 1 }
+    ],
+    'p-empanada-arreglada': [
+        { id: 'masa_empanada', cant: 1 }, { id: 'ensalada', cant: 1 }
+    ],
+    'p-sra-empanada': [
+        { id: 'masa_empanada', cant: 1 }, { id: 'carne_mechada', cant: 1 }, { id: 'ensalada', cant: 1 }
+    ],
+    'c-empanada-sencilla-cafe': [
+        { id: 'masa_empanada', cant: 1 }, { id: 'cafe', cant: 1 }
+    ],
+    'c-empanada-arreglada-cafe': [
+        { id: 'masa_empanada', cant: 1 }, { id: 'ensalada', cant: 1 }, { id: 'cafe', cant: 1 }
+    ],
+    'c-sra-empanada-cafe': [
+        { id: 'masa_empanada', cant: 1 }, { id: 'carne_mechada', cant: 1 }, { id: 'ensalada', cant: 1 }, { id: 'cafe', cant: 1 }
+    ],
     'p-cono-salchipapa': [
         { id: 'papas_fritas', cant: 1 }, { id: 'salchicha', cant: 1 }
     ],

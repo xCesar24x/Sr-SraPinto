@@ -2492,10 +2492,10 @@
                 <span id="cart-total" style="display: none;">₡0</span>
             </div>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; padding: 0 2px;">
+            <div style="display: flex; align-items: center; justify-content: flex-start; margin-bottom: 6px; padding: 0 2px;">
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 0.74rem; color: rgba(255,255,255,0.75); cursor: pointer; user-select: none;">
                     <input type="checkbox" id="chk-auto-print" style="accent-color: #2ecc71; width: 15px; height: 15px; cursor: pointer;">
-                    <span><i class="fas fa-print" style="color: var(--mostaza);"></i> Auto-imprimir ticket</span>
+                    <span><i class="fas fa-print" style="color: var(--mostaza);"></i> Auto-imprimir comanda</span>
                 </label>
             </div>
 
@@ -2522,7 +2522,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=2.5"></script>
+<script src="js/main.js?v=2.8"></script>
 
 <script>
 /**
@@ -2584,6 +2584,7 @@ const PosManager = {
                 localStorage.setItem('pos_auto_print', chk.checked ? 'true' : 'false');
             });
         }
+
     },
 
     setCategory(cat) {
@@ -2604,7 +2605,7 @@ const PosManager = {
         if (cat === 'todos') return true;
         const dishCat = (dish.categoria || '').toLowerCase();
         if (cat === 'desayuno') {
-            return dishCat === 'desayuno' || dishCat === 'pintos';
+            return dishCat === 'desayuno' || dishCat === 'pintos' || (dish.id && dish.id.includes('empanada'));
         }
         if (cat === 'almuerzo') {
             return dishCat === 'almuerzo';
@@ -2620,11 +2621,16 @@ const PosManager = {
 
     getAllDishes() {
         if (!window.MenuController) return [];
-        let list = [...(window.MenuController.MENU_DATA || [])];
+        const deprecatedIds = new Set([
+            'p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto',
+            'p-empanada-carne-queso', 'p-empanada-birria', 'p-sra-empanada-m1',
+            'p-sra-empanada-m2', 'c-empanada-cafe'
+        ]);
+        let list = (window.MenuController.MENU_DATA || []).filter(d => !deprecatedIds.has(d.id));
         if (window.MenuController.volioDishes && window.MenuController.volioDishes.length > 0) {
             const existingIds = new Set(list.map(d => d.id));
             window.MenuController.volioDishes.forEach(vd => {
-                if (!existingIds.has(vd.id)) {
+                if (!existingIds.has(vd.id) && !deprecatedIds.has(vd.id)) {
                     list.push({
                         id: vd.id,
                         categoria: vd.categoria,

@@ -279,13 +279,22 @@
 
         function cambiarMetodoImpresion(val) {
             localStorage.setItem("metodoImpresion", val);
+            if (val === "direct-text") {
+                localStorage.setItem("pos_print_method", "rawbt-direct");
+            } else if (val === "text-plain") {
+                localStorage.setItem("pos_print_method", "rawbt");
+            }
             document.getElementById("method-description").innerText = descripciones[val] || "";
             console.log("⚙️ Método de impresión cambiado a:", val);
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Cargar método guardado o usar por defecto Método D (el más compatible y rápido)
-            const metodoGuardado = localStorage.getItem("metodoImpresion") || "text-plain";
+            // Cargar método guardado o sincronizar con pos_print_method
+            let metodoGuardado = localStorage.getItem("metodoImpresion");
+            if (!metodoGuardado) {
+                const posMethod = localStorage.getItem("pos_print_method");
+                metodoGuardado = posMethod === "rawbt-direct" ? "direct-text" : "text-plain";
+            }
             document.getElementById("select-print-method").value = metodoGuardado;
             cambiarMetodoImpresion(metodoGuardado);
 

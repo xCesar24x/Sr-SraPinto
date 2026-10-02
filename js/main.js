@@ -521,87 +521,165 @@ const CartManager = {
         };
     },
 
+    generarTextoTiquete(pedido) {
+        const empleadoName = localStorage.getItem('srsrapinto_cedula') || 'Cajero';
+        const numComanda = pedido.num_pedido ? `#${pedido.num_pedido}` : (pedido.id ? `#${pedido.id.slice(-5).toUpperCase()}` : '#1');
+        const fechaObj = pedido.fecha ? new Date(pedido.fecha) : new Date();
+        const fechaStr = fechaObj.toLocaleDateString('es-CR');
+        const horaStr = fechaObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
+
+        const W = 32; // Ancho estándar térmico 58mm
+        const lineSep = "-".repeat(W);
+        const dblSep  = "=".repeat(W);
+
+        const centrar = (txt) => {
+            txt = (txt || '').trim();
+            if (txt.length >= W) return txt.substring(0, W);
+            const padLeft = Math.floor((W - txt.length) / 2);
+            return " ".repeat(padLeft) + txt;
+        };
+
+        const formatearFila = (izq, der) => {
+            izq = (izq || '').toString();
+            der = (der || '').toString();
+            const esp = W - izq.length - der.length;
+            if (esp <= 0) {
+                const maxIzq = Math.max(1, W - der.length - 1);
+                return izq.substring(0, maxIzq) + " " + der;
+            }
+            return izq + " ".repeat(esp) + der;
+        };
+
+        let t = "";
+        t += dblSep + "\n";
+        t += centrar("SR. & SRA. PINTO") + "\n";
+        t += centrar("EL SABOR DE SER TICO") + "\n";
+        t += dblSep + "\n";
+        t += formatearFila(`Fecha: ${fechaStr}`, horaStr) + "\n";
+        t += `Cajero: ${empleadoName}\n`;
+        t += `COMANDA: ${numComanda}\n`;
+        
+        if (pedido.cliente && pedido.cliente.trim() !== '') {
+            t += `Cliente: ${pedido.cliente.trim()}\n`;
+        }
+        if (pedido.alergias && pedido.alergias.trim() !== '') {
+            t += lineSep + "\n";
+            t += `* ALERGIAS: ${pedido.alergias.trim().toUpperCase()}\n`;
+        }
+        t += lineSep + "\n";
+        t += formatearFila("CANT  PRODUCTO", "TOTAL") + "\n";
+        t += lineSep + "\n";
+
+        const items = pedido.items || [];
+        items.forEach(item => {
+            const cant = item.quantity || item.cantidad || 1;
+            const precio = item.precio || 0;
+            const subtotal = precio * cant;
+            let nombre = (item.nombre || '').toUpperCase().trim();
+            const totalStr = `c.${subtotal.toLocaleString()}`;
+
+            const cantPrefijo = `${cant} x `;
+            const maxNomLen = W - cantPrefijo.length - totalStr.length - 1;
+            if (nombre.length <= maxNomLen) {
+                t += formatearFila(`${cantPrefijo}${nombre}`, totalStr) + "\n";
+            } else {
+                t += `${cantPrefijo}${nombre}\n`;
+                t += formatearFila(`  ${cant} x c.${precio.toLocaleString()}`, totalStr) + "\n";
+            }
+
+            if (item.notas && item.notas.trim() !== '') {
+                t += `  * ${item.notas.trim()}\n`;
+            }
+        });
+
+        t += lineSep + "\n";
+        const total = pedido.total || 0;
+        t += formatearFila("TOTAL:", `c.${total.toLocaleString()}`) + "\n";
+
+        const metodoPago = (pedido.metodoPago || 'EFECTIVO').toUpperCase();
+        t += formatearFila(`PAGO (${metodoPago}):`, `c.${total.toLocaleString()}`) + "\n";
+        t += dblSep + "\n";
+
+        t += centrar("Gracias por tu compra!") + "\n";
+        t += centrar("Dios te bendiga :)") + "\n\n";
+        t += centrar("WhatsApp: +506 8822-4763") + "\n";
+        t += centrar("srysrapinto.com") + "\n";
+        t += dblSep + "\n";
+        t += "\n\n\n\n";
+
+        return t;
+    },
+
+    imprimirConRawBT(texto) {
+        try {
+            // Conversión segura de caracteres UTF-8 a Base64
+            const base64Data = window.btoa(unescape(encodeURIComponent(texto)));
+
+            // Protocolo directo oficial registrado por la app RawBT en Android: rawbt:base64,<datos>
+            // Al usar el esquema nativo registrado, Android abre RawBT directamente SIN pasar por Play Store ni vista previa
+            const url = "rawbt:base64," + base64Data;
+
+            console.log("🖨️ Despachando a RawBT:", url.substring(0, 80) + "...");
+            this.mostrarToast('<i class="fas fa-print"></i> Imprimiendo en RawBT...');
+
+            window.location.href = url;
+            return true;
+        } catch (err) {
+            console.error("Error al enviar a RawBT:", err);
+            return false;
+        }
+    },
+
     imprimirTiquete(pedido) {
         if (!pedido) {
             alert("No hay ningún pedido cargado para imprimir.");
             return;
         }
 
-        const printMethod = localStorage.getItem('pos_print_method') || 'rawbt';
+        const texto = this.generarTextoTiquete(pedido);
+        const isAndroid = /Android/i.test(navigator.userAgent);
 
-        if (printMethod === 'rawbt') {
-            const empleadoName = localStorage.getItem('srsrapinto_cedula') || 'Cajero';
-            const numComanda = pedido.num_pedido ? `#${pedido.num_pedido}` : (pedido.id ? `#${pedido.id.slice(-5).toUpperCase()}` : '#1');
-            const fechaObj = pedido.fecha ? new Date(pedido.fecha) : new Date();
-            const fechaStr = fechaObj.toLocaleDateString('es-CR');
-            const horaStr = fechaObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
-            
-            let t = "";
-            t += "        SR & SRA PINTO\n";
-            t += "     EL SABOR DE SER TICO\n";
-            t += "------------------------------\n";
-            t += `Fecha: ${fechaStr}  ${horaStr}\n`;
-            t += `Cajero: ${empleadoName}\n`;
-            t += `COMANDA: ${numComanda}\n`;
-            if (pedido.cliente && pedido.cliente.trim() !== '') {
-                t += `Cliente: ${pedido.cliente}\n`;
-            }
-            if (pedido.alergias && pedido.alergias.trim() !== '') {
-                t += `* ALERGIAS: ${pedido.alergias.toUpperCase()}\n`;
-            }
-            t += "------------------------------\n";
-            t += "CANT  PRODUCTO          TOTAL\n";
-            t += "------------------------------\n";
-            const items = pedido.items || [];
-            items.forEach(item => {
-                let nombre = (item.nombre || '').toUpperCase();
-                if (nombre.length > 18) nombre = nombre.substring(0, 18);
-                const cant = item.quantity || item.cantidad || 1;
-                const precio = item.precio || 0;
-                const totalItem = `c.${(precio * cant).toLocaleString()}`;
-                let esp = 30 - nombre.length - totalItem.length;
-                if (esp < 1) esp = 1;
-                t += nombre + " ".repeat(esp) + totalItem + "\n";
-                t += `  ${cant} x c.${precio.toLocaleString()}\n`;
-            });
-            t += "------------------------------\n";
-            const total = pedido.total || 0;
-            let totalStr = `c.${total.toLocaleString()}`;
-            let espT = 30 - 6 - totalStr.length;
-            if (espT < 1) espT = 1;
-            t += "TOTAL:" + " ".repeat(espT) + totalStr + "\n";
-            
-            let pagoStr = `c.${total.toLocaleString()}`;
-            let metStr = (pedido.metodoPago || 'EFECTIVO').toUpperCase();
-            let espM = 30 - metStr.length - pagoStr.length;
-            if (espM < 1) espM = 1;
-            t += metStr + " ".repeat(espM) + pagoStr + "\n";
-            t += "------------------------------\n";
-            t += "    Gracias por tu compra!\n";
-            t += "     Dios te bendiga :)\n\n";
-            t += "  WhatsApp: +506 8822-4763\n";
-            t += "      srysrapinto.com\n\n\n\n";
-
-            try {
-                // Enviar texto directamente via Android Intent SEND a RawBT (sin codificación base64 corrupta)
-                const intentUrl = 'intent:#Intent;' +
-                    'action=android.intent.action.SEND;' +
-                    'type=text/plain;' +
-                    'S.android.intent.extra.TEXT=' + encodeURIComponent(t) + ';' +
-                    'package=ru.a402d.rawbtprinter;' +
-                    'end;';
-                
-                console.log("🖨️ Enviando ticket directo por Intent SEND a RawBT...");
-                window.location.href = intentUrl;
-            } catch (error) {
-                console.error("Error al enviar Intent a RawBT:", error);
-                this.imprimirTiqueteNativo(pedido);
-            }
-            return;
+        if (isAndroid) {
+            // En Android / terminal Sunmi: Despacho directo a RawBT
+            this.imprimirConRawBT(texto);
+        } else {
+            // En PC / Laptop: Apertura limpia de impresión nativa del sistema
+            this.imprimirTiqueteNativo(pedido);
         }
+    },
 
-        // Opción nativa del sistema
-        this.imprimirTiqueteNativo(pedido);
+    imprimirTiquetePrueba() {
+        const dummyOrder = {
+            num_pedido: 99,
+            cliente: "Cliente de Prueba",
+            alergias: "Ninguna",
+            fecha: new Date().toISOString(),
+            metodoPago: "SINPE MÓVIL",
+            total: 4700,
+            items: [
+                { nombre: "Señor Pinto Clásico", cantidad: 1, precio: 3500 },
+                { nombre: "Café Chorreado", cantidad: 1, precio: 1200 }
+            ]
+        };
+        this.imprimirTiquete(dummyOrder);
+    },
+
+    mostrarToast(msg) {
+        let toast = document.getElementById('pos-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'pos-toast';
+            toast.style.cssText = 'position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: #120003; border: 1px solid #2ecc71; color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 0.85rem; font-weight: 800; box-shadow: 0 10px 30px rgba(0,0,0,0.7); z-index: 99999; display: flex; align-items: center; gap: 8px; transition: opacity 0.3s, transform 0.3s; opacity: 0; pointer-events: none;';
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = msg;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(10px)';
+        }, 2800);
     },
 
     imprimirTiqueteNativo(pedido) {
@@ -740,22 +818,6 @@ const MenuController = {
             badgeClass: 'badge-value'
         },
         {
-            id: 'p-empanada-pinto',
-            categoria: 'pintos',
-            nombre: 'Empanada de Pinto',
-            desc: 'Crujiente empanada rellena de nuestro famoso gallo pinto.',
-            precio: 2500,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Pinto">'
-        },
-        {
-            id: 'p-sra-empanada-m1',
-            categoria: 'pintos',
-            nombre: 'Sra. Empanada Arreglada',
-            desc: 'Empanada de pinto con ensalada, carne mechada y salsas.',
-            precio: 3500,
-            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">'
-        },
-        {
             id: 'p-queso-pinto',
             categoria: 'pintos',
             nombre: 'Queso Pinto',
@@ -789,51 +851,72 @@ const MenuController = {
             precio: 5000,
             img: '<img src="images-catalogo/Sra. Hamburguesa con Papas.jpeg" alt="Sra. Hamburguesa con Papas">'
         },
+        // ── 6 OPCIONES OFICIALES DE EMPANADAS (CON SELECCIÓN DE RELLENO: QUESO, CARNE, PINTO) ──
         {
-            id: 'p-empanada-carne',
+            id: 'p-empanada-sencilla',
             categoria: 'snacks',
-            nombre: 'Empanada de Carne',
-            desc: 'Empanada artesanal rellena de carne bien sazonada.',
+            nombre: 'Empanada Sencilla',
+            desc: 'Crujiente empanada artesanal de maíz frita. Elige tu relleno favorito.',
             precio: 2500,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Carne">'
-        },
-        {
-            id: 'p-empanada-queso',
-            categoria: 'snacks',
-            nombre: 'Empanada de Queso Mozzarella',
-            desc: 'Empanada artesanal rellena de queso mozzarella derretido.',
-            precio: 2500,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Queso Mozzarella">'
-        },
-        {
-            id: 'p-empanada-carne-queso',
-            categoria: 'snacks',
-            nombre: 'Empanada de Carne y Queso Mozzarella',
-            desc: 'Empanada artesanal rellena de carne y queso mozzarella derretido.',
-            precio: 2500,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada de Carne y Queso Mozzarella">'
-        },
-        {
-            id: 'p-sra-empanada-m2',
-            categoria: 'snacks',
-            nombre: 'Sra. Empanada Arreglada',
-            desc: 'Empanada con ensalada y salsas. Elige tu relleno.',
-            precio: 3500,
-            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Sra. Empanada Arreglada">',
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada Sencilla">',
             requiresOptions: true,
-            options: ['Carne', 'Queso Mozzarella', 'Carne y Queso Mozzarella']
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
-            id: 'c-empanada-cafe',
+            id: 'p-empanada-arreglada',
             categoria: 'snacks',
-            nombre: 'Combo: Empanada + Café',
-            desc: 'Llévatelo en combo: Empanada a elegir + Café Premium Grande.',
+            nombre: 'Empanada Arreglada',
+            desc: 'Empanada crujiente con repollo arreglado, salsas y relleno a elegir.',
             precio: 3000,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Combo Empanada + Café">',
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Empanada Arreglada">',
+            requiresOptions: true,
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+        },
+        {
+            id: 'p-sra-empanada',
+            categoria: 'snacks',
+            nombre: 'Señora Empanada',
+            desc: 'Nuestra empanada insignia con repollo, carne mechada extra por encima y salsas.',
+            precio: 3500,
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Señora Empanada">',
+            requiresOptions: true,
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+        },
+        {
+            id: 'c-empanada-sencilla-cafe',
+            categoria: 'snacks',
+            nombre: 'Combo: Empanada Sencilla + Café',
+            desc: 'Empanada sencilla a elegir + Café Premium Grande.',
+            precio: 3000,
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Combo Empanada Sencilla + Café">',
             badge: 'Combo',
             badgeClass: 'badge-value',
             requiresOptions: true,
-            options: ['Carne', 'Queso Mozzarella', 'Carne y Queso Mozzarella']
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+        },
+        {
+            id: 'c-empanada-arreglada-cafe',
+            categoria: 'snacks',
+            nombre: 'Combo: Empanada Arreglada + Café',
+            desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
+            precio: 3500,
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Combo Empanada Arreglada + Café">',
+            badge: 'Combo',
+            badgeClass: 'badge-value',
+            requiresOptions: true,
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+        },
+        {
+            id: 'c-sra-empanada-cafe',
+            categoria: 'snacks',
+            nombre: 'Combo: Señora Empanada + Café',
+            desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
+            precio: 4000,
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Combo Señora Empanada + Café">',
+            badge: 'Combo',
+            badgeClass: 'badge-value',
+            requiresOptions: true,
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
             id: 'p-cono-salchipapa',
@@ -891,7 +974,18 @@ const MenuController = {
     ],
 
     getProductById(id) {
-        let p = (this.MENU_DATA || []).find(item => item.id === id);
+        // Alias de compatibilidad para comandas históricas
+        const ALIASES = {
+            'p-empanada-carne': 'p-empanada-sencilla',
+            'p-empanada-queso': 'p-empanada-sencilla',
+            'p-empanada-pinto': 'p-empanada-sencilla',
+            'p-empanada-carne-queso': 'p-empanada-sencilla',
+            'p-sra-empanada-m1': 'p-sra-empanada',
+            'p-sra-empanada-m2': 'p-empanada-arreglada',
+            'c-empanada-cafe': 'c-empanada-sencilla-cafe'
+        };
+        const searchId = ALIASES[id] || id;
+        let p = (this.MENU_DATA || []).find(item => item.id === searchId);
         if (!p && this.volioDishes && this.volioDishes.length > 0) {
             const v = this.volioDishes.find(item => item.id === id);
             if (v) {
@@ -1024,8 +1118,14 @@ const MenuController = {
     },
 
     applyStateAndRender() {
+        const deprecatedEmpanadas = new Set([
+            'p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto',
+            'p-empanada-carne-queso', 'p-empanada-birria', 'p-sra-empanada-m1',
+            'p-sra-empanada-m2', 'c-empanada-cafe'
+        ]);
+
         // 1. Restaurar al estado original
-        this.MENU_DATA = JSON.parse(JSON.stringify(this.ORIGINAL_MENU_DATA));
+        this.MENU_DATA = (JSON.parse(JSON.stringify(this.ORIGINAL_MENU_DATA))).filter(p => !deprecatedEmpanadas.has(p.id));
         this.CATEGORIAS = JSON.parse(JSON.stringify(this.ORIGINAL_CATEGORIAS));
 
         // 2. Aplicar Modo Feria si está activo
@@ -1033,12 +1133,12 @@ const MenuController = {
             // Precios de Feria (mezcla entre los estáticos y los editados)
             const baseFeriaPrices = {
                 'p-senor-pinto': 4000, 'c-senor-pinto-cafe': 4000, 'c-burrote-cafe': 3000,
-                'p-sr-patacon': 4000, 'p-sra-quesadilla': 4000, 'p-empanada-carne': 2000,
-                'p-empanada-queso': 2000, 'p-empanada-carne-queso': 2000, 'p-sra-empanada-m1': 3500,
-                'p-sra-empanada-m2': 3500, 'p-sra-hamburguesa': 5000, 'p-cono-salchipapa': 3000,
-                'p-sr-papi-carne': 3500, 'b-cafe-premium': 1300, 'p-patacon-caribeno': 4000,
-                'c-queso-pinto-cafe': 4000, 'b-cafe-8oz': 1000, 'ce-empanada-fresco': 2000,
-                'ce-salchipapa-fresco': 2500, 'ce-hamburguesa-jr-fresco': 2500, 'ce-hotdog-fresco': 2000
+                'p-sr-patacon': 4000, 'p-sra-quesadilla': 4000, 'p-empanada-sencilla': 2500,
+                'p-empanada-arreglada': 3000, 'p-sra-empanada': 3500, 'p-sra-hamburguesa': 5000,
+                'p-cono-salchipapa': 3000, 'p-sr-papi-carne': 3500, 'b-cafe-premium': 1300,
+                'p-patacon-caribeno': 4000, 'c-queso-pinto-cafe': 4000, 'b-cafe-8oz': 1000,
+                'ce-empanada-fresco': 2000, 'ce-salchipapa-fresco': 2500,
+                'ce-hamburguesa-jr-fresco': 2500, 'ce-hotdog-fresco': 2000
             };
             
             const activeFeriaPrices = this.feriaCustomPrices ? { ...baseFeriaPrices, ...this.feriaCustomPrices } : baseFeriaPrices;
@@ -1086,7 +1186,7 @@ const MenuController = {
                     id: 'ce-empanada-fresco', categoria: 'combos', nombre: 'Empanada + Té Frío',
                     desc: 'Empanada a tu elección acompañada de un refrescante té frío.',
                     precio: activeFeriaPrices['ce-empanada-fresco'] || 2000, img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada + Té Frío" class="img-fit">',
-                    requiresOptions: true, options: ['Carne', 'Queso', 'Carne y Queso']
+                    requiresOptions: true, options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 });
                 this.MENU_DATA.push({
                     id: 'ce-salchipapa-fresco', categoria: 'combos', nombre: 'Salchipapas + Té Frío',
@@ -1140,16 +1240,37 @@ const MenuController = {
                 }
             }
 
-            // Convertir al formato estándar MENU_DATA
-            this.MENU_DATA = activeVolioDishes.map(d => ({
-                id: d.id,
-                categoria: d.categoria,
-                nombre: d.nombre,
-                desc: d.desc || '',
-                precio: d.precio || 0,
-                costo: d.costo || 0,
-                img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${d.nombre}" class="img-fit">`
-            }));
+            // Convertir al formato estándar MENU_DATA, heredando flags de opciones y filtrando deprecados
+            const mappedVolio = activeVolioDishes
+                .filter(d => !deprecatedEmpanadas.has(d.id))
+                .map(d => {
+                    const original = (this.ORIGINAL_MENU_DATA || []).find(o => o.id === d.id);
+                    return {
+                        id: d.id,
+                        categoria: d.categoria,
+                        nombre: d.nombre,
+                        desc: d.desc || (original ? original.desc : ''),
+                        precio: d.precio || (original ? original.precio : 0),
+                        costo: d.costo || (original ? original.costo : 0),
+                        requiresOptions: d.requiresOptions || (original ? original.requiresOptions : false),
+                        options: d.options || (original ? original.options : null),
+                        img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || (original && original.img ? (original.img.match(/src="([^"]+)"/) ? original.img.match(/src="([^"]+)"/)[1] : original.img) : 'images-catalogo/Señor Pinto.jpeg')}" alt="${d.nombre}" class="img-fit">`
+                    };
+                });
+
+            // Asegurar que las 6 opciones oficiales de empanadas estén siempre presentes en Snacks
+            const officialEmpanadaIds = [
+                'p-empanada-sencilla', 'p-empanada-arreglada', 'p-sra-empanada',
+                'c-empanada-sencilla-cafe', 'c-empanada-arreglada-cafe', 'c-sra-empanada-cafe'
+            ];
+            officialEmpanadaIds.forEach(eid => {
+                if (!mappedVolio.some(d => d.id === eid)) {
+                    const orig = (this.ORIGINAL_MENU_DATA || []).find(o => o.id === eid);
+                    if (orig) mappedVolio.push(orig);
+                }
+            });
+
+            this.MENU_DATA = mappedVolio;
 
             // Si la categoría actual no existe en Volio, resetear a desayuno
             if (!['desayuno', 'almuerzo', 'snacks', 'bebidas'].includes(StateManager.currentCategory)) {
@@ -1159,6 +1280,7 @@ const MenuController = {
             // Sincronizar catálogo maestro con el menú general (precios, descripciones, nombres e imágenes)
             if (this.volioDishes && this.volioDishes.length > 0) {
                 this.volioDishes.forEach(vd => {
+                    if (deprecatedEmpanadas.has(vd.id)) return;
                     const item = this.MENU_DATA.find(p => p.id === vd.id);
                     if (item) {
                         if (vd.precio !== undefined && vd.precio !== null && !isNaN(vd.precio)) item.precio = vd.precio;
@@ -1183,6 +1305,7 @@ const MenuController = {
         // 5. El Catálogo Maestro (volio_platillos) es la fuente definitiva y en tiempo real
         if (this.volioDishes && this.volioDishes.length > 0) {
             this.MENU_DATA.forEach(p => {
+                if (deprecatedEmpanadas.has(p.id)) return;
                 const vd = this.volioDishes.find(d => d.id === p.id);
                 if (vd && vd.precio !== undefined && vd.precio !== null && !isNaN(vd.precio)) {
                     p.precio = vd.precio;
@@ -1562,31 +1685,144 @@ const UIController = {
         if (!modal) {
             modal = document.createElement('div');
             modal.id = 'options-modal';
-            modal.className = 'success-overlay active';
-            modal.style.zIndex = '10000';
+            modal.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(10, 0, 3, 0.88);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+                padding: 15px;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.15s ease;
+            `;
             modal.innerHTML = `
-                <div class="success-modal" style="padding: 30px;">
-                    <div style="font-size: 2rem; color: var(--mostaza); margin-bottom: 10px;"><i class="fas fa-list"></i></div>
-                    <h2 class="success-title" id="options-title" style="font-size: 1.5rem; margin-bottom: 20px;">Elige una opción</h2>
-                    <div id="options-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <div id="options-modal-card" style="
+                    background: #190107;
+                    border: 2px solid #f7b731;
+                    border-radius: 20px;
+                    padding: 22px 20px;
+                    width: 100%;
+                    max-width: 360px;
+                    box-shadow: 0 15px 45px rgba(0,0,0,0.85);
+                    text-align: center;
+                    transform: scale(0.95);
+                    transition: transform 0.15s ease;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                ">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #f7b731; font-weight: 800;">
+                        🥟 Selecciona el Relleno
                     </div>
-                    <button class="success-btn" style="padding: 10px; border-color: rgba(255,255,255,0.1);" onclick="document.getElementById('options-modal').classList.remove('active')">
+                    <h3 id="options-title" style="
+                        color: #ffffff;
+                        font-size: 1.25rem;
+                        font-weight: 900;
+                        margin: 0;
+                        line-height: 1.2;
+                        font-family: 'Gotham', sans-serif;
+                    "></h3>
+                    <div id="options-price" style="font-size: 1rem; color: #2ecc71; font-weight: 800; margin-bottom: 4px;"></div>
+                    <div id="options-list" style="display: flex; flex-direction: column; gap: 9px;"></div>
+                    <button type="button" id="options-cancel-btn" style="
+                        background: rgba(255,255,255,0.06);
+                        border: 1px solid rgba(255,255,255,0.15);
+                        color: rgba(255,255,255,0.7);
+                        padding: 10px;
+                        border-radius: 12px;
+                        font-size: 0.82rem;
+                        font-weight: 800;
+                        cursor: pointer;
+                        margin-top: 5px;
+                        font-family: inherit;
+                        transition: background 0.2s;
+                    ">
                         CANCELAR
                     </button>
                 </div>
             `;
             document.body.appendChild(modal);
-        } else {
-            modal.classList.add('active');
+
+            // Cerrar al hacer clic fuera o en botón cancelar
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal || e.target.id === 'options-cancel-btn') {
+                    UIController.closeOptionsModal();
+                }
+            });
         }
-        
-        document.getElementById('options-title').innerText = product.nombre;
-        const list = document.getElementById('options-list');
-        list.innerHTML = product.options.map(opt => `
-            <button class="success-btn" style="padding: 12px; font-size: 1rem; border-color: var(--mostaza); color: var(--mostaza);" onclick="CartManager.addItem('${product.id}', '${opt}'); document.getElementById('options-modal').classList.remove('active');">
-                ${opt}
-            </button>
-        `).join('');
+
+        // Poblar contenido
+        const titleEl = document.getElementById('options-title');
+        const priceEl = document.getElementById('options-price');
+        const listEl = document.getElementById('options-list');
+        const card = document.getElementById('options-modal-card');
+
+        if (titleEl) titleEl.innerText = product.nombre;
+        if (priceEl) priceEl.innerText = `₡${(product.precio || 0).toLocaleString()}`;
+
+        // Mapeo de emojis para cada opción
+        const flavorIcons = {
+            'Queso': '🧀',
+            'Carne': '🥩',
+            'Pinto': '🍚',
+            'Carne y Queso': '🧀🥩',
+            'Coca Cola': '🥤',
+            'Fresca': '🥤',
+            'Fanta': '🥤',
+            'Gingerale': '🥤',
+            'Coca Zero': '🥤',
+            'Té Blanco': '🧃'
+        };
+
+        if (listEl) {
+            listEl.innerHTML = (product.options || []).map(opt => {
+                const icon = flavorIcons[opt] || '✨';
+                return `
+                    <button type="button" style="
+                        background: linear-gradient(135deg, rgba(247, 183, 49, 0.15), rgba(243, 156, 18, 0.08));
+                        border: 1.5px solid rgba(247, 183, 49, 0.5);
+                        color: #ffffff;
+                        padding: 13px 16px;
+                        border-radius: 14px;
+                        font-size: 1rem;
+                        font-weight: 800;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        transition: background 0.15s, border-color 0.15s, transform 0.1s;
+                        font-family: inherit;
+                    "
+                    onmousedown="this.style.transform='scale(0.98)'"
+                    onmouseup="this.style.transform='scale(1)'"
+                    onclick="CartManager.addItem('${product.id}', '${opt}'); UIController.closeOptionsModal();">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.25rem;">${icon}</span>
+                            <span>${opt}</span>
+                        </span>
+                        <i class="fas fa-plus-circle" style="color: #f7b731; font-size: 1.1rem;"></i>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        modal.style.opacity = '1';
+        modal.style.pointerEvents = 'auto';
+        if (card) card.style.transform = 'scale(1)';
+        if (navigator.vibrate) navigator.vibrate(20);
+    },
+
+    closeOptionsModal() {
+        const modal = document.getElementById('options-modal');
+        const card = document.getElementById('options-modal-card');
+        if (modal) {
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+            if (card) card.style.transform = 'scale(0.95)';
+        }
     }
 };
 
