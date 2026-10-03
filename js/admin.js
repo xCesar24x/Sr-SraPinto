@@ -2758,6 +2758,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
                 {
+                    id: 'c-empanada-sencilla-cafe',
+                    nombre: 'Combo: Empanada Sencilla + Café',
+                    categoria: 'desayuno',
+                    desc: 'Empanada sencilla a elegir con Café Premium Grande.',
+                    ingredientes: 'Empanada sencilla a elegir + café chorreado 12oz',
+                    precio: 3000,
+                    costo: 1050,
+                    img: 'images-catalogo/empanadas.jpeg',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+                },
+                {
                     id: 'p-empanada-arreglada',
                     nombre: 'Empanada Arreglada',
                     categoria: 'snacks',
@@ -2765,6 +2777,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     ingredientes: 'Empanada a elegir, ensalada de repollo, salsas de la casa',
                     precio: 3000,
                     costo: 950,
+                    img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+                },
+                {
+                    id: 'c-empanada-arreglada-cafe',
+                    nombre: 'Combo: Empanada Arreglada + Café',
+                    categoria: 'desayuno',
+                    desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
+                    ingredientes: 'Empanada arreglada a elegir + café chorreado 12oz',
+                    precio: 3500,
+                    costo: 1200,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
                     requiresOptions: true,
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
@@ -2782,33 +2806,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
                 {
-                    id: 'c-empanada-sencilla-cafe',
-                    nombre: 'Combo: Empanada Sencilla + Café',
-                    categoria: 'snacks',
-                    desc: 'Empanada sencilla a elegir con Café Premium Grande.',
-                    ingredientes: 'Empanada sencilla a elegir + café chorreado 12oz',
-                    precio: 3000,
-                    costo: 1050,
-                    img: 'images-catalogo/empanadas.jpeg',
-                    requiresOptions: true,
-                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
-                },
-                {
-                    id: 'c-empanada-arreglada-cafe',
-                    nombre: 'Combo: Empanada Arreglada + Café',
-                    categoria: 'snacks',
-                    desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
-                    ingredientes: 'Empanada arreglada a elegir + café chorreado 12oz',
-                    precio: 3500,
-                    costo: 1200,
-                    img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
-                    requiresOptions: true,
-                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
-                },
-                {
                     id: 'c-sra-empanada-cafe',
                     nombre: 'Combo: Señora Empanada + Café',
-                    categoria: 'snacks',
+                    categoria: 'desayuno',
                     desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
                     ingredientes: 'Señora empanada a elegir + café chorreado 12oz',
                     precio: 4000,
@@ -2825,7 +2825,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     ingredientes: 'Empanada a elección + té frío',
                     precio: 2000,
                     costo: 650,
-                    img: 'images-catalogo/empanadas.jpeg'
+                    img: 'images-catalogo/empanadas.jpeg',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
 
                 // ☕ BEBIDAS
@@ -3704,6 +3706,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            const isEmp = (id && id.toLowerCase().includes('empanada')) || (nombre && nombre.toLowerCase().includes('empanada'));
             const dishData = {
                 nombre,
                 categoria,
@@ -3712,6 +3715,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 precio,
                 costo,
                 recetaItems: this.activeRecipeItems || [],
+                requiresOptions: isEmp ? true : false,
+                options: isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null,
                 img: img || 'images-catalogo/Señor Pinto.jpeg',
                 actualizadoEn: new Date().toISOString()
             };

@@ -5,6 +5,24 @@
  */
 
 // ========================================
+// REGLAS GLOBALES DE PLATILLOS Y OPCIONES
+// ========================================
+window.isEmpanadaDish = function(dish) {
+    if (!dish) return false;
+    if (dish.requiresOptions === true) return true;
+    const id = (dish.id || '').toLowerCase();
+    const nombre = (dish.nombre || '').toLowerCase();
+    return id.includes('empanada') || nombre.includes('empanada');
+};
+
+window.isCafeCombo = function(dish) {
+    if (!dish) return false;
+    const id = (dish.id || '').toLowerCase();
+    const nombre = (dish.nombre || '').toLowerCase();
+    return id.includes('cafe') || id.includes('café') || nombre.includes('+ café') || nombre.includes('+ cafe') || (nombre.includes('combo') && (nombre.includes('café') || nombre.includes('cafe')));
+};
+
+// ========================================
 // MÓDULO: State Management
 // ========================================
 const StateManager = {
@@ -51,7 +69,16 @@ const CartManager = {
         const product = MenuController.getProductById(productId);
         if (!product) return;
         
-        if (product.requiresOptions && !option) {
+        const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(product)) ||
+                      product.requiresOptions === true ||
+                      (product.id && product.id.toLowerCase().includes('empanada')) ||
+                      (product.nombre && product.nombre.toLowerCase().includes('empanada'));
+
+        if (isEmp && !option) {
+            product.requiresOptions = true;
+            if (!product.options || product.options.length === 0) {
+                product.options = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+            }
             UIController.showOptionsModal(product);
             return;
         }
@@ -867,12 +894,36 @@ const MenuController = {
             options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
+            id: 'c-empanada-sencilla-cafe',
+            categoria: 'pintos',
+            nombre: 'Combo: Empanada Sencilla + Café',
+            desc: 'Empanada sencilla a elegir + Café Premium Grande.',
+            precio: 3000,
+            img: '<img src="images-catalogo/empanadas.jpeg" alt="Combo Empanada Sencilla + Café">',
+            badge: 'Combo',
+            badgeClass: 'badge-value',
+            requiresOptions: true,
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+        },
+        {
             id: 'p-empanada-arreglada',
             categoria: 'snacks',
             nombre: 'Empanada Arreglada',
             desc: 'Empanada crujiente con repollo arreglado, salsas y relleno a elegir.',
             precio: 3000,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Empanada Arreglada">',
+            requiresOptions: true,
+            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+        },
+        {
+            id: 'c-empanada-arreglada-cafe',
+            categoria: 'pintos',
+            nombre: 'Combo: Empanada Arreglada + Café',
+            desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
+            precio: 3500,
+            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Combo Empanada Arreglada + Café">',
+            badge: 'Combo',
+            badgeClass: 'badge-value',
             requiresOptions: true,
             options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
@@ -887,32 +938,8 @@ const MenuController = {
             options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
-            id: 'c-empanada-sencilla-cafe',
-            categoria: 'snacks',
-            nombre: 'Combo: Empanada Sencilla + Café',
-            desc: 'Empanada sencilla a elegir + Café Premium Grande.',
-            precio: 3000,
-            img: '<img src="images-catalogo/empanadas.jpeg" alt="Combo Empanada Sencilla + Café">',
-            badge: 'Combo',
-            badgeClass: 'badge-value',
-            requiresOptions: true,
-            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
-        },
-        {
-            id: 'c-empanada-arreglada-cafe',
-            categoria: 'snacks',
-            nombre: 'Combo: Empanada Arreglada + Café',
-            desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
-            precio: 3500,
-            img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Combo Empanada Arreglada + Café">',
-            badge: 'Combo',
-            badgeClass: 'badge-value',
-            requiresOptions: true,
-            options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
-        },
-        {
             id: 'c-sra-empanada-cafe',
-            categoria: 'snacks',
+            categoria: 'pintos',
             nombre: 'Combo: Señora Empanada + Café',
             desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
             precio: 4000,
@@ -993,6 +1020,9 @@ const MenuController = {
         if (!p && this.volioDishes && this.volioDishes.length > 0) {
             const v = this.volioDishes.find(item => item.id === id);
             if (v) {
+                const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(v)) ||
+                              (v.id && v.id.toLowerCase().includes('empanada')) ||
+                              (v.nombre && v.nombre.toLowerCase().includes('empanada'));
                 p = {
                     id: v.id,
                     categoria: v.categoria,
@@ -1001,6 +1031,8 @@ const MenuController = {
                     ingredientes: v.ingredientes || '',
                     precio: v.precio || 0,
                     costo: v.costo || 0,
+                    requiresOptions: v.requiresOptions !== undefined ? v.requiresOptions : isEmp,
+                    options: v.options || (isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null),
                     img: v.img || 'images-catalogo/Señor Pinto.jpeg'
                 };
             }
@@ -1009,6 +1041,18 @@ const MenuController = {
             p = this.ORIGINAL_MENU_DATA.find(item => item.id === id);
         }
         if (p) {
+            // Garantizar flags de opciones en cualquier empanada
+            const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(p)) ||
+                          (p.requiresOptions === true) ||
+                          (p.id && p.id.toLowerCase().includes('empanada')) ||
+                          (p.nombre && p.nombre.toLowerCase().includes('empanada'));
+            if (isEmp) {
+                p.requiresOptions = true;
+                if (!p.options || p.options.length === 0) {
+                    p.options = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                }
+            }
+
             // Garantizar el precio más actualizado: Catálogo Maestro siempre toma prioridad
             if (this.volioDishes && this.volioDishes.length > 0) {
                 const vd = this.volioDishes.find(item => item.id === id);
@@ -1256,8 +1300,8 @@ const MenuController = {
                         desc: d.desc || (original ? original.desc : ''),
                         precio: d.precio || (original ? original.precio : 0),
                         costo: d.costo || (original ? original.costo : 0),
-                        requiresOptions: d.requiresOptions !== undefined ? d.requiresOptions : (original ? original.requiresOptions : (d.id && d.id.includes('empanada'))),
-                        options: d.options || (original ? original.options : (d.id && d.id.includes('empanada') ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null)),
+                        requiresOptions: d.requiresOptions !== undefined ? d.requiresOptions : (original ? original.requiresOptions : (window.isEmpanadaDish ? window.isEmpanadaDish(d) : (d.id && d.id.includes('empanada')))),
+                        options: d.options || (original ? original.options : ((window.isEmpanadaDish ? window.isEmpanadaDish(d) : (d.id && d.id.includes('empanada'))) ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null)),
                         img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || (original && original.img ? (original.img.match(/src="([^"]+)"/) ? original.img.match(/src="([^"]+)"/)[1] : original.img) : 'images-catalogo/Señor Pinto.jpeg')}" alt="${d.nombre}" class="img-fit">`
                     };
                 });
@@ -1269,17 +1313,40 @@ const MenuController = {
                 StateManager.setCategory('desayuno');
             }
         } else {
-            // Sincronizar catálogo maestro con el menú general (precios, descripciones, nombres e imágenes)
+            // Sincronizar catálogo maestro con el menú general (precios, descripciones, nombres, opciones e imágenes)
             if (this.volioDishes && this.volioDishes.length > 0) {
+                const existingMap = new Map(this.MENU_DATA.map(p => [p.id, p]));
                 this.volioDishes.forEach(vd => {
                     if (deprecatedEmpanadas.has(vd.id)) return;
-                    const item = this.MENU_DATA.find(p => p.id === vd.id);
+                    const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(vd)) ||
+                                  (vd.id && vd.id.toLowerCase().includes('empanada')) ||
+                                  (vd.nombre && vd.nombre.toLowerCase().includes('empanada'));
+                    const item = existingMap.get(vd.id);
                     if (item) {
                         if (vd.precio !== undefined && vd.precio !== null && !isNaN(vd.precio)) item.precio = vd.precio;
                         if (vd.nombre) item.nombre = vd.nombre;
                         if (vd.desc) item.desc = vd.desc;
                         if (vd.ingredientes) item.ingredientes = vd.ingredientes;
                         if (vd.img) item.img = vd.img.startsWith('<') ? vd.img : `<img src="${vd.img}" alt="${vd.nombre}" class="img-fit">`;
+                        if (isEmp) {
+                            item.requiresOptions = true;
+                            item.options = (vd.options && vd.options.length) ? vd.options : ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                        }
+                    } else {
+                        const newDish = {
+                            id: vd.id,
+                            categoria: vd.categoria || 'snacks',
+                            nombre: vd.nombre,
+                            desc: vd.desc || '',
+                            ingredientes: vd.ingredientes || '',
+                            precio: vd.precio || 0,
+                            costo: vd.costo || 0,
+                            requiresOptions: vd.requiresOptions !== undefined ? vd.requiresOptions : isEmp,
+                            options: vd.options || (isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null),
+                            img: vd.img && vd.img.startsWith('<') ? vd.img : `<img src="${vd.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${vd.nombre}" class="img-fit">`
+                        };
+                        this.MENU_DATA.push(newDish);
+                        existingMap.set(vd.id, newDish);
                     }
                 });
             }
@@ -1578,10 +1645,85 @@ const MenuController = {
             }`;
         }
 
-        const filtered = this.MENU_DATA.filter(p => p.categoria === categoryId);
+        const isDesayunoCat = (categoryId === 'pintos' || categoryId === 'desayuno');
+        const isSnacksCat = (categoryId === 'snacks' || categoryId === 'snack');
+
+        const filtered = this.MENU_DATA.filter(p => {
+            const dishCat = (p.categoria || '').toLowerCase();
+            const id = (p.id || '').toLowerCase();
+            const nombre = (p.nombre || '').toLowerCase();
+            const isEmp = typeof window.isEmpanadaDish === 'function' ? window.isEmpanadaDish(p) : (id.includes('empanada') || nombre.includes('empanada'));
+            const isCafe = typeof window.isCafeCombo === 'function' ? window.isCafeCombo(p) : (id.includes('cafe') || id.includes('café') || nombre.includes('+ café') || nombre.includes('+ cafe') || (nombre.includes('combo') && (nombre.includes('café') || nombre.includes('cafe'))));
+
+            if (isDesayunoCat) {
+                // En Desayunos van los desayunos y todas las 6 opciones de empanadas (sencillas y + café)
+                if (isEmp) return true;
+                return dishCat === 'pintos' || dishCat === 'desayuno';
+            }
+            if (isSnacksCat) {
+                // En Snacks van las 3 empanadas individuales (SIN café) y los demás snacks
+                if (isEmp) return !isCafe;
+                return dishCat === 'snacks' || dishCat === 'snack' || dishCat === 'combos';
+            }
+            return dishCat === categoryId;
+        });
         
-        // Ordenar por precio de mayor a menor (excepto bebidas para mantener cafés juntos)
-        if (categoryId !== 'bebidas') {
+        // Ordenamiento específico solicitado para empanadas
+        if (isDesayunoCat) {
+            const empanadaOrder = {
+                'p-empanada-sencilla': 10,
+                'c-empanada-sencilla-cafe': 11,
+                'p-empanada-arreglada': 12,
+                'c-empanada-arreglada-cafe': 13,
+                'p-sra-empanada': 14,
+                'c-sra-empanada-cafe': 15
+            };
+            filtered.sort((a, b) => {
+                const getOrder = (item) => {
+                    if (empanadaOrder[item.id] !== undefined) return empanadaOrder[item.id];
+                    const id = (item.id || '').toLowerCase();
+                    const nom = (item.nombre || '').toLowerCase();
+                    if (id.includes('empanada') || nom.includes('empanada')) {
+                        if (nom.includes('sencilla') && (nom.includes('café') || nom.includes('cafe'))) return 11;
+                        if (nom.includes('sencilla')) return 10;
+                        if (nom.includes('arreglada') && (nom.includes('café') || nom.includes('cafe'))) return 13;
+                        if (nom.includes('arreglada')) return 12;
+                        if (nom.includes('señora') && (nom.includes('café') || nom.includes('cafe'))) return 15;
+                        if (nom.includes('señora')) return 14;
+                        return 16;
+                    }
+                    return 0; // Desayunos tradicionales primero
+                };
+                const oA = getOrder(a);
+                const oB = getOrder(b);
+                if (oA !== oB) return oA - oB;
+                return b.precio - a.precio;
+            });
+        } else if (isSnacksCat) {
+            const empanadaOrder = {
+                'p-empanada-sencilla': 1,
+                'p-empanada-arreglada': 2,
+                'p-sra-empanada': 3
+            };
+            filtered.sort((a, b) => {
+                const getOrder = (item) => {
+                    if (empanadaOrder[item.id] !== undefined) return empanadaOrder[item.id];
+                    const id = (item.id || '').toLowerCase();
+                    const nom = (item.nombre || '').toLowerCase();
+                    if (id.includes('empanada') || nom.includes('empanada')) {
+                        if (nom.includes('sencilla')) return 1;
+                        if (nom.includes('arreglada')) return 2;
+                        if (nom.includes('señora')) return 3;
+                        return 4;
+                    }
+                    return 99; // Otros snacks después
+                };
+                const oA = getOrder(a);
+                const oB = getOrder(b);
+                if (oA !== oB) return oA - oB;
+                return b.precio - a.precio;
+            });
+        } else if (categoryId !== 'bebidas') {
             filtered.sort((a, b) => b.precio - a.precio);
         }
         
@@ -1769,8 +1911,9 @@ const UIController = {
             'Té Blanco': '🧃'
         };
 
+        const optionsToRender = (product.options && product.options.length) ? product.options : ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
         if (listEl) {
-            listEl.innerHTML = (product.options || []).map(opt => {
+            listEl.innerHTML = optionsToRender.map(opt => {
                 const icon = flavorIcons[opt] || '✨';
                 return `
                     <button type="button" style="
