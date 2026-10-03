@@ -555,8 +555,9 @@ const CartManager = {
         t += centrar("SR. & SRA. PINTO") + "\n";
         t += centrar("EL SABOR DE SER TICO") + "\n";
         t += dblSep + "\n";
-        t += formatearFila(`Fecha: ${fechaStr}`, horaStr) + "\n";
-        t += `Cajero: ${empleadoName}\n`;
+        t += `Fecha:   ${fechaStr}\n`;
+        t += `Hora:    ${horaStr}\n`;
+        t += `Cajero:  ${empleadoName}\n`;
         t += `COMANDA: ${numComanda}\n`;
         
         if (pedido.cliente && pedido.cliente.trim() !== '') {
@@ -724,7 +725,8 @@ const CartManager = {
             <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
 
             <div style="font-size: 10.5px; line-height: 1.35;">
-                <div><strong>Fecha:</strong> ${fechaStr} ${horaStr}</div>
+                <div><strong>Fecha:</strong> ${fechaStr}</div>
+                <div><strong>Hora:</strong> ${horaStr}</div>
                 <div><strong>Cajero:</strong> ${empleadoName}</div>
                 <div style="margin-top: 2px;"><strong>COMANDA:</strong> <span style="font-size: 13.5px; font-weight: 900;">${numComanda}</span></div>
                 ${pedido.cliente && pedido.cliente.trim() !== '' ? `<div><strong>Cliente:</strong> ${pedido.cliente}</div>` : ''}
