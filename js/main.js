@@ -26,7 +26,7 @@ window.isCafeCombo = function(dish) {
 // MÓDULO: State Management
 // ========================================
 const StateManager = {
-    currentCategory: 'menu1',
+    currentCategory: 'desayuno',
     
     setCategory(category) {
         this.currentCategory = category;
@@ -1171,7 +1171,7 @@ const MenuController = {
     customPrices: {},
     feriaConfig: { active: false, combos_active: false },
     feriaCustomPrices: null,
-    volioConfig: { active: false },
+    volioConfig: { active: true },
     volioDishes: [],
     volioSchedule: { lunes: [], martes: [], miercoles: [], jueves: [], viernes: [] },
 
@@ -1222,12 +1222,13 @@ const MenuController = {
                 this.applyStateAndRender();
             });
 
-            // Escuchar Modo Volio en tiempo real
+            // Escuchar Modo Volio en tiempo real (activo por defecto)
             window.FirebaseDB.collection('config').doc('volio').onSnapshot((doc) => {
                 if (doc.exists) {
-                    this.volioConfig = doc.data();
+                    const data = doc.data();
+                    this.volioConfig = { active: data.active !== false };
                 } else {
-                    this.volioConfig = { active: false };
+                    this.volioConfig = { active: true };
                 }
                 this.applyStateAndRender();
             });
@@ -1248,7 +1249,7 @@ const MenuController = {
             });
         }
         this.renderSidebar();
-        this.renderCategory('pintos');
+        this.renderCategory('desayuno');
     },
 
     applyStateAndRender() {
@@ -1340,8 +1341,9 @@ const MenuController = {
             }
         }
 
-        // 3.5. APLICAR MODO VOLIO SI ESTÁ ACTIVO
-        if (this.volioConfig && this.volioConfig.active) {
+        // 3.5. APLICAR MODO VOLIO (Activo por defecto)
+        const isVolioActive = !this.volioConfig || this.volioConfig.active !== false;
+        if (isVolioActive) {
             // Categorías oficiales de Modo Volio
             this.CATEGORIAS = [
                 { id: 'desayuno', nombre: 'Desayunos', icon: '🍳', subtitle: 'Deliciosos desayunos tradicionales para arrancar el día' },

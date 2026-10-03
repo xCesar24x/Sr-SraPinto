@@ -2484,7 +2484,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // MÓDULO: VOLIO MANAGER (Ingeniería de Menú & Programación Semanal)
     // ==========================================================================
     window.VolioManager = {
-        active: false,
+        active: true,
         dishes: [],
         schedule: {
             lunes: [],
@@ -2510,17 +2510,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const db = window.FirebaseDB;
             if (!db) return;
 
-            // 1. Escuchar estado del Modo Volio (On / Off)
+            // 1. Asegurar estado del Modo Volio (Activo por defecto)
+            this.active = true;
             db.collection('config').doc('volio').onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
-                    this.active = !!data.active;
+                    if (data.active === false) {
+                        db.collection('config').doc('volio').update({ active: true });
+                    }
+                    this.active = true;
                 } else {
-                    this.active = false;
-                    db.collection('config').doc('volio').set({ active: false });
+                    this.active = true;
+                    db.collection('config').doc('volio').set({ active: true });
                 }
                 this.updateModeUI();
             });
+            // Persistir inmediatamente en Firestore
+            db.collection('config').doc('volio').set({ active: true }, { merge: true });
 
             // 2. Escuchar catálogo de platillos y recetas
             db.collection('volio_platillos').onSnapshot(snapshot => {
