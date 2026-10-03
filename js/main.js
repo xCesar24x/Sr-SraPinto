@@ -1250,9 +1250,10 @@ const MenuController = {
     },
 
     CATEGORIAS: [
-        { id: 'pintos',  nombre: 'Desayunos',  icon: '🍳', subtitle: 'Gallo pinto hecho con amor, igual de malo pa\u2019 la dieta 😉' },
-        { id: 'snacks',  nombre: 'Snacks',  icon: '🥟', subtitle: 'Empanadas, patacones y más antojos irresistibles' },
-        { id: 'bebidas', nombre: 'Bebidas', icon: '☕', subtitle: 'Café fresquito y bebidas frías' }
+        { id: 'desayuno', nombre: 'Desayunos', icon: '🍳', subtitle: 'Deliciosos desayunos tradicionales para arrancar el día' },
+        { id: 'almuerzo',  nombre: 'Almuerzos',  icon: '🍲', subtitle: 'Casados completos y platillos del día preparados con amor casero' },
+        { id: 'snacks',    nombre: 'Snacks',    icon: '🥟', subtitle: 'Empanadas arregladas, patacones y antojos irresistibles' },
+        { id: 'bebidas',   nombre: 'Bebidas',   icon: '☕', subtitle: 'Café fresquito y bebidas frías' }
     ],
 
     inventario: {},
@@ -1697,7 +1698,7 @@ const MenuController = {
                         🍲 <strong>En esta programación semanal lo que varía cada día son las opciones de Almuerzo.</strong>
                     </p>
                     <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.72); line-height: 1.4;">
-                        🍳 Los <strong>Desayunos</strong>, 🥟 <strong>Snacks (empanadas y patacones)</strong> y ☕ <strong>Bebidas</strong> están <strong>disponibles todos los días durante toda la semana</strong> en sus categorías del menú.
+                        🍳 Los <strong>Desayunos</strong>, 🥟 <strong>Snacks</strong> y ☕ <strong>Bebidas</strong> están <strong>disponibles todos los días durante toda la semana</strong> en sus categorías del menú.
                     </p>
                 </div>
                 ${currentTodayKey ? `
@@ -1810,13 +1811,13 @@ const MenuController = {
                     Nuestras famosas empanadas (arregladas, sencillas, señora empanada), burritos, pinto y café están <strong>disponibles todos los días de la semana</strong>.
                 </p>
                 <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                    <button class="btn-primary" onclick="MenuController.renderCategory('desayuno')" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; cursor: pointer; font-weight: 700;">
+                    <button class="btn-primary" onclick="MenuController.renderCategory('desayuno'); document.getElementById('menu-dynamic-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; cursor: pointer; font-weight: 700;">
                         🍳 Ver Desayunos
                     </button>
-                    <button class="btn-primary" onclick="MenuController.renderCategory('snacks')" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; background: linear-gradient(135deg, #e67e22, #d35400); cursor: pointer; font-weight: 700;">
+                    <button class="btn-primary" onclick="MenuController.renderCategory('snacks'); document.getElementById('menu-dynamic-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; background: linear-gradient(135deg, #e67e22, #d35400); cursor: pointer; font-weight: 700;">
                         🥟 Ver Snacks & Empanadas
                     </button>
-                    <button class="btn-primary" onclick="MenuController.renderCategory('bebidas')" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; background: linear-gradient(135deg, #3498db, #2980b9); cursor: pointer; font-weight: 700;">
+                    <button class="btn-primary" onclick="MenuController.renderCategory('bebidas'); document.getElementById('menu-dynamic-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' });" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; background: linear-gradient(135deg, #3498db, #2980b9); cursor: pointer; font-weight: 700;">
                         ☕ Ver Bebidas
                     </button>
                 </div>
@@ -1831,7 +1832,8 @@ const MenuController = {
             this.renderWeeklyMenu();
             return;
         }
-        StateManager.setCategory(categoryId);
+        const catKey = (categoryId === 'pintos' || categoryId === 'desayuno') ? 'desayuno' : categoryId;
+        StateManager.setCategory(catKey);
         const container = document.getElementById('menu-dynamic-content');
         const titleEl = document.getElementById('current-category-title');
         const countEl = document.getElementById('current-category-count');
@@ -1847,13 +1849,18 @@ const MenuController = {
 
         // Update sidebar active state
         document.querySelectorAll('.sidebar-btn').forEach(btn => {
-            if (btn.dataset.cat === categoryId) btn.classList.add('active');
+            const isMatch = btn.dataset.cat === catKey || 
+                            (catKey === 'desayuno' && btn.dataset.cat === 'pintos') ||
+                            (catKey === 'pintos' && btn.dataset.cat === 'desayuno');
+            if (isMatch) btn.classList.add('active');
             else if (btn.dataset.cat !== 'semana') btn.classList.remove('active');
         });
 
-        const categoryInfo = this.CATEGORIAS.find(c => c.id === categoryId);
+        const categoryInfo = (this.CATEGORIAS && this.CATEGORIAS.find(c => c.id === catKey || c.id === categoryId)) ||
+                             (this.CATEGORIAS && this.CATEGORIAS.find(c => (catKey === 'desayuno' && c.id === 'pintos'))) ||
+                             { icon: '🍳', nombre: 'Desayunos', subtitle: 'Deliciosos desayunos tradicionales' };
         if (titleEl) {
-            titleEl.innerHTML = `${categoryInfo.icon} ${categoryInfo.nombre}${
+            titleEl.innerHTML = `${categoryInfo.icon || '🍳'} ${categoryInfo.nombre || 'Menú'}${
                 categoryInfo.subtitle
                     ? `<span>${categoryInfo.subtitle}</span>`
                     : ''
