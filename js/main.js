@@ -603,6 +603,7 @@ const CartManager = {
 
         t += centrar("Gracias por tu compra!") + "\n";
         t += centrar("Dios te bendiga :)") + "\n\n";
+        t += centrar("Para pedidos:") + "\n";
         t += centrar("WhatsApp: +506 8822-4763") + "\n";
         t += centrar("srysrapinto.com") + "\n";
         t += dblSep + "\n";
@@ -765,7 +766,8 @@ const CartManager = {
             <div style="text-align: center; font-size: 10.5px; margin-top: 6px;">
                 <div>¡Muchas gracias por su compra!</div>
                 <div style="margin-top: 2px; font-weight: bold;">Dios le bendiga :)</div>
-                <div style="margin-top: 6px; font-size: 10px;">WhatsApp: +506 8822-4763</div>
+                <div style="margin-top: 6px; font-size: 10px;">Para pedidos:</div>
+                <div style="font-size: 10px;">WhatsApp: +506 8822-4763</div>
                 <div style="font-size: 10px; font-weight: bold; margin-top: 1px;">srysrapinto.com</div>
             </div>
             <div style="height: 12mm;"></div>
