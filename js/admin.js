@@ -2547,6 +2547,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (Object.keys(priceSync).length > 0) {
                         db.collection('config').doc('precios').set(priceSync, { merge: true }).catch(err => console.warn("Sync precios:", err));
                     }
+
+                    // Si las 6 empanadas oficiales no están o existen IDs viejos duplicados, sincronizar automáticamente una vez
+                    const hasOfficial = this.dishes.some(d => d.id === 'p-empanada-sencilla');
+                    const hasDeprecated = this.dishes.some(d => ['p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto'].includes(d.id));
+                    if (!this._empanadasAutoSynced && (!hasOfficial || hasDeprecated)) {
+                        this._empanadasAutoSynced = true;
+                        this.syncEmpanadasToCatalog(false);
+                    }
                 }
             });
 
@@ -2890,6 +2898,152 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (err) {
                 console.error("Error al importar productos al catálogo:", err);
                 if (interactive) alert("Hubo un error al sincronizar los productos.");
+            }
+        },
+
+        async syncEmpanadasToCatalog(interactive = true) {
+            const db = window.FirebaseDB;
+            if (!db) {
+                if (interactive) alert("Base de datos no disponible.");
+                return;
+            }
+
+            if (interactive && !confirm("¿Deseas sincronizar las 6 opciones oficiales de empanadas al Catálogo Maestro y eliminar los sabores viejos duplicados?")) return;
+
+            const deprecatedIds = [
+                'p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto',
+                'p-empanada-carne-queso', 'p-empanada-birria', 'p-sra-empanada-m1',
+                'p-sra-empanada-m2', 'c-empanada-cafe'
+            ];
+
+            const officialEmpanadas = [
+                {
+                    id: 'p-empanada-sencilla',
+                    nombre: 'Empanada Sencilla',
+                    categoria: 'snacks',
+                    desc: 'Crujiente empanada artesanal de maíz frita. Elige tu relleno favorito.',
+                    ingredientes: 'Masa de maíz sazonada, relleno a elegir (queso, carne o pinto)',
+                    precio: 2500,
+                    costo: 800,
+                    img: 'images-catalogo/empanadas.jpeg',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso'],
+                    actualizadoEn: new Date().toISOString()
+                },
+                {
+                    id: 'p-empanada-arreglada',
+                    nombre: 'Empanada Arreglada',
+                    categoria: 'snacks',
+                    desc: 'Empanada crujiente con repollo arreglado, salsas y relleno a elegir.',
+                    ingredientes: 'Empanada artesanal, ensalada de repollo, salsas de la casa',
+                    precio: 3000,
+                    costo: 950,
+                    img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso'],
+                    actualizadoEn: new Date().toISOString()
+                },
+                {
+                    id: 'p-sra-empanada',
+                    nombre: 'Señora Empanada',
+                    categoria: 'snacks',
+                    desc: 'Nuestra empanada insignia con repollo, carne mechada extra por encima y salsas.',
+                    ingredientes: 'Empanada grande, ensalada de repollo fresco, carne mechada extra, salsas de la casa',
+                    precio: 3500,
+                    costo: 1100,
+                    img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso'],
+                    actualizadoEn: new Date().toISOString()
+                },
+                {
+                    id: 'c-empanada-sencilla-cafe',
+                    nombre: 'Combo: Empanada Sencilla + Café',
+                    categoria: 'snacks',
+                    desc: 'Empanada sencilla a elegir + Café Premium Grande.',
+                    ingredientes: 'Empanada sencilla a elegir + café chorreado 12oz',
+                    precio: 3000,
+                    costo: 1050,
+                    img: 'images-catalogo/empanadas.jpeg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso'],
+                    actualizadoEn: new Date().toISOString()
+                },
+                {
+                    id: 'c-empanada-arreglada-cafe',
+                    nombre: 'Combo: Empanada Arreglada + Café',
+                    categoria: 'snacks',
+                    desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
+                    ingredientes: 'Empanada arreglada a elegir + café chorreado 12oz',
+                    precio: 3500,
+                    costo: 1200,
+                    img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso'],
+                    actualizadoEn: new Date().toISOString()
+                },
+                {
+                    id: 'c-sra-empanada-cafe',
+                    nombre: 'Combo: Señora Empanada + Café',
+                    categoria: 'snacks',
+                    desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
+                    ingredientes: 'Señora empanada a elegir + café chorreado 12oz',
+                    precio: 4000,
+                    costo: 1350,
+                    img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso'],
+                    actualizadoEn: new Date().toISOString()
+                }
+            ];
+
+            try {
+                const batch = db.batch();
+
+                // 1. Borrar platillos viejos de empanadas por sabor para evitar duplicados
+                deprecatedIds.forEach(oldId => {
+                    const docRef = db.collection('volio_platillos').doc(oldId);
+                    batch.delete(docRef);
+                });
+
+                // 2. Insertar / Actualizar las 6 oficiales en el Catálogo Maestro
+                officialEmpanadas.forEach(p => {
+                    const docRef = db.collection('volio_platillos').doc(p.id);
+                    batch.set(docRef, p, { merge: true });
+                });
+
+                await batch.commit();
+
+                // 3. Sincronizar programación semanal
+                const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
+                const newSchedule = { ...(this.schedule || {}) };
+                const newIds = officialEmpanadas.map(e => e.id);
+
+                days.forEach(d => {
+                    let dayDishes = Array.isArray(newSchedule[d]) ? [...newSchedule[d]] : [];
+                    dayDishes = dayDishes.filter(id => !deprecatedIds.includes(id));
+                    newIds.forEach(nid => {
+                        if (!dayDishes.includes(nid)) dayDishes.push(nid);
+                    });
+                    newSchedule[d] = dayDishes;
+                });
+
+                await db.collection('config_volio').doc('programacion_semanal').set(newSchedule, { merge: true });
+                this.schedule = newSchedule;
+                this.renderDaySchedule();
+
+                if (interactive) {
+                    alert("✅ Se sincronizaron las 6 empanadas oficiales al Catálogo Maestro y se eliminaron los sabores duplicados anteriores. Ahora puedes editar sus precios o fotos directamente desde la tabla de abajo.");
+                }
+            } catch (err) {
+                console.error("Error al sincronizar empanadas:", err);
+                if (interactive) alert("Error al sincronizar empanadas al catálogo.");
             }
         },
 

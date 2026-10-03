@@ -1252,23 +1252,11 @@ const MenuController = {
                         desc: d.desc || (original ? original.desc : ''),
                         precio: d.precio || (original ? original.precio : 0),
                         costo: d.costo || (original ? original.costo : 0),
-                        requiresOptions: d.requiresOptions || (original ? original.requiresOptions : false),
-                        options: d.options || (original ? original.options : null),
+                        requiresOptions: d.requiresOptions !== undefined ? d.requiresOptions : (original ? original.requiresOptions : (d.id && d.id.includes('empanada'))),
+                        options: d.options || (original ? original.options : (d.id && d.id.includes('empanada') ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null)),
                         img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || (original && original.img ? (original.img.match(/src="([^"]+)"/) ? original.img.match(/src="([^"]+)"/)[1] : original.img) : 'images-catalogo/Señor Pinto.jpeg')}" alt="${d.nombre}" class="img-fit">`
                     };
                 });
-
-            // Asegurar que las 6 opciones oficiales de empanadas estén siempre presentes en Snacks
-            const officialEmpanadaIds = [
-                'p-empanada-sencilla', 'p-empanada-arreglada', 'p-sra-empanada',
-                'c-empanada-sencilla-cafe', 'c-empanada-arreglada-cafe', 'c-sra-empanada-cafe'
-            ];
-            officialEmpanadaIds.forEach(eid => {
-                if (!mappedVolio.some(d => d.id === eid)) {
-                    const orig = (this.ORIGINAL_MENU_DATA || []).find(o => o.id === eid);
-                    if (orig) mappedVolio.push(orig);
-                }
-            });
 
             this.MENU_DATA = mappedVolio;
 
