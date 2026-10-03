@@ -3104,52 +3104,46 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!container) return;
 
             const currentDayDishes = this.schedule[this.currentDay] || [];
-            const categories = [
-                { id: 'desayuno', label: '🍳 Desayunos' },
-                { id: 'almuerzo', label: '🍲 Almuerzos' },
-                { id: 'snacks', label: '🥟 Snacks & Antojos' },
-                { id: 'bebidas', label: '☕ Bebidas' }
-            ];
+            const almuerzos = this.dishes.filter(d => d.categoria === 'almuerzo');
 
-            let html = '';
+            let html = `
+                <div style="margin-bottom: 15px; padding: 12px 16px; background: rgba(247, 183, 49, 0.08); border-left: 3px solid var(--mostaza); border-radius: 8px; font-size: 0.83rem; color: rgba(255,255,255,0.85); line-height: 1.45;">
+                    <i class="fas fa-info-circle" style="color: var(--mostaza); margin-right: 6px;"></i> 
+                    <strong>Nota:</strong> Los <strong>Desayunos</strong>, <strong>Snacks (empanadas/patacones)</strong> y <strong>Bebidas</strong> están activos y disponibles todos los días durante toda la semana. En esta sección programas únicamente los <strong>Almuerzos</strong> que rotan cada día.
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--mostaza); font-size: 0.95rem; margin-bottom: 12px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🍲 Almuerzos en Catálogo (${almuerzos.length} platillos creados)</span>
+                        <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: normal;">Marca los que se servirán el <strong>${this.currentDay.charAt(0).toUpperCase() + this.currentDay.slice(1)}</strong></span>
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px;">
+            `;
 
-            categories.forEach(cat => {
-                const catDishes = this.dishes.filter(d => d.categoria === cat.id);
-                html += `
-                    <div style="margin-bottom: 20px;">
-                        <h4 style="color: var(--mostaza); font-size: 0.95rem; margin-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
-                            ${cat.label} (${catDishes.length} en catálogo)
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px;">
-                `;
-
-                if (catDishes.length === 0) {
-                    html += `<p style="font-size: 0.8rem; color: rgba(255,255,255,0.4); grid-column: 1 / -1;">No hay productos creados en esta categoría.</p>`;
-                } else {
-                    catDishes.forEach(dish => {
-                        const isScheduled = currentDayDishes.includes(dish.id);
-                        const imgSrc = dish.img || 'images-catalogo/Señor Pinto.jpeg';
-                        html += `
-                            <div style="background: ${isScheduled ? 'rgba(233, 19, 80, 0.12)' : 'rgba(0,0,0,0.3)'}; border: 1px solid ${isScheduled ? 'var(--rojo)' : 'var(--border)'}; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: all 0.2s;">
-                                <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                                    <img src="${imgSrc}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border);" onerror="this.src='logo-brand/PNG/Icono Mostaza.png'">
-                                    <div style="min-width: 0;">
-                                        <strong style="color: white; font-size: 0.88rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.sanitize(dish.nombre)}</strong>
-                                        <span style="font-size: 0.78rem; color: var(--mostaza); font-weight: bold;">₡${(dish.precio || 0).toLocaleString()} <span style="color: rgba(255,255,255,0.4); font-weight: normal;">• Costo: ₡${(dish.costo || 0).toLocaleString()}</span></span>
-                                        ${dish.ingredientes ? `<div style="font-size: 0.72rem; color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${this.sanitize(dish.ingredientes)}</div>` : ''}
-                                    </div>
+            if (almuerzos.length === 0) {
+                html += `<p style="font-size: 0.8rem; color: rgba(255,255,255,0.4); grid-column: 1 / -1; padding: 10px 0;">No hay platillos creados con categoría <strong>Almuerzo</strong> en el catálogo. Puedes agregar uno nuevo con el botón "+ Nuevo Platillo / Receta".</p>`;
+            } else {
+                almuerzos.forEach(dish => {
+                    const isScheduled = currentDayDishes.includes(dish.id);
+                    const imgSrc = dish.img || 'images-catalogo/Señor Pinto.jpeg';
+                    html += `
+                        <div style="background: ${isScheduled ? 'rgba(233, 19, 80, 0.12)' : 'rgba(0,0,0,0.3)'}; border: 1px solid ${isScheduled ? 'var(--rojo)' : 'var(--border)'}; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: all 0.2s;">
+                            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                                <img src="${imgSrc}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border);" onerror="this.src='logo-brand/PNG/Icono Mostaza.png'">
+                                <div style="min-width: 0;">
+                                    <strong style="color: white; font-size: 0.88rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${this.sanitize(dish.nombre)}</strong>
+                                    <span style="font-size: 0.78rem; color: var(--mostaza); font-weight: bold;">₡${(dish.precio || 0).toLocaleString()} <span style="color: rgba(255,255,255,0.4); font-weight: normal;">• Costo: ₡${(dish.costo || 0).toLocaleString()}</span></span>
+                                    ${dish.ingredientes ? `<div style="font-size: 0.72rem; color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">${this.sanitize(dish.ingredientes)}</div>` : ''}
                                 </div>
-                                <label class="switch-toggle" style="cursor: pointer; flex-shrink: 0;" title="${isScheduled ? 'Activo hoy' : 'Inactivo hoy'}">
-                                    <input type="checkbox" ${isScheduled ? 'checked' : ''} onchange="VolioManager.toggleDishInDay('${dish.id}', this.checked)" style="accent-color: var(--rojo); width: 20px; height: 20px; cursor: pointer;">
-                                </label>
                             </div>
-                        `;
-                    });
-                }
+                            <label class="switch-toggle" style="cursor: pointer; flex-shrink: 0;" title="${isScheduled ? 'Activo este día' : 'Inactivo este día'}">
+                                <input type="checkbox" ${isScheduled ? 'checked' : ''} onchange="VolioManager.toggleDishInDay('${dish.id}', this.checked)" style="accent-color: var(--rojo); width: 20px; height: 20px; cursor: pointer;">
+                            </label>
+                        </div>
+                    `;
+                });
+            }
 
-                html += `</div></div>`;
-            });
-
+            html += `</div></div>`;
             container.innerHTML = html;
         },
 

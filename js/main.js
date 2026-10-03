@@ -1360,20 +1360,25 @@ const MenuController = {
             // Obtener IDs de platillos programados para el día actual
             const scheduledIds = (this.volioSchedule && this.volioSchedule[currentDayKey]) ? this.volioSchedule[currentDayKey] : [];
 
-            // Filtrar del catálogo de platillos Volio los que están programados para hoy
+            // Filtrar del catálogo de platillos Volio:
+            // Desayunos, Snacks y Bebidas están SIEMPRE disponibles durante toda la semana.
+            // Solo los Almuerzos rotan según la programación del día actual.
             let activeVolioDishes = [];
             if (this.volioDishes && this.volioDishes.length > 0) {
+                const alwaysAvailableDishes = this.volioDishes.filter(d => d.categoria !== 'almuerzo');
+                const almuerzosDishes = this.volioDishes.filter(d => d.categoria === 'almuerzo');
+
+                let activeAlmuerzos = [];
                 if (scheduledIds.length > 0) {
-                    const scheduledDishes = this.volioDishes.filter(d => scheduledIds.includes(d.id));
-                    // Si una categoría (como snacks o bebidas) no tiene platillos programados para hoy,
-                    // mantener disponibles los platillos del catálogo de esa categoría para no dejarla vacía
-                    const scheduledCategories = new Set(scheduledDishes.map(d => d.categoria));
-                    const unscheduledCategoriesDishes = this.volioDishes.filter(d => !scheduledCategories.has(d.categoria));
-                    activeVolioDishes = [...scheduledDishes, ...unscheduledCategoriesDishes];
-                } else {
-                    // Si no hay programación específica aún, mostrar todos los platillos activos
-                    activeVolioDishes = this.volioDishes;
+                    activeAlmuerzos = almuerzosDishes.filter(d => scheduledIds.includes(d.id));
                 }
+                // Si aún no han asignado almuerzos específicos para este día en la programación,
+                // mostrar todos los almuerzos del catálogo para no dejar la categoría vacía
+                if (activeAlmuerzos.length === 0) {
+                    activeAlmuerzos = almuerzosDishes;
+                }
+
+                activeVolioDishes = [...alwaysAvailableDishes, ...activeAlmuerzos];
             }
 
             // Convertir al formato estándar MENU_DATA, heredando flags de opciones y filtrando deprecados
@@ -1522,7 +1527,7 @@ const MenuController = {
             }
         });
 
-        if (titleEl) titleEl.innerHTML = `📅 Menú de la Semana<span>Especialidades de Lunes a Viernes · Cocinamos fresco todos los días</span>`;
+        if (titleEl) titleEl.innerHTML = `📅 Menú Semanal de Almuerzos<span>Los almuerzos rotan de Lunes a Viernes · Desayunos y snacks disponibles toda la semana</span>`;
         if (countEl) countEl.innerText = 'Lunes a Viernes';
 
         const dayNames = [
@@ -1554,25 +1559,25 @@ const MenuController = {
         };
 
         let daysHtml = `
-            <div style="background: rgba(241, 196, 15, 0.08); border: 1px solid rgba(241, 196, 15, 0.25); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                <div>
-                    <h4 style="margin: 0 0 4px 0; color: var(--mostaza); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-calendar-alt"></i> Menú Semanal de Sr. & Sra. Pinto
+            <div style="background: rgba(241, 196, 15, 0.08); border: 1px solid rgba(241, 196, 15, 0.25); border-radius: 14px; padding: 18px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+                <div style="flex: 1; min-width: 260px;">
+                    <h4 style="margin: 0 0 6px 0; color: var(--mostaza); font-size: 1.08rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-calendar-alt"></i> Menú Semanal de Almuerzos
                     </h4>
-                    <p style="margin: 0; font-size: 0.82rem; color: rgba(255,255,255,0.75);">
-                        ${currentTodayKey 
-                            ? `¡Hoy es <strong>${todayNameObj?.name}</strong>! Puedes agregar los platillos de hoy a tu orden. Los demás días se muestran para visualización y planificación.`
-                            : `Conoce las especialidades programadas de Lunes a Viernes. Los platillos del día activo permiten ordenar directamente al carrito.`
-                        }
+                    <p style="margin: 0 0 6px 0; font-size: 0.86rem; color: #fff; line-height: 1.45;">
+                        🍲 <strong>En esta programación semanal lo que varía cada día son las opciones de Almuerzo.</strong>
+                    </p>
+                    <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.72); line-height: 1.4;">
+                        🍳 Los <strong>Desayunos</strong>, 🥟 <strong>Snacks (empanadas y patacones)</strong> y ☕ <strong>Bebidas</strong> están <strong>disponibles todos los días durante toda la semana</strong> en sus categorías del menú.
                     </p>
                 </div>
                 ${currentTodayKey ? `
-                    <span style="background: rgba(39, 174, 96, 0.25); color: #2ecc71; border: 1px solid rgba(39, 174, 96, 0.45); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Hoy es ${todayNameObj?.name.toUpperCase()} (Disponible para ordenar)
+                    <span style="background: rgba(39, 174, 96, 0.25); color: #2ecc71; border: 1px solid rgba(39, 174, 96, 0.45); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Hoy es ${todayNameObj?.name.toUpperCase()} (Almuerzo disponible)
                     </span>
                 ` : `
-                    <span style="background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.15); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-eye" style="color: #f1c40f;"></i> Modo Visualización Semanal
+                    <span style="background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.65); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-eye" style="color: #f1c40f;"></i> Planificación Semanal
                     </span>
                 `}
             </div>
@@ -1583,30 +1588,8 @@ const MenuController = {
             const isToday = (day.key === currentTodayKey);
             const scheduledIds = (this.volioSchedule && this.volioSchedule[day.key]) ? this.volioSchedule[day.key] : [];
             const dayDishes = scheduledIds.map(id => this.getProductById(id)).filter(Boolean);
-
-            // Clasificar por secciones: Desayuno, Almuerzo, Snack
-            const desayunos = dayDishes.filter(d => {
-                const cat = (d.categoria || '').toLowerCase();
-                return cat === 'desayuno' || cat === 'pintos';
-            });
-
-            const almuerzos = dayDishes.filter(d => {
-                const cat = (d.categoria || '').toLowerCase();
-                return cat === 'almuerzo';
-            });
-
-            const snacks = dayDishes.filter(d => {
-                const cat = (d.categoria || '').toLowerCase();
-                return !['desayuno', 'pintos', 'almuerzo'].includes(cat);
-            });
-
-            const subCategories = [
-                { id: 'desayuno', title: 'Desayunos', icon: '🍳', color: '#f39c12', items: desayunos },
-                { id: 'almuerzo',  title: 'Almuerzos',  icon: '🍲', color: '#e67e22', items: almuerzos },
-                { id: 'snack',     title: 'Snacks & Antojos', icon: '🥟', color: '#e74c3c', items: snacks }
-            ];
-
-            const totalOptions = dayDishes.length;
+            const almuerzos = dayDishes.filter(d => (d.categoria || '').toLowerCase() === 'almuerzo');
+            const totalOptions = almuerzos.length;
 
             daysHtml += `
                 <div class="weekly-day-box ${isToday ? 'is-today' : ''}">
@@ -1620,7 +1603,7 @@ const MenuController = {
                             }
                         </h4>
                         <span style="font-size: 0.78rem; color: rgba(255,255,255,0.55); font-weight: 600;">
-                            ${totalOptions} ${totalOptions === 1 ? 'platillo programado' : 'platillos programados'}
+                            ${totalOptions} ${totalOptions === 1 ? 'almuerzo programado' : 'almuerzos programados'}
                         </span>
                     </div>
             `;
@@ -1628,73 +1611,88 @@ const MenuController = {
             if (totalOptions === 0) {
                 daysHtml += `
                     <div style="padding: 16px; text-align: center; color: rgba(255,255,255,0.4); font-size: 0.82rem; font-style: italic; background: rgba(255,255,255,0.015); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.08);">
-                        <i class="fas fa-utensils" style="margin-right: 6px;"></i> Sin platillos especiales programados para este día. ¡Nuestras opciones tradicionales a la carta están disponibles!
+                        <i class="fas fa-utensils" style="margin-right: 6px;"></i> Sin almuerzos especiales asignados para este día. ¡Nuestros desayunos y snacks a la carta están disponibles!
                     </div>
                 `;
             } else {
-                // Renderizar cada sub-sección (Desayuno, Almuerzo, Snack)
-                subCategories.forEach(subCat => {
-                    if (subCat.items.length === 0) return;
+                daysHtml += `
+                    <div class="weekly-subcat-header">
+                        <span class="weekly-subcat-title" style="color: #e67e22;">
+                            <span>🍲</span> Almuerzos del Día
+                        </span>
+                        <span class="weekly-subcat-badge">${totalOptions} ${totalOptions === 1 ? 'opción' : 'opciones'}</span>
+                    </div>
+                    <div class="menu-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+                `;
+
+                almuerzos.forEach(product => {
+                    const imgSrc = extractImgSrc(product.img);
+                    const ingredientesText = product.ingredientes || product.desc || '';
+                    const isAgotado = this.inventario[product.id] === false;
+
+                    // Si es hoy, permitir agregar al carrito
+                    const cartItem = CartManager.items.find(i => i.id === product.id);
+                    const btnContent = cartItem ? `<span style="font-weight: 900; font-size: 1.1rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
 
                     daysHtml += `
-                        <div class="weekly-subcat-header">
-                            <span class="weekly-subcat-title" style="color: ${subCat.color};">
-                                <span>${subCat.icon}</span> ${subCat.title}
-                            </span>
-                            <span class="weekly-subcat-badge">${subCat.items.length} ${subCat.items.length === 1 ? 'opción' : 'opciones'}</span>
-                        </div>
-                        <div class="menu-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
-                    `;
-
-                    subCat.items.forEach(product => {
-                        const imgSrc = extractImgSrc(product.img);
-                        const ingredientesText = product.ingredientes || product.desc || '';
-                        const isAgotado = this.inventario[product.id] === false;
-
-                        // Si es hoy, permitir agregar al carrito
-                        const cartItem = CartManager.items.find(i => i.id === product.id);
-                        const btnContent = cartItem ? `<span style="font-weight: 900; font-size: 1.1rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
-
-                        daysHtml += `
-                            <div class="menu-card-h card-visible ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" style="opacity: 1; transform: none; padding: 12px 14px; gap: 14px; margin: 0; background: ${isToday ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)'}; border: 1px solid ${isToday ? 'rgba(241, 196, 15, 0.22)' : 'rgba(255,255,255,0.05)'};">
-                                <div class="mch-img" style="width: 85px; height: 85px; min-width: 85px; max-width: 85px; max-height: 85px; border-radius: 12px; overflow: hidden; background: #130406; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
-                                    <img src="${imgSrc}" alt="${product.nombre}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" onerror="this.src='images-catalogo/Señor Pinto.jpeg'">
-                                </div>
-                                <div class="mch-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
-                                    <div class="mch-title" style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.25;">
-                                        ${product.nombre}
-                                        ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''}
-                                        ${isAgotado ? '<span style="color: #ff3b30; font-weight: 900; font-size: 0.72rem; margin-left: 6px; padding: 2px 6px; border: 1px solid #ff3b30; border-radius: 4px;">AGOTADO</span>' : ''}
-                                    </div>
-                                    ${ingredientesText ? `
-                                        <div class="mch-desc" style="font-size: 0.74rem; color: rgba(255,255,255,0.68); line-height: 1.35;">
-                                            <strong style="color: #f1c40f; font-weight: 700;">Ingredientes:</strong> ${ingredientesText}
-                                        </div>
-                                    ` : ''}
-                                    <div class="mch-price-row" style="margin-top: 2px;">
-                                        <span class="mch-price" style="font-size: 1rem; color: var(--mostaza); font-weight: 900;">₡${(product.precio || 0).toLocaleString()}</span>
-                                    </div>
-                                </div>
-                                ${isToday ? `
-                                    <button class="mch-add-btn" id="add-btn-${product.id}" ${isAgotado ? 'disabled style="background: #555; color: #888;"' : ''} onclick="CartManager.addItem('${product.id}')" title="Agregar a mi orden" style="align-self: center; width: 42px; height: 42px; border-radius: 50%; font-size: 1.2rem; flex-shrink: 0;">
-                                        ${isAgotado ? '<i class="fas fa-ban"></i>' : btnContent}
-                                    </button>
-                                ` : `
-                                    <div class="weekly-view-badge" title="Disponible el ${day.name}">
-                                        <i class="fas fa-eye" style="color: rgba(241, 196, 15, 0.75); font-size: 0.75rem;"></i> Visualizar
-                                    </div>
-                                `}
+                        <div class="menu-card-h card-visible ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" style="opacity: 1; transform: none; padding: 12px 14px; gap: 14px; margin: 0; background: ${isToday ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.02)'}; border: 1px solid ${isToday ? 'rgba(241, 196, 15, 0.22)' : 'rgba(255,255,255,0.05)'};">
+                            <div class="mch-img" style="width: 85px; height: 85px; min-width: 85px; max-width: 85px; max-height: 85px; border-radius: 12px; overflow: hidden; background: #130406; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+                                <img src="${imgSrc}" alt="${product.nombre}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" onerror="this.src='images-catalogo/Señor Pinto.jpeg'">
                             </div>
-                        `;
-                    });
-
-                    daysHtml += `</div>`; // cierre .menu-list
+                            <div class="mch-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px;">
+                                <div class="mch-title" style="font-size: 1.02rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.25;">
+                                    ${product.nombre}
+                                    ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''}
+                                    ${isAgotado ? '<span style="color: #ff3b30; font-weight: 900; font-size: 0.72rem; margin-left: 6px; padding: 2px 6px; border: 1px solid #ff3b30; border-radius: 4px;">AGOTADO</span>' : ''}
+                                </div>
+                                ${ingredientesText ? `
+                                    <div class="mch-desc" style="font-size: 0.74rem; color: rgba(255,255,255,0.68); line-height: 1.35;">
+                                        <strong style="color: #f1c40f; font-weight: 700;">Ingredientes:</strong> ${ingredientesText}
+                                    </div>
+                                ` : ''}
+                                <div class="mch-price-row" style="margin-top: 2px;">
+                                    <span class="mch-price" style="font-size: 1rem; color: var(--mostaza); font-weight: 900;">₡${(product.precio || 0).toLocaleString()}</span>
+                                </div>
+                            </div>
+                            ${isToday ? `
+                                <button class="mch-add-btn" id="add-btn-${product.id}" ${isAgotado ? 'disabled style="background: #555; color: #888;"' : ''} onclick="CartManager.addItem('${product.id}')" title="Agregar a mi orden" style="align-self: center; width: 42px; height: 42px; border-radius: 50%; font-size: 1.2rem; flex-shrink: 0;">
+                                    ${isAgotado ? '<i class="fas fa-ban"></i>' : btnContent}
+                                </button>
+                            ` : `
+                                <div class="weekly-view-badge" title="Disponible el ${day.name}">
+                                    <i class="fas fa-eye" style="color: rgba(241, 196, 15, 0.75); font-size: 0.75rem;"></i> Visualizar
+                                </div>
+                            `}
+                        </div>
+                    `;
                 });
+
+                daysHtml += `</div>`; // cierre .menu-list
             }
 
             daysHtml += `</div>`; // cierre .weekly-day-box
         });
 
+        // Banner informativo inferior con accesos directos
+        daysHtml += `
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 18px 22px; margin-top: 15px; text-align: center;">
+                <span style="font-size: 1rem; font-weight: 800; color: #fff; display: block; margin-bottom: 4px;">🍳 ¿Buscando Desayunos, Snacks o Bebidas?</span>
+                <p style="margin: 0 0 14px 0; font-size: 0.82rem; color: rgba(255,255,255,0.7); max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.45;">
+                    Nuestras famosas empanadas (arregladas, sencillas, señora empanada), burritos, pinto y café están <strong>disponibles todos los días de la semana</strong>.
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-primary" onclick="MenuController.renderCategory('desayuno')" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; cursor: pointer; font-weight: 700;">
+                        🍳 Ver Desayunos
+                    </button>
+                    <button class="btn-primary" onclick="MenuController.renderCategory('snacks')" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; background: linear-gradient(135deg, #e67e22, #d35400); cursor: pointer; font-weight: 700;">
+                        🥟 Ver Snacks & Empanadas
+                    </button>
+                    <button class="btn-primary" onclick="MenuController.renderCategory('bebidas')" style="padding: 9px 20px; font-size: 0.85rem; border-radius: 20px; background: linear-gradient(135deg, #3498db, #2980b9); cursor: pointer; font-weight: 700;">
+                        ☕ Ver Bebidas
+                    </button>
+                </div>
+            </div>
+        `;
         daysHtml += `</div>`; // cierre flex column
         container.innerHTML = daysHtml;
     },
