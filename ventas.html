@@ -2450,7 +2450,7 @@
 
         <!-- CAJA DE DATOS DEL CLIENTE -->
         <div class="pos-ticket-client-box">
-            <input type="text" id="order-name" class="pos-ticket-input" placeholder="👤 Nombre del cliente / Mesa..." oninput="CartManager.updateName(this.value)">
+            <input type="text" id="order-name" class="pos-ticket-input" placeholder="👤 Nombre del cliente / Mesa..." oninput="CartManager.updateName(this.value)" onfocus="if(window.CartManager && (CartManager.isDefaultName || this.value.startsWith('Comanda #'))) this.select()" onblur="if(window.CartManager) CartManager.handleNameBlur()">
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: rgba(255,255,255,0.7); cursor: pointer;">
                     <input type="checkbox" id="has-allergies" style="accent-color: var(--mostaza); width: 14px; height: 14px;" onchange="CartManager.toggleAllergies(this.checked)">
@@ -2522,7 +2522,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=3.2"></script>
+<script src="js/main.js?v=3.3"></script>
 
 <script>
 /**
@@ -2548,6 +2548,9 @@ const PosManager = {
         this.loadPreferences();
         this.renderDishes();
         this.syncCartUI();
+        if (window.CartManager) {
+            window.CartManager.syncDefaultCustomerName();
+        }
     },
 
     toggleFastMode() {
@@ -3714,6 +3717,7 @@ const SalesDashboard = {
     iniciarModificacion(id, cliente, alergias, metodoPago, items, numPedido = 0) {
         CartManager.editingOrderId = id;
         CartManager.customerName = cliente;
+        CartManager.isDefaultName = (!cliente || cliente.startsWith('Comanda #'));
         CartManager.selectedPaymentMethod = metodoPago;
         
         CartManager.items = [];
@@ -3799,6 +3803,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         SalesDashboard.init();
         if (window.PosManager) window.PosManager.init();
+        if (window.CartManager) window.CartManager.syncDefaultCustomerName();
     }, 600);
 });
 </script>

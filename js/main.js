@@ -45,6 +45,8 @@ const CartManager = {
     items: [],
     selectedPaymentMethod: 'Efectivo',
     customerName: '',
+    isDefaultName: true,
+    siguienteNumeroComanda: 1,
     hasAllergies: false,
     allergiesText: '',
     editingOrderId: null,
@@ -58,7 +60,47 @@ const CartManager = {
                 this.items = [];
             }
         }
+
+        const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+        if (isSalesPOS) {
+            const listenToTurno = () => {
+                if (window.FirebaseDB) {
+                    window.FirebaseDB.collection('config').doc('turno').onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            this.siguienteNumeroComanda = data.siguiente_numero || 1;
+                        } else {
+                            this.siguienteNumeroComanda = 1;
+                        }
+                        this.syncDefaultCustomerName();
+                    }, (err) => {
+                        console.warn("Aviso al escuchar turno:", err);
+                    });
+                } else {
+                    setTimeout(listenToTurno, 300);
+                }
+            };
+            listenToTurno();
+        }
+
         this.updateCartUI();
+    },
+
+    syncDefaultCustomerName() {
+        const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+        if (!isSalesPOS) return;
+        if (this.editingOrderId) return; // Si estamos modificando, respetar el cliente existente
+
+        const defaultName = `Comanda #${this.siguienteNumeroComanda || 1}`;
+        const nameInput = document.getElementById('order-name');
+
+        if (!this.customerName || this.customerName.trim() === '' || this.isDefaultName || this.customerName.startsWith('Comanda #')) {
+            this.customerName = defaultName;
+            this.isDefaultName = true;
+            if (nameInput) {
+                nameInput.value = defaultName;
+            }
+        }
     },
     
     save() {
@@ -242,11 +284,31 @@ const CartManager = {
     },
 
     updateName(name) {
-        this.customerName = name;
+        const defaultName = `Comanda #${this.siguienteNumeroComanda || 1}`;
+        if (!name || name.trim() === '') {
+            this.customerName = '';
+            this.isDefaultName = true;
+        } else {
+            this.customerName = name.trim();
+            this.isDefaultName = (this.customerName === defaultName);
+        }
         const nameInput = document.getElementById('order-name');
-        if (nameInput && name.trim() !== '') {
+        if (nameInput && name && name.trim() !== '') {
             nameInput.style.borderColor = '';
             nameInput.style.boxShadow = '';
+        }
+    },
+
+    handleNameBlur() {
+        const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+        if (!isSalesPOS) return;
+        const nameInput = document.getElementById('order-name');
+        if (!nameInput) return;
+        if (!nameInput.value || nameInput.value.trim() === '') {
+            const defaultName = `Comanda #${this.siguienteNumeroComanda || 1}`;
+            nameInput.value = defaultName;
+            this.customerName = defaultName;
+            this.isDefaultName = true;
         }
     },
 
@@ -314,15 +376,24 @@ const CartManager = {
     async procesarPedido() {
         if (this.items.length === 0) return;
 
+        const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+
         if (!this.customerName || this.customerName.trim() === '') {
-            alert("⚠️ Por favor, ingresá el nombre del cliente para continuar con el pedido.");
-            const nameInput = document.getElementById('order-name');
-            if (nameInput) {
-                nameInput.focus();
-                nameInput.style.borderColor = 'var(--rojo)';
-                nameInput.style.boxShadow = '0 0 10px rgba(233, 19, 80, 0.5)';
+            if (isSalesPOS) {
+                this.customerName = `Comanda #${this.siguienteNumeroComanda || 1}`;
+                this.isDefaultName = true;
+                const nameInput = document.getElementById('order-name');
+                if (nameInput) nameInput.value = this.customerName;
+            } else {
+                alert("⚠️ Por favor, ingresá el nombre del cliente para continuar con el pedido.");
+                const nameInput = document.getElementById('order-name');
+                if (nameInput) {
+                    nameInput.focus();
+                    nameInput.style.borderColor = 'var(--rojo)';
+                    nameInput.style.boxShadow = '0 0 10px rgba(233, 19, 80, 0.5)';
+                }
+                return;
             }
-            return;
         }
 
         const btn = document.getElementById('btn-checkout');
@@ -331,11 +402,10 @@ const CartManager = {
         btn.style.pointerEvents = 'none';
 
         try {
-            const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
             const estadoInicial = isSalesPOS ? 'en_proceso' : 'pendiente_aprobacion';
 
             const pedido = {
-                cliente: this.customerName || 'Cliente sin nombre',
+                cliente: this.customerName || (isSalesPOS ? `Comanda #${this.siguienteNumeroComanda || 1}` : 'Cliente sin nombre'),
                 alergias: this.hasAllergies ? this.allergiesText : '',
                 metodoPago: this.selectedPaymentMethod,
                 total: this.getTotal(),
@@ -419,6 +489,9 @@ const CartManager = {
                         
                         // Añadir número de comanda secuencial
                         pedido.num_pedido = numPedido;
+                        if (this.isDefaultName || !pedido.cliente || pedido.cliente.startsWith('Comanda #')) {
+                            pedido.cliente = `Comanda #${numPedido}`;
+                        }
                     }
 
                     // Crear nuevo pedido
@@ -488,16 +561,27 @@ const CartManager = {
     },
 
     resetAndClose() {
+        const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+
         // Vaciar carrito
         this.items = [];
-        this.customerName = '';
         this.hasAllergies = false;
         this.allergiesText = '';
         this.editingOrderId = null;
         
         // Reset inputs
         const nameInput = document.getElementById('order-name');
-        if (nameInput) nameInput.value = '';
+        if (isSalesPOS) {
+            const defaultName = `Comanda #${this.siguienteNumeroComanda || 1}`;
+            this.customerName = defaultName;
+            this.isDefaultName = true;
+            if (nameInput) nameInput.value = defaultName;
+        } else {
+            this.customerName = '';
+            this.isDefaultName = true;
+            if (nameInput) nameInput.value = '';
+        }
+
         const allergiesCheck = document.getElementById('has-allergies');
         if (allergiesCheck) { allergiesCheck.checked = false; this.toggleAllergies(false); }
         const allergiesText = document.getElementById('allergies-text');
@@ -513,7 +597,9 @@ const CartManager = {
         const successOverlay = document.getElementById('success-overlay');
         if (successOverlay) successOverlay.classList.remove('active');
         
-        UIController.toggleCart(); // Cierra el carrito
+        if (!isSalesPOS) {
+            UIController.toggleCart(); // Cierra el carrito solo en web externa
+        }
     },
 
     convertirLogoYEjecutar(callback) {
