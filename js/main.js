@@ -23,6 +23,90 @@ window.isCafeCombo = function(dish) {
 };
 
 // ========================================
+// 6 OPCIONES OFICIALES DE EMPANADAS (CANÓNICAS)
+// ========================================
+window.CANONICAL_EMPANADAS = [
+    {
+        id: 'p-empanada-sencilla',
+        nombre: 'Empanada Sencilla',
+        categoria: 'snacks',
+        desc: 'Crujiente empanada artesanal de maíz frita. Elige tu relleno favorito.',
+        ingredientes: 'Masa de maíz sazonada, relleno a elegir (queso, carne o pinto)',
+        precio: 2500,
+        costo: 800,
+        img: 'images-catalogo/empanadas.jpeg',
+        requiresOptions: true,
+        options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+    },
+    {
+        id: 'c-empanada-sencilla-cafe',
+        nombre: 'Combo: Empanada Sencilla + Café',
+        categoria: 'snacks',
+        desc: 'Empanada sencilla a elegir + Café Premium Grande.',
+        ingredientes: 'Empanada sencilla a elegir + café chorreado 12oz',
+        precio: 3000,
+        costo: 1050,
+        img: 'images-catalogo/empanadas.jpeg',
+        badge: 'Combo',
+        badgeClass: 'badge-value',
+        requiresOptions: true,
+        options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+    },
+    {
+        id: 'p-empanada-arreglada',
+        nombre: 'Empanada Arreglada',
+        categoria: 'snacks',
+        desc: 'Empanada crujiente con repollo arreglado, salsas y relleno a elegir.',
+        ingredientes: 'Empanada artesanal, ensalada de repollo, salsas de la casa',
+        precio: 3000,
+        costo: 950,
+        img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+        requiresOptions: true,
+        options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+    },
+    {
+        id: 'c-empanada-arreglada-cafe',
+        nombre: 'Combo: Empanada Arreglada + Café',
+        categoria: 'snacks',
+        desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
+        ingredientes: 'Empanada arreglada a elegir + café chorreado 12oz',
+        precio: 3500,
+        costo: 1200,
+        img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+        badge: 'Combo',
+        badgeClass: 'badge-value',
+        requiresOptions: true,
+        options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+    },
+    {
+        id: 'p-sra-empanada',
+        nombre: 'Señora Empanada',
+        categoria: 'snacks',
+        desc: 'Nuestra empanada insignia con repollo, carne mechada extra por encima y salsas.',
+        ingredientes: 'Empanada grande, ensalada de repollo fresco, carne mechada extra, salsas de la casa',
+        precio: 3500,
+        costo: 1100,
+        img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+        requiresOptions: true,
+        options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+    },
+    {
+        id: 'c-sra-empanada-cafe',
+        nombre: 'Combo: Señora Empanada + Café',
+        categoria: 'snacks',
+        desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
+        ingredientes: 'Señora empanada a elegir + café chorreado 12oz',
+        precio: 4000,
+        costo: 1350,
+        img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+        badge: 'Combo',
+        badgeClass: 'badge-value',
+        requiresOptions: true,
+        options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
+    }
+];
+
+// ========================================
 // MÓDULO: State Management
 // ========================================
 const StateManager = {
@@ -1126,6 +1210,10 @@ const MenuController = {
         if (!p && this.ORIGINAL_MENU_DATA) {
             p = this.ORIGINAL_MENU_DATA.find(item => item.id === id);
         }
+        if (!p && window.CANONICAL_EMPANADAS) {
+            const canonical = window.CANONICAL_EMPANADAS.find(c => c.id === searchId || c.id === id);
+            if (canonical) p = { ...canonical };
+        }
         if (p) {
             // Garantizar flags de opciones en cualquier empanada
             const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(p)) ||
@@ -1379,6 +1467,39 @@ const MenuController = {
                 }
 
                 activeVolioDishes = [...alwaysAvailableDishes, ...activeAlmuerzos];
+            } else {
+                activeVolioDishes = [...(this.ORIGINAL_MENU_DATA || [])];
+            }
+
+            // GARANTIZAR LAS 6 OPCIONES OFICIALES DE EMPANADAS SIEMPRE EN activeVolioDishes
+            if (window.CANONICAL_EMPANADAS && window.CANONICAL_EMPANADAS.length > 0) {
+                window.CANONICAL_EMPANADAS.forEach(canonicalEmp => {
+                    const idx = activeVolioDishes.findIndex(d => d.id === canonicalEmp.id);
+                    if (idx === -1) {
+                        activeVolioDishes.push({ ...canonicalEmp });
+                    } else {
+                        activeVolioDishes[idx].requiresOptions = true;
+                        if (!activeVolioDishes[idx].options || activeVolioDishes[idx].options.length === 0) {
+                            activeVolioDishes[idx].options = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                        }
+                        if (!activeVolioDishes[idx].desc) {
+                            activeVolioDishes[idx].desc = canonicalEmp.desc;
+                        }
+                    }
+                });
+
+                // Si Firebase está conectado y falta alguna empanada en Firestore volio_platillos, escribirla para persistencia
+                if (window.FirebaseDB && this.volioDishes && this.volioDishes.length > 0) {
+                    const missingInFirestore = window.CANONICAL_EMPANADAS.filter(emp => !this.volioDishes.some(d => d.id === emp.id));
+                    if (missingInFirestore.length > 0) {
+                        missingInFirestore.forEach(emp => {
+                            window.FirebaseDB.collection('volio_platillos').doc(emp.id).set({
+                                ...emp,
+                                actualizadoEn: new Date().toISOString()
+                            }, { merge: true }).catch(err => console.warn("Auto-sync empanada a Firestore:", emp.id, err));
+                        });
+                    }
+                }
             }
 
             // Convertir al formato estándar MENU_DATA, heredando flags de opciones y filtrando deprecados
@@ -1386,16 +1507,24 @@ const MenuController = {
                 .filter(d => !deprecatedEmpanadas.has(d.id))
                 .map(d => {
                     const original = (this.ORIGINAL_MENU_DATA || []).find(o => o.id === d.id);
+                    const canonical = (window.CANONICAL_EMPANADAS || []).find(c => c.id === d.id);
+                    const isEmp = (window.isEmpanadaDish ? window.isEmpanadaDish(d) : (d.id && d.id.includes('empanada')));
+                    let itemPrecio = d.precio || (original ? original.precio : (canonical ? canonical.precio : 0));
+                    if (this.customPrices && this.customPrices[d.id] !== undefined && !isNaN(this.customPrices[d.id])) {
+                        itemPrecio = this.customPrices[d.id];
+                    }
                     return {
                         id: d.id,
                         categoria: d.categoria,
                         nombre: d.nombre,
-                        desc: d.desc || (original ? original.desc : ''),
-                        precio: d.precio || (original ? original.precio : 0),
-                        costo: d.costo || (original ? original.costo : 0),
-                        requiresOptions: d.requiresOptions !== undefined ? d.requiresOptions : (original ? original.requiresOptions : (window.isEmpanadaDish ? window.isEmpanadaDish(d) : (d.id && d.id.includes('empanada')))),
-                        options: d.options || (original ? original.options : ((window.isEmpanadaDish ? window.isEmpanadaDish(d) : (d.id && d.id.includes('empanada'))) ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null)),
-                        img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || (original && original.img ? (original.img.match(/src="([^"]+)"/) ? original.img.match(/src="([^"]+)"/)[1] : original.img) : 'images-catalogo/Señor Pinto.jpeg')}" alt="${d.nombre}" class="img-fit">`
+                        desc: d.desc || (original ? original.desc : (canonical ? canonical.desc : '')),
+                        precio: itemPrecio,
+                        costo: d.costo || (original ? original.costo : (canonical ? canonical.costo : 0)),
+                        badge: d.badge || (original ? original.badge : (canonical ? canonical.badge : null)),
+                        badgeClass: d.badgeClass || (original ? original.badgeClass : (canonical ? canonical.badgeClass : null)),
+                        requiresOptions: d.requiresOptions !== undefined ? d.requiresOptions : (canonical ? true : (original ? original.requiresOptions : isEmp)),
+                        options: (d.options && d.options.length) ? d.options : (canonical ? canonical.options : (original ? original.options : (isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null))),
+                        img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || (original && original.img ? (original.img.match(/src="([^"]+)"/) ? original.img.match(/src="([^"]+)"/)[1] : original.img) : (canonical ? canonical.img : 'images-catalogo/Señor Pinto.jpeg'))}" alt="${d.nombre}" class="img-fit">`
                     };
                 });
 
@@ -1824,7 +1953,7 @@ const MenuController = {
                 const cartItem = CartManager.items.find(i => i.id === product.id);
                 const btnContent = cartItem ? `<span style="font-weight: bold; font-size: 1.2rem;">${cartItem.quantity}</span>` : `<i class="fas fa-plus"></i>`;
                 return `
-                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" style="--index: ${index}; ${isAgotado ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
+                <div class="menu-card-h ${product.badgeClass ? 'highlight-item' : ''} ${isAgotado ? 'agotado' : ''}" id="card-${product.id}" onclick="CartManager.addItem('${product.id}')" style="cursor: pointer; --index: ${index}; ${isAgotado ? 'opacity: 0.5; filter: grayscale(1); pointer-events: none;' : ''}">
                     <div class="mch-img">${product.img}</div>
                     <div class="mch-info">
                         <div class="mch-title">${product.nombre} ${product.badge ? `<span class="mch-badge">${product.badge}</span>` : ''} ${isAgotado ? '<span style="color: #ff3b30; font-weight: 900; font-size: 0.75rem; margin-left: 6px; padding: 2px 6px; border: 1px solid #ff3b30; border-radius: 4px;">AGOTADO</span>' : ''}</div>
@@ -1833,7 +1962,7 @@ const MenuController = {
                             <span class="mch-price">₡${product.precio.toLocaleString()}</span>
                         </div>
                     </div>
-                    <button class="mch-add-btn" id="add-btn-${product.id}" ${isAgotado ? 'disabled style="background: #ccc; color: #666;"' : ''} onclick="CartManager.addItem('${product.id}')">
+                    <button class="mch-add-btn" id="add-btn-${product.id}" ${isAgotado ? 'disabled style="background: #ccc; color: #666;"' : ''} onclick="event.stopPropagation(); CartManager.addItem('${product.id}')">
                         ${isAgotado ? '<i class="fas fa-ban"></i>' : btnContent}
                     </button>
                 </div>

@@ -2555,9 +2555,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
 
                     // Si las 6 empanadas oficiales no están o existen IDs viejos duplicados, sincronizar automáticamente una vez
-                    const hasOfficial = this.dishes.some(d => d.id === 'p-empanada-sencilla');
-                    const hasDeprecated = this.dishes.some(d => ['p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto'].includes(d.id));
-                    if (!this._empanadasAutoSynced && (!hasOfficial || hasDeprecated)) {
+                    const officialIds = ['p-empanada-sencilla', 'c-empanada-sencilla-cafe', 'p-empanada-arreglada', 'c-empanada-arreglada-cafe', 'p-sra-empanada', 'c-sra-empanada-cafe'];
+                    const hasAllOfficials = officialIds.every(id => this.dishes.some(d => d.id === id));
+                    const hasDeprecated = this.dishes.some(d => ['p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto', 'p-sra-empanada-m1', 'p-sra-empanada-m2', 'c-empanada-cafe'].includes(d.id));
+                    if (!this._empanadasAutoSynced && (!hasAllOfficials || hasDeprecated)) {
                         this._empanadasAutoSynced = true;
                         this.syncEmpanadasToCatalog(false);
                     }

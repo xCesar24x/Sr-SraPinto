@@ -2522,7 +2522,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=3.5"></script>
+<script src="js/main.js?v=3.6"></script>
 
 <script>
 /**
@@ -2660,6 +2660,18 @@ const PosManager = {
                         img: vd.img && vd.img.startsWith('<') ? vd.img : `<img src="${vd.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${vd.nombre}" class="img-fit">`
                     });
                     existingIds.add(vd.id);
+                }
+            });
+        }
+        if (window.CANONICAL_EMPANADAS && window.CANONICAL_EMPANADAS.length > 0) {
+            const existingIds = new Set(list.map(d => d.id));
+            window.CANONICAL_EMPANADAS.forEach(c => {
+                if (!existingIds.has(c.id)) {
+                    list.push({
+                        ...c,
+                        img: `<img src="${c.img}" alt="${c.nombre}" class="img-fit">`
+                    });
+                    existingIds.add(c.id);
                 }
             });
         }
