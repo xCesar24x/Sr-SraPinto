@@ -2522,7 +2522,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=3.7"></script>
+<script src="js/main.js?v=3.8"></script>
 
 <script>
 /**
@@ -2636,6 +2636,8 @@ const PosManager = {
     getAllDishes() {
         if (!window.MenuController) return [];
         const deprecatedIds = new Set([
+            'c-empanada-sencilla-cafe', 'c-empanada-arreglada-cafe',
+            'c-sra-empanada-cafe', 'p-sra-empanada',
             'p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto',
             'p-empanada-carne-queso', 'p-empanada-birria', 'p-sra-empanada-m1',
             'p-sra-empanada-m2', 'c-empanada-cafe'
@@ -2643,8 +2645,10 @@ const PosManager = {
         let list = (window.MenuController.MENU_DATA || []).filter(d => !deprecatedIds.has(d.id));
         if (window.MenuController.volioDishes && window.MenuController.volioDishes.length > 0) {
             const existingIds = new Set(list.map(d => d.id));
+            const existingNames = new Set(list.map(d => (d.nombre || '').toLowerCase().trim()));
             window.MenuController.volioDishes.forEach(vd => {
-                if (!existingIds.has(vd.id) && !deprecatedIds.has(vd.id)) {
+                const normName = (vd.nombre || '').toLowerCase().trim();
+                if (!existingIds.has(vd.id) && !existingNames.has(normName) && !deprecatedIds.has(vd.id)) {
                     const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(vd)) ||
                                   (vd.id && vd.id.toLowerCase().includes('empanada')) ||
                                   (vd.nombre && vd.nombre.toLowerCase().includes('empanada'));
@@ -2660,22 +2664,37 @@ const PosManager = {
                         img: vd.img && vd.img.startsWith('<') ? vd.img : `<img src="${vd.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${vd.nombre}" class="img-fit">`
                     });
                     existingIds.add(vd.id);
+                    existingNames.add(normName);
                 }
             });
         }
         if (window.CANONICAL_EMPANADAS && window.CANONICAL_EMPANADAS.length > 0) {
             const existingIds = new Set(list.map(d => d.id));
+            const existingNames = new Set(list.map(d => (d.nombre || '').toLowerCase().trim()));
             window.CANONICAL_EMPANADAS.forEach(c => {
-                if (!existingIds.has(c.id)) {
+                const normName = (c.nombre || '').toLowerCase().trim();
+                if (!existingIds.has(c.id) && !existingNames.has(normName) && !deprecatedIds.has(c.id)) {
                     list.push({
                         ...c,
                         img: `<img src="${c.img}" alt="${c.nombre}" class="img-fit">`
                     });
                     existingIds.add(c.id);
+                    existingNames.add(normName);
                 }
             });
         }
-        return list;
+        // Deduplicar list final por nombre normalizado
+        const seenNames = new Set();
+        const finalList = [];
+        list.forEach(item => {
+            if (deprecatedIds.has(item.id)) return;
+            const normName = (item.nombre || '').toLowerCase().trim();
+            if (!seenNames.has(normName)) {
+                seenNames.add(normName);
+                finalList.push(item);
+            }
+        });
+        return finalList;
     },
 
     renderDishes() {

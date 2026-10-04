@@ -32,19 +32,19 @@ window.CANONICAL_EMPANADAS = [
         categoria: 'snacks',
         desc: 'Crujiente empanada artesanal de maíz frita. Elige tu relleno favorito.',
         ingredientes: 'Masa de maíz sazonada, relleno a elegir (queso, carne o pinto)',
-        precio: 2500,
+        precio: 1400,
         costo: 800,
         img: 'images-catalogo/empanadas.jpeg',
         requiresOptions: true,
         options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
     },
     {
-        id: 'c-empanada-sencilla-cafe',
+        id: 'v-1791030289012',
         nombre: 'Combo: Empanada Sencilla + Café',
-        categoria: 'snacks',
+        categoria: 'desayuno',
         desc: 'Empanada sencilla a elegir + Café Premium Grande.',
         ingredientes: 'Empanada sencilla a elegir + café chorreado 12oz',
-        precio: 3000,
+        precio: 1900,
         costo: 1050,
         img: 'images-catalogo/empanadas.jpeg',
         badge: 'Combo',
@@ -58,19 +58,19 @@ window.CANONICAL_EMPANADAS = [
         categoria: 'snacks',
         desc: 'Empanada crujiente con repollo arreglado, salsas y relleno a elegir.',
         ingredientes: 'Empanada artesanal, ensalada de repollo, salsas de la casa',
-        precio: 3000,
+        precio: 1800,
         costo: 950,
         img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
         requiresOptions: true,
         options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
     },
     {
-        id: 'c-empanada-arreglada-cafe',
+        id: 'v-1790059042629',
         nombre: 'Combo: Empanada Arreglada + Café',
-        categoria: 'snacks',
+        categoria: 'desayuno',
         desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
         ingredientes: 'Empanada arreglada a elegir + café chorreado 12oz',
-        precio: 3500,
+        precio: 2300,
         costo: 1200,
         img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
         badge: 'Combo',
@@ -79,24 +79,24 @@ window.CANONICAL_EMPANADAS = [
         options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
     },
     {
-        id: 'p-sra-empanada',
+        id: 'v-1790058848755',
         nombre: 'Señora Empanada',
         categoria: 'snacks',
         desc: 'Nuestra empanada insignia con repollo, carne mechada extra por encima y salsas.',
         ingredientes: 'Empanada grande, ensalada de repollo fresco, carne mechada extra, salsas de la casa',
-        precio: 3500,
+        precio: 2300,
         costo: 1100,
         img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
         requiresOptions: true,
         options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
     },
     {
-        id: 'c-sra-empanada-cafe',
+        id: 'v-1790059143341',
         nombre: 'Combo: Señora Empanada + Café',
-        categoria: 'snacks',
+        categoria: 'desayuno',
         desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
         ingredientes: 'Señora empanada a elegir + café chorreado 12oz',
-        precio: 4000,
+        precio: 2800,
         costo: 1350,
         img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
         badge: 'Combo',
@@ -105,6 +105,7 @@ window.CANONICAL_EMPANADAS = [
         options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
     }
 ];
+
 
 // ========================================
 // MÓDULO: State Management
@@ -1058,17 +1059,17 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Empanada Sencilla',
             desc: 'Crujiente empanada artesanal de maíz frita. Elige tu relleno favorito.',
-            precio: 2500,
+            precio: 1400,
             img: '<img src="images-catalogo/empanadas.jpeg" alt="Empanada Sencilla">',
             requiresOptions: true,
             options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
-            id: 'c-empanada-sencilla-cafe',
-            categoria: 'pintos',
+            id: 'v-1791030289012',
+            categoria: 'desayuno',
             nombre: 'Combo: Empanada Sencilla + Café',
             desc: 'Empanada sencilla a elegir + Café Premium Grande.',
-            precio: 3000,
+            precio: 1900,
             img: '<img src="images-catalogo/empanadas.jpeg" alt="Combo Empanada Sencilla + Café">',
             badge: 'Combo',
             badgeClass: 'badge-value',
@@ -1080,17 +1081,17 @@ const MenuController = {
             categoria: 'snacks',
             nombre: 'Empanada Arreglada',
             desc: 'Empanada crujiente con repollo arreglado, salsas y relleno a elegir.',
-            precio: 3000,
+            precio: 1800,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Empanada Arreglada">',
             requiresOptions: true,
             options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
-            id: 'c-empanada-arreglada-cafe',
-            categoria: 'pintos',
+            id: 'v-1790059042629',
+            categoria: 'desayuno',
             nombre: 'Combo: Empanada Arreglada + Café',
             desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
-            precio: 3500,
+            precio: 2300,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Combo Empanada Arreglada + Café">',
             badge: 'Combo',
             badgeClass: 'badge-value',
@@ -1098,21 +1099,21 @@ const MenuController = {
             options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
-            id: 'p-sra-empanada',
+            id: 'v-1790058848755',
             categoria: 'snacks',
             nombre: 'Señora Empanada',
             desc: 'Nuestra empanada insignia con repollo, carne mechada extra por encima y salsas.',
-            precio: 3500,
+            precio: 2300,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Señora Empanada">',
             requiresOptions: true,
             options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
         },
         {
-            id: 'c-sra-empanada-cafe',
-            categoria: 'pintos',
+            id: 'v-1790059143341',
+            categoria: 'desayuno',
             nombre: 'Combo: Señora Empanada + Café',
             desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
-            precio: 4000,
+            precio: 2800,
             img: '<img src="images-catalogo/Sra. Empanada Arreglada .jpeg" alt="Combo Señora Empanada + Café">',
             badge: 'Combo',
             badgeClass: 'badge-value',
@@ -1181,9 +1182,13 @@ const MenuController = {
             'p-empanada-queso': 'p-empanada-sencilla',
             'p-empanada-pinto': 'p-empanada-sencilla',
             'p-empanada-carne-queso': 'p-empanada-sencilla',
-            'p-sra-empanada-m1': 'p-sra-empanada',
+            'p-sra-empanada-m1': 'v-1790058848755',
             'p-sra-empanada-m2': 'p-empanada-arreglada',
-            'c-empanada-cafe': 'c-empanada-sencilla-cafe'
+            'p-sra-empanada': 'v-1790058848755',
+            'c-empanada-cafe': 'v-1791030289012',
+            'c-empanada-sencilla-cafe': 'v-1791030289012',
+            'c-empanada-arreglada-cafe': 'v-1790059042629',
+            'c-sra-empanada-cafe': 'v-1790059143341'
         };
         const searchId = ALIASES[id] || id;
         let p = (this.MENU_DATA || []).find(item => item.id === searchId);
@@ -1343,9 +1348,12 @@ const MenuController = {
 
     applyStateAndRender() {
         const deprecatedEmpanadas = new Set([
-            'p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto',
-            'p-empanada-carne-queso', 'p-empanada-birria', 'p-sra-empanada-m1',
-            'p-sra-empanada-m2', 'c-empanada-cafe'
+            'c-empanada-sencilla-cafe', 'c-empanada-arreglada-cafe',
+            'c-sra-empanada-cafe', 'p-sra-empanada',
+            'p-sra-empanada-m1', 'p-sra-empanada-m2',
+            'c-empanada-cafe', 'p-empanada-carne',
+            'p-empanada-queso', 'p-empanada-pinto',
+            'p-empanada-carne-queso', 'p-empanada-birria'
         ]);
 
         // 1. Restaurar al estado original
@@ -1472,10 +1480,11 @@ const MenuController = {
                 activeVolioDishes = [...(this.ORIGINAL_MENU_DATA || [])];
             }
 
-            // GARANTIZAR LAS 6 OPCIONES OFICIALES DE EMPANADAS SIEMPRE EN activeVolioDishes
+            // GARANTIZAR LAS 6 OPCIONES OFICIALES DE EMPANADAS EN activeVolioDishes
             if (window.CANONICAL_EMPANADAS && window.CANONICAL_EMPANADAS.length > 0) {
                 window.CANONICAL_EMPANADAS.forEach(canonicalEmp => {
-                    const idx = activeVolioDishes.findIndex(d => d.id === canonicalEmp.id);
+                    const normCanName = (canonicalEmp.nombre || '').toLowerCase().trim();
+                    const idx = activeVolioDishes.findIndex(d => d.id === canonicalEmp.id || (d.nombre && d.nombre.toLowerCase().trim() === normCanName));
                     if (idx === -1) {
                         activeVolioDishes.push({ ...canonicalEmp });
                     } else {
@@ -1489,26 +1498,35 @@ const MenuController = {
                     }
                 });
 
-                // Si Firebase está conectado y falta alguna empanada en Firestore volio_platillos, escribirla para persistencia
+                // Si se detectan documentos obsoletos o duplicados en Firestore, eliminarlos permanentemente
                 if (window.FirebaseDB && this.volioDishes && this.volioDishes.length > 0) {
-                    const missingInFirestore = window.CANONICAL_EMPANADAS.filter(emp => !this.volioDishes.some(d => d.id === emp.id));
-                    if (missingInFirestore.length > 0) {
-                        missingInFirestore.forEach(emp => {
-                            window.FirebaseDB.collection('volio_platillos').doc(emp.id).set({
-                                ...emp,
-                                actualizadoEn: new Date().toISOString()
-                            }, { merge: true }).catch(err => console.warn("Auto-sync empanada a Firestore:", emp.id, err));
+                    const badDishesInFirestore = this.volioDishes.filter(d => deprecatedEmpanadas.has(d.id));
+                    if (badDishesInFirestore.length > 0) {
+                        badDishesInFirestore.forEach(d => {
+                            window.FirebaseDB.collection('volio_platillos').doc(d.id).delete().catch(err => console.warn("Clean bad doc:", d.id, err));
                         });
                     }
                 }
             }
 
+            // Deduplicar activeVolioDishes por nombre normalizado antes de mapear
+            const seenVolioNames = new Set();
+            const uniqueActiveVolioDishes = [];
+            activeVolioDishes.forEach(d => {
+                if (deprecatedEmpanadas.has(d.id)) return;
+                const normName = (d.nombre || '').toLowerCase().trim();
+                if (!seenVolioNames.has(normName)) {
+                    seenVolioNames.add(normName);
+                    uniqueActiveVolioDishes.push(d);
+                }
+            });
+
             // Convertir al formato estándar MENU_DATA, heredando flags de opciones y filtrando deprecados
-            const mappedVolio = activeVolioDishes
+            const mappedVolio = uniqueActiveVolioDishes
                 .filter(d => !deprecatedEmpanadas.has(d.id))
                 .map(d => {
                     const original = (this.ORIGINAL_MENU_DATA || []).find(o => o.id === d.id);
-                    const canonical = (window.CANONICAL_EMPANADAS || []).find(c => c.id === d.id);
+                    const canonical = (window.CANONICAL_EMPANADAS || []).find(c => c.id === d.id || (c.nombre && c.nombre.toLowerCase().trim() === (d.nombre || '').toLowerCase().trim()));
                     const isEmp = (window.isEmpanadaDish ? window.isEmpanadaDish(d) : (d.id && d.id.includes('empanada')));
                     let itemPrecio = d.precio || (original ? original.precio : (canonical ? canonical.precio : 0));
                     if (this.customPrices && this.customPrices[d.id] !== undefined && !isNaN(this.customPrices[d.id])) {
@@ -1870,7 +1888,7 @@ const MenuController = {
         const isDesayunoCat = (categoryId === 'pintos' || categoryId === 'desayuno');
         const isSnacksCat = (categoryId === 'snacks' || categoryId === 'snack');
 
-        const filtered = this.MENU_DATA.filter(p => {
+        let filtered = this.MENU_DATA.filter(p => {
             const dishCat = (p.categoria || '').toLowerCase();
             const id = (p.id || '').toLowerCase();
             const nombre = (p.nombre || '').toLowerCase();
@@ -1889,15 +1907,31 @@ const MenuController = {
             }
             return dishCat === categoryId;
         });
+
+        // Deduplicar productos en la categoría por nombre normalizado
+        const seenCatNames = new Set();
+        const dedupedFiltered = [];
+        filtered.forEach(item => {
+            const norm = (item.nombre || '').toLowerCase().trim();
+            if (!seenCatNames.has(norm)) {
+                seenCatNames.add(norm);
+                dedupedFiltered.push(item);
+            }
+        });
+        filtered = dedupedFiltered;
         
         // Ordenamiento específico solicitado para empanadas
         if (isDesayunoCat) {
             const empanadaOrder = {
                 'p-empanada-sencilla': 10,
+                'v-1791030289012': 11,
                 'c-empanada-sencilla-cafe': 11,
                 'p-empanada-arreglada': 12,
+                'v-1790059042629': 13,
                 'c-empanada-arreglada-cafe': 13,
+                'v-1790058848755': 14,
                 'p-sra-empanada': 14,
+                'v-1790059143341': 15,
                 'c-sra-empanada-cafe': 15
             };
             filtered.sort((a, b) => {

@@ -2554,13 +2554,20 @@ document.addEventListener("DOMContentLoaded", () => {
                         db.collection('config').doc('precios').set(priceSync, { merge: true }).catch(err => console.warn("Sync precios:", err));
                     }
 
-                    // Si las 6 empanadas oficiales no están o existen IDs viejos duplicados, sincronizar automáticamente una vez
-                    const officialIds = ['p-empanada-sencilla', 'c-empanada-sencilla-cafe', 'p-empanada-arreglada', 'c-empanada-arreglada-cafe', 'p-sra-empanada', 'c-sra-empanada-cafe'];
-                    const hasAllOfficials = officialIds.every(id => this.dishes.some(d => d.id === id));
-                    const hasDeprecated = this.dishes.some(d => ['p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto', 'p-sra-empanada-m1', 'p-sra-empanada-m2', 'c-empanada-cafe'].includes(d.id));
-                    if (!this._empanadasAutoSynced && (!hasAllOfficials || hasDeprecated)) {
-                        this._empanadasAutoSynced = true;
-                        this.syncEmpanadasToCatalog(false);
+                    // Limpieza activa: si existen IDs viejos o duplicados en Firestore, eliminarlos permanentemente
+                    const badIds = [
+                        'c-empanada-sencilla-cafe', 'c-empanada-arreglada-cafe',
+                        'c-sra-empanada-cafe', 'p-sra-empanada',
+                        'p-sra-empanada-m1', 'p-sra-empanada-m2',
+                        'c-empanada-cafe', 'p-empanada-carne',
+                        'p-empanada-queso', 'p-empanada-pinto',
+                        'p-empanada-carne-queso', 'p-empanada-birria'
+                    ];
+                    const foundBad = this.dishes.filter(d => badIds.includes(d.id));
+                    if (foundBad.length > 0) {
+                        foundBad.forEach(d => {
+                            db.collection('volio_platillos').doc(d.id).delete().catch(err => console.warn("Eliminando duplicado:", d.id, err));
+                        });
                     }
                 }
             });
@@ -2758,21 +2765,23 @@ document.addEventListener("DOMContentLoaded", () => {
                     categoria: 'snacks',
                     desc: 'Crujiente empanada artesanal con relleno a elegir.',
                     ingredientes: 'Masa de maíz sazonada, relleno a elegir (queso, carne o pinto)',
-                    precio: 2500,
+                    precio: 1400,
                     costo: 800,
                     img: 'images-catalogo/empanadas.jpeg',
                     requiresOptions: true,
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
                 {
-                    id: 'c-empanada-sencilla-cafe',
+                    id: 'v-1791030289012',
                     nombre: 'Combo: Empanada Sencilla + Café',
                     categoria: 'desayuno',
                     desc: 'Empanada sencilla a elegir con Café Premium Grande.',
                     ingredientes: 'Empanada sencilla a elegir + café chorreado 12oz',
-                    precio: 3000,
+                    precio: 1900,
                     costo: 1050,
                     img: 'images-catalogo/empanadas.jpeg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value',
                     requiresOptions: true,
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
@@ -2782,45 +2791,49 @@ document.addEventListener("DOMContentLoaded", () => {
                     categoria: 'snacks',
                     desc: 'Crujiente empanada rellena a elegir con repollo fresco picado y salsas.',
                     ingredientes: 'Empanada a elegir, ensalada de repollo, salsas de la casa',
-                    precio: 3000,
+                    precio: 1800,
                     costo: 950,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
                     requiresOptions: true,
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
                 {
-                    id: 'c-empanada-arreglada-cafe',
+                    id: 'v-1790059042629',
                     nombre: 'Combo: Empanada Arreglada + Café',
                     categoria: 'desayuno',
                     desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
                     ingredientes: 'Empanada arreglada a elegir + café chorreado 12oz',
-                    precio: 3500,
+                    precio: 2300,
                     costo: 1200,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value',
                     requiresOptions: true,
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
                 {
-                    id: 'p-sra-empanada',
+                    id: 'v-1790058848755',
                     nombre: 'Señora Empanada',
                     categoria: 'snacks',
                     desc: 'Nuestra reina: empanada grande con relleno a elegir, arreglada con repollo, carne extra y salsas.',
                     ingredientes: 'Empanada grande a elegir, repollo, carne mechada extra, queso, salsas',
-                    precio: 3500,
+                    precio: 2300,
                     costo: 1100,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
                     requiresOptions: true,
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
                 {
-                    id: 'c-sra-empanada-cafe',
+                    id: 'v-1790059143341',
                     nombre: 'Combo: Señora Empanada + Café',
                     categoria: 'desayuno',
                     desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
                     ingredientes: 'Señora empanada a elegir + café chorreado 12oz',
-                    precio: 4000,
+                    precio: 2800,
                     costo: 1350,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value',
                     requiresOptions: true,
                     options: ['Queso', 'Carne', 'Pinto', 'Carne y Queso']
                 },
@@ -2920,9 +2933,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (interactive && !confirm("¿Deseas sincronizar las 6 opciones oficiales de empanadas al Catálogo Maestro y eliminar los sabores viejos duplicados?")) return;
 
             const deprecatedIds = [
+                'c-empanada-sencilla-cafe', 'c-empanada-arreglada-cafe',
+                'c-sra-empanada-cafe', 'p-sra-empanada',
+                'p-sra-empanada-m1', 'p-sra-empanada-m2', 'c-empanada-cafe',
                 'p-empanada-carne', 'p-empanada-queso', 'p-empanada-pinto',
-                'p-empanada-carne-queso', 'p-empanada-birria', 'p-sra-empanada-m1',
-                'p-sra-empanada-m2', 'c-empanada-cafe'
+                'p-empanada-carne-queso', 'p-empanada-birria'
             ];
 
             const officialEmpanadas = [
@@ -2932,7 +2947,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     categoria: 'snacks',
                     desc: 'Crujiente empanada artesanal de maíz frita. Elige tu relleno favorito.',
                     ingredientes: 'Masa de maíz sazonada, relleno a elegir (queso, carne o pinto)',
-                    precio: 2500,
+                    precio: 1400,
                     costo: 800,
                     img: 'images-catalogo/empanadas.jpeg',
                     requiresOptions: true,
@@ -2945,7 +2960,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     categoria: 'snacks',
                     desc: 'Empanada crujiente con repollo arreglado, salsas y relleno a elegir.',
                     ingredientes: 'Empanada artesanal, ensalada de repollo, salsas de la casa',
-                    precio: 3000,
+                    precio: 1800,
                     costo: 950,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
                     requiresOptions: true,
@@ -2953,12 +2968,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     actualizadoEn: new Date().toISOString()
                 },
                 {
-                    id: 'p-sra-empanada',
+                    id: 'v-1790058848755',
                     nombre: 'Señora Empanada',
                     categoria: 'snacks',
                     desc: 'Nuestra empanada insignia con repollo, carne mechada extra por encima y salsas.',
                     ingredientes: 'Empanada grande, ensalada de repollo fresco, carne mechada extra, salsas de la casa',
-                    precio: 3500,
+                    precio: 2300,
                     costo: 1100,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
                     requiresOptions: true,
@@ -2966,12 +2981,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     actualizadoEn: new Date().toISOString()
                 },
                 {
-                    id: 'c-empanada-sencilla-cafe',
+                    id: 'v-1791030289012',
                     nombre: 'Combo: Empanada Sencilla + Café',
-                    categoria: 'snacks',
+                    categoria: 'desayuno',
                     desc: 'Empanada sencilla a elegir + Café Premium Grande.',
                     ingredientes: 'Empanada sencilla a elegir + café chorreado 12oz',
-                    precio: 3000,
+                    precio: 1900,
                     costo: 1050,
                     img: 'images-catalogo/empanadas.jpeg',
                     badge: 'Combo',
@@ -2981,12 +2996,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     actualizadoEn: new Date().toISOString()
                 },
                 {
-                    id: 'c-empanada-arreglada-cafe',
+                    id: 'v-1790059042629',
                     nombre: 'Combo: Empanada Arreglada + Café',
-                    categoria: 'snacks',
+                    categoria: 'desayuno',
                     desc: 'Empanada arreglada con repollo y salsas + Café Premium Grande.',
                     ingredientes: 'Empanada arreglada a elegir + café chorreado 12oz',
-                    precio: 3500,
+                    precio: 2300,
                     costo: 1200,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
                     badge: 'Combo',
@@ -2996,12 +3011,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     actualizadoEn: new Date().toISOString()
                 },
                 {
-                    id: 'c-sra-empanada-cafe',
+                    id: 'v-1790059143341',
                     nombre: 'Combo: Señora Empanada + Café',
-                    categoria: 'snacks',
+                    categoria: 'desayuno',
                     desc: 'Señora empanada arreglada con carne extra + Café Premium Grande.',
                     ingredientes: 'Señora empanada a elegir + café chorreado 12oz',
-                    precio: 4000,
+                    precio: 2800,
                     costo: 1350,
                     img: 'images-catalogo/Sra. Empanada Arreglada .jpeg',
                     badge: 'Combo',
