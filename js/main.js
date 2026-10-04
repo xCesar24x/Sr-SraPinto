@@ -682,7 +682,11 @@ const CartManager = {
         const successOverlay = document.getElementById('success-overlay');
         if (successOverlay) successOverlay.classList.remove('active');
         
-        if (!isSalesPOS) {
+        if (isSalesPOS) {
+            if (window.PosManager && typeof window.PosManager.closeComandaModal === 'function') {
+                window.PosManager.closeComandaModal();
+            }
+        } else {
             UIController.toggleCart(); // Cierra el carrito solo en web externa
         }
     },

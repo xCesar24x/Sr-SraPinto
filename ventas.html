@@ -1996,58 +1996,131 @@
             color: #fff;
         }
 
-        /* ─── RESPONSIVE MOBILE BAR ─── */
+        /* ─── BOTÓN DE COMANDA RÁPIDA EN TOP NAV ─── */
+        .btn-top-comanda {
+            display: none;
+            background: rgba(247, 183, 49, 0.15) !important;
+            border-color: rgba(247, 183, 49, 0.5) !important;
+            color: #f7b731 !important;
+            font-weight: 800;
+        }
+
+        /* ─── BOTÓN MINIMIZAR Y BANNER DENTRO DE COMANDA ─── */
+        .pos-ticket-minimize-btn {
+            display: none;
+        }
+        .pos-ticket-add-more-bar {
+            display: none;
+        }
+
+        /* ─── RESPONSIVE MOBILE BAR (BARRA FLOTANTE DE COMANDA) ─── */
         .pos-mobile-bar {
             display: none;
             position: fixed;
             bottom: 0;
             left: 0;
+            right: 0;
             width: 100%;
-            background: rgba(20, 5, 8, 0.96);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 10px 16px;
+            height: 68px;
+            background: #120306;
+            border-top: 2px solid rgba(247, 183, 49, 0.5);
+            padding: 8px 14px;
             z-index: 9980;
-            backdrop-filter: blur(10px);
+            box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.7);
             align-items: center;
             justify-content: space-between;
+            box-sizing: border-box;
+        }
+        .pos-mob-summary-wrap {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .pos-mob-count-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .pos-mob-total-val {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #2ecc71;
+            line-height: 1.2;
+        }
+        .pos-mob-open-btn {
+            background: linear-gradient(135deg, #f7b731, #f39c12);
+            color: #2B0A11;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: 900;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(247, 183, 49, 0.4);
+            transition: transform 0.15s, box-shadow 0.15s;
+            font-family: inherit;
+        }
+        .pos-mob-open-btn:active {
+            transform: scale(0.96);
+        }
+        .pos-mob-btn-badge {
+            background: #2B0A11;
+            color: #f7b731;
+            font-size: 0.75rem;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
         }
 
-        /* ─── RESPONSIVE MÓVIL Y VERTICAL (PORTRAIT / TABLET / CELULAR) ─── */
-        @media (max-width: 900px), (orientation: portrait) {
+        /* ─── RESPONSIVE MÓVIL Y VERTICAL (SUNMI V2 / TABLET / CELULAR) ─── */
+        @media (max-width: 992px), (orientation: portrait) {
             #pos-top-nav {
                 height: 56px;
-                padding: 0 10px;
-                gap: 8px;
+                padding: 0 8px;
+                gap: 6px;
             }
             .pos-brand img {
-                height: 32px;
+                height: 30px;
             }
             .pos-brand-tag {
                 display: none;
             }
             .pos-brand-title {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
             .pos-nav-btn {
-                padding: 6px 10px;
-                font-size: 0.78rem;
-                gap: 5px;
+                padding: 6px 8px;
+                font-size: 0.76rem;
+                gap: 4px;
             }
-            .pos-nav-btn span {
-                display: inline-block;
+            .btn-top-comanda {
+                display: inline-flex !important;
             }
+
             .pos-workspace-container {
                 display: flex !important;
-                flex-direction: row !important;
+                flex-direction: column !important;
                 height: calc(100vh - 56px) !important;
                 margin-top: 56px !important;
                 width: 100% !important;
                 overflow: hidden !important;
             }
 
-            /* CATÁLOGO A LA IZQUIERDA: 2 COLUMNAS */
+            /* CATÁLOGO A PANTALLA COMPLETA (100% ANCHO EN VERTICAL) */
             .pos-catalog-section {
-                flex: 1 1 53% !important;
+                flex: 1 1 100% !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 min-width: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -2058,144 +2131,213 @@
                 gap: 6px;
             }
             .pos-cat-btn {
-                padding: 6px 12px;
-                font-size: 0.78rem;
+                padding: 7px 12px;
+                font-size: 0.8rem;
                 gap: 5px;
-                border-radius: 8px;
+                border-radius: 9px;
             }
             .pos-search-wrap {
                 min-width: 110px;
-                max-width: 150px;
+                max-width: 160px;
                 margin-left: auto;
             }
             .pos-search-wrap input {
-                padding: 6px 8px 6px 26px;
-                font-size: 0.78rem;
+                padding: 7px 8px 7px 28px;
+                font-size: 0.8rem;
             }
             .pos-search-wrap i {
-                left: 8px;
-                font-size: 0.75rem;
+                left: 9px;
+                font-size: 0.78rem;
             }
+
+            /* GRID CON ESPACIO INFERIOR PARA LA BARRA FLOTANTE */
             .pos-dish-grid-wrap {
-                padding: 10px 8px !important;
+                padding: 10px 10px 85px 10px !important;
                 flex: 1;
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
             .pos-dish-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-                gap: 8px !important;
+                gap: 10px !important;
             }
             .pos-dish-card {
-                padding: 8px 6px;
-                border-radius: 12px;
+                padding: 10px 8px;
+                border-radius: 14px;
+                min-height: 145px;
             }
             .pos-dish-img-wrap {
-                width: 58px;
-                height: 58px;
+                width: 66px;
+                height: 66px;
                 margin-bottom: 6px;
             }
             .pos-dish-name {
-                font-size: 0.76rem;
-                height: 28px;
-                line-height: 1.2;
+                font-size: 0.8rem;
+                height: 32px;
+                line-height: 1.25;
                 margin-bottom: 4px;
             }
             .pos-dish-price {
-                font-size: 0.88rem;
+                font-size: 0.95rem;
             }
 
-            /* COMANDA A LA DERECHA: SIEMPRE VISIBLE Y SIN TAPAR */
+            /* BARRA MÓVIL INFERIOR FLOTANTE ACTIVA */
+            .pos-mobile-bar {
+                display: flex !important;
+            }
+
+            /* COMANDA EN PANTALLA COMPLETA DESLIZANTE */
             .pos-ticket-sidebar {
-                position: relative !important;
-                transform: none !important;
-                right: auto !important;
-                top: auto !important;
-                height: 100% !important;
-                width: 47% !important;
-                min-width: 210px !important;
-                max-width: 360px !important;
-                flex-shrink: 0 !important;
-                box-shadow: -4px 0 15px rgba(0, 0, 0, 0.4) !important;
-                border-left: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+                position: fixed !important;
+                inset: 0 !important;
+                width: 100vw !important;
+                max-width: 100vw !important;
+                height: 100vh !important;
+                z-index: 99990 !important;
+                background: #140306 !important;
                 display: flex !important;
                 flex-direction: column !important;
-                z-index: 20 !important;
+                box-shadow: none !important;
+                border: none !important;
+                transform: translateY(105%) !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.2s ease !important;
             }
+            .pos-ticket-sidebar.mobile-open {
+                transform: translateY(0) !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+
+            /* BOTÓN DE MINIMIZAR / VOLVER EN EL HEADER DE LA COMANDA */
+            .pos-ticket-minimize-btn {
+                display: inline-flex !important;
+                align-items: center;
+                gap: 6px;
+                background: rgba(255, 255, 255, 0.12);
+                border: 1px solid rgba(255, 255, 255, 0.22);
+                color: #ffffff;
+                font-size: 0.82rem;
+                font-weight: 800;
+                padding: 7px 12px;
+                border-radius: 10px;
+                cursor: pointer;
+                transition: 0.2s;
+                font-family: inherit;
+            }
+            .pos-ticket-minimize-btn:active {
+                background: rgba(247, 183, 49, 0.25);
+                border-color: #f7b731;
+                color: #f7b731;
+            }
+
+            /* BANNER SUPERIOR DE LA COMANDA: "SEGUIR AGREGANDO" */
+            .pos-ticket-add-more-bar {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                background: linear-gradient(90deg, rgba(247, 183, 49, 0.16), rgba(46, 204, 113, 0.12));
+                border-bottom: 1.5px solid rgba(247, 183, 49, 0.35);
+                padding: 10px 14px;
+                font-size: 0.82rem;
+                font-weight: 700;
+                color: #f7b731;
+                cursor: pointer;
+                user-select: none;
+            }
+            .pos-ticket-add-more-bar:active {
+                background: rgba(247, 183, 49, 0.25);
+            }
+
             .pos-ticket-header {
-                padding: 10px 12px;
+                padding: 10px 14px;
+                background: #190107;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             }
             .pos-ticket-title {
-                font-size: 0.85rem;
+                font-size: 0.95rem;
                 gap: 6px;
             }
             .pos-ticket-clear-btn {
-                padding: 4px 8px;
-                font-size: 0.7rem;
+                padding: 6px 10px;
+                font-size: 0.75rem;
             }
             .pos-ticket-client-box {
-                padding: 8px 12px;
-                gap: 6px;
-            }
-            .pos-ticket-input {
-                padding: 7px 10px;
-                font-size: 0.82rem;
-            }
-            .pos-ticket-items-wrap {
-                padding: 8px 10px;
-                gap: 6px;
-            }
-            .pos-ticket-item {
-                padding: 7px 8px;
-                gap: 4px;
-            }
-            .pos-ticket-item-name {
-                font-size: 0.78rem;
-            }
-            .pos-ticket-item-price {
-                font-size: 0.82rem;
-            }
-            .pos-ticket-stepper button {
-                width: 22px;
-                height: 22px;
-                font-size: 0.7rem;
-            }
-            .pos-ticket-stepper span {
-                font-size: 0.8rem;
-                min-width: 14px;
-            }
-            .pos-ticket-footer {
-                padding: 10px 12px;
+                padding: 10px 14px;
                 gap: 8px;
             }
+            .pos-ticket-input {
+                padding: 9px 12px;
+                font-size: 0.9rem;
+            }
+            .pos-ticket-items-wrap {
+                padding: 10px 14px;
+                gap: 8px;
+                flex: 1;
+                overflow-y: auto;
+            }
+            .pos-ticket-item {
+                padding: 10px 12px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+            .pos-ticket-item-name {
+                font-size: 0.88rem;
+                line-height: 1.3;
+            }
+            .pos-ticket-item-price {
+                font-size: 0.92rem;
+                font-weight: 900;
+            }
+            .pos-ticket-stepper {
+                gap: 8px;
+                padding: 3px 6px;
+                background: rgba(0, 0, 0, 0.4);
+                border-radius: 8px;
+            }
+            .pos-ticket-stepper button {
+                width: 28px;
+                height: 28px;
+                font-size: 0.85rem;
+                border-radius: 6px;
+            }
+            .pos-ticket-stepper span {
+                font-size: 0.9rem;
+                font-weight: 900;
+                min-width: 18px;
+            }
+            .pos-ticket-footer {
+                padding: 12px 14px 16px 14px;
+                background: #0f0104;
+                border-top: 1.5px solid rgba(255, 255, 255, 0.1);
+                gap: 10px;
+            }
             .pos-ticket-pay-title {
-                font-size: 0.68rem;
+                font-size: 0.72rem;
             }
             .pos-ticket-pay-options {
-                gap: 4px;
+                gap: 6px;
             }
             .pos-ticket-pay-options .pay-chip {
-                padding: 5px 8px;
-                font-size: 0.7rem;
-                gap: 4px;
+                padding: 6px 10px;
+                font-size: 0.74rem;
+                border-radius: 8px;
             }
             .pos-ticket-total-row {
-                padding: 2px 0;
+                padding: 4px 0;
             }
             .pos-ticket-total-label {
-                font-size: 0.95rem;
+                font-size: 1.05rem;
             }
             .pos-ticket-total-val {
-                font-size: 1.25rem;
+                font-size: 1.45rem;
             }
             .pos-ticket-btn-submit {
-                padding: 11px 10px;
-                font-size: 0.88rem;
-                border-radius: 10px;
-            }
-
-            /* No se necesita barra inferior flotante porque la comanda ya está fija a la derecha */
-            .pos-mobile-bar {
-                display: none !important;
+                padding: 13px 12px;
+                font-size: 0.95rem;
+                border-radius: 12px;
             }
         }
 
@@ -2209,45 +2351,52 @@
                 display: none;
             }
             .pos-nav-btn {
-                padding: 6px 7px;
-                font-size: 0.72rem;
+                padding: 5px 6px;
+                font-size: 0.7rem;
             }
             .pos-nav-btn span {
+                display: none;
+            }
+            .btn-top-comanda span {
                 display: none;
             }
             .pos-categories-nav {
                 padding: 6px 8px;
             }
             .pos-cat-btn {
-                padding: 5px 9px;
-                font-size: 0.72rem;
+                padding: 6px 10px;
+                font-size: 0.74rem;
             }
             .pos-search-wrap {
                 min-width: 85px;
-                max-width: 110px;
+                max-width: 120px;
             }
-            .pos-ticket-sidebar {
-                width: 48% !important;
-                min-width: 175px !important;
+            .pos-dish-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+            }
+            .pos-dish-card {
+                padding: 8px 6px;
+                border-radius: 12px;
+                min-height: 135px;
             }
             .pos-dish-img-wrap {
-                width: 46px;
-                height: 46px;
+                width: 58px;
+                height: 58px;
             }
             .pos-dish-name {
-                font-size: 0.7rem;
-                height: 24px;
+                font-size: 0.76rem;
+                height: 30px;
             }
             .pos-dish-price {
-                font-size: 0.78rem;
+                font-size: 0.88rem;
             }
-            .pos-ticket-pay-options .pay-chip {
-                padding: 4px 6px;
-                font-size: 0.65rem;
+            .pos-mob-open-btn {
+                padding: 9px 12px;
+                font-size: 0.82rem;
             }
-            .pos-ticket-btn-submit {
-                padding: 9px 6px;
-                font-size: 0.8rem;
+            .pos-mob-total-val {
+                font-size: 1.15rem;
             }
         }
 
@@ -2348,6 +2497,12 @@
     </div>
 
     <div class="pos-nav-actions">
+        <button id="btn-top-comanda" class="pos-nav-btn btn-top-comanda" onclick="PosManager.toggleComandaModal()" title="Ver Comanda Actual">
+            <i class="fas fa-receipt" style="color: #f7b731;"></i>
+            <span>Comanda</span>
+            <span id="top-comanda-badge" class="pos-badge" style="background: #f7b731; color: #1a0307; font-weight: 900;">0</span>
+        </button>
+
         <button id="btn-in-progress" class="pos-nav-btn btn-in-progress" onclick="SalesDashboard.openInProgressOrders()" title="Comandas en Proceso">
             <i class="fas fa-clock" style="color: #f39c12;"></i>
             <span>En Proceso</span>
@@ -2431,16 +2586,25 @@
         </div>
     </section>
 
-    <!-- PANEL DERECHO: TICKET DE VENTA / COMANDA -->
+    <!-- PANEL DERECHO: TICKET DE VENTA / COMANDA (EN MÓVIL/SUNMI ABRE EN PANTALLA COMPLETA) -->
     <aside id="pos-ticket-sidebar" class="pos-ticket-sidebar">
         <div class="pos-ticket-header">
+            <button type="button" class="pos-ticket-minimize-btn" onclick="PosManager.closeComandaModal()" title="Volver a los platillos y agregar lo que falte">
+                <i class="fas fa-arrow-left"></i> <span>Volver</span>
+            </button>
             <div class="pos-ticket-title">
-                <i class="fas fa-receipt" style="color: var(--mostaza);"></i> Comanda Actual
+                <i class="fas fa-receipt" style="color: var(--mostaza);"></i> Comanda
                 <span id="pos-ticket-count" style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 700; margin-left: 5px;">0 items</span>
             </div>
             <button class="pos-ticket-clear-btn" onclick="PosManager.clearCart()" title="Vaciar orden">
                 <i class="fas fa-trash-alt"></i> Vaciar
             </button>
+        </div>
+
+        <!-- BANNER DE MINIMIZAR / SEGUIR AGREGANDO PLATILLOS EN MÓVIL/SUNMI -->
+        <div class="pos-ticket-add-more-bar" onclick="PosManager.closeComandaModal()" title="Toca aquí para volver a los platillos y seguir agregando">
+            <span><i class="fas fa-plus-circle" style="color: #2ecc71;"></i> ¿Falta algún platillo? <strong>Toca aquí para seguir agregando</strong></span>
+            <i class="fas fa-chevron-right" style="opacity: 0.7;"></i>
         </div>
 
         <!-- BANNER DE EDICIÓN INTERNO -->
@@ -2506,14 +2670,16 @@
     </aside>
 </main>
 
-<!-- BARRA MÓVIL INFERIOR -->
-<div id="pos-mobile-bar" class="pos-mobile-bar">
-    <div style="display: flex; flex-direction: column;">
-        <span style="font-size: 0.75rem; color: rgba(255,255,255,0.6);"><span id="pos-mob-bar-count">0</span> productos</span>
-        <span id="pos-mob-bar-total" style="font-size: 1.15rem; font-weight: 900; color: #2ecc71;">₡0</span>
+<!-- BARRA MÓVIL INFERIOR FLOTANTE -->
+<div id="pos-mobile-bar" class="pos-mobile-bar" onclick="if(!event.target.closest('#pos-mob-open-btn')) PosManager.openComandaModal()">
+    <div class="pos-mob-summary-wrap">
+        <span class="pos-mob-count-label"><i class="fas fa-shopping-bag" style="color: #f7b731;"></i> <span id="pos-mob-bar-count">0</span> platillos</span>
+        <span id="pos-mob-bar-total" class="pos-mob-total-val">₡0</span>
     </div>
-    <button onclick="document.getElementById('pos-ticket-sidebar').classList.toggle('mobile-open')" style="background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 900; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-        <i class="fas fa-receipt"></i> Ver Comanda
+    <button id="pos-mob-open-btn" class="pos-mob-open-btn" onclick="PosManager.openComandaModal()">
+        <i class="fas fa-receipt"></i>
+        <span>Ver Comanda</span>
+        <span id="pos-mob-btn-badge" class="pos-mob-btn-badge">0</span>
     </button>
 </div>
 
@@ -2522,7 +2688,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=3.8"></script>
+<script src="js/main.js?v=3.9"></script>
 
 <script>
 /**
@@ -2911,6 +3077,36 @@ const PosManager = {
 
         const mobBarCount = document.getElementById('pos-mob-bar-count');
         if (mobBarCount) mobBarCount.textContent = count;
+
+        const mobBtnBadge = document.getElementById('pos-mob-btn-badge');
+        if (mobBtnBadge) mobBtnBadge.textContent = count;
+
+        const topBadge = document.getElementById('top-comanda-badge');
+        if (topBadge) topBadge.textContent = count;
+    },
+
+    openComandaModal() {
+        const sidebar = document.getElementById('pos-ticket-sidebar');
+        if (sidebar) {
+            sidebar.classList.add('mobile-open');
+            if (navigator.vibrate) navigator.vibrate(35);
+        }
+    },
+
+    closeComandaModal() {
+        const sidebar = document.getElementById('pos-ticket-sidebar');
+        if (sidebar) {
+            sidebar.classList.remove('mobile-open');
+            if (navigator.vibrate) navigator.vibrate(25);
+        }
+    },
+
+    toggleComandaModal() {
+        const sidebar = document.getElementById('pos-ticket-sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('mobile-open');
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
     },
 
     clearCart() {
