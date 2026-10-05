@@ -1383,6 +1383,57 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
         }
 
+        @keyframes pulse-green {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(37, 211, 102, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(231, 76, 60, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .badge-web-order {
+            background: rgba(37, 211, 102, 0.2);
+            border: 1px solid rgba(37, 211, 102, 0.55);
+            color: #25d366;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-in-progress-whatsapp {
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            border: none;
+            color: white;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-in-progress-whatsapp:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(37, 211, 102, 0.45);
+        }
+        .btn-in-progress-whatsapp:active {
+            transform: scale(0.96);
+        }
+
         /* ─── WORKSPACE DUAL PANEL ─── */
         .pos-workspace-container {
             display: flex;
@@ -2400,11 +2451,26 @@
                 display: none;
             }
             .pos-nav-btn {
-                padding: 5px 6px;
-                font-size: 0.7rem;
+                padding: 6px 8px;
+                font-size: 0.75rem;
+                position: relative;
             }
-            .pos-nav-btn span {
+            .pos-nav-btn > span:not(.pos-badge) {
                 display: none;
+            }
+            .pos-nav-btn .pos-badge {
+                display: inline-flex !important;
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                min-width: 17px;
+                height: 17px;
+                border-radius: 9px;
+                font-size: 0.65rem;
+                padding: 0 4px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.7);
+                border: 1.5px solid var(--negro);
+                z-index: 5;
             }
             .btn-top-comanda span {
                 display: none;
@@ -2737,7 +2803,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=4.3"></script>
+<script src="js/main.js?v=4.4"></script>
 
 <script>
 /**
@@ -3502,12 +3568,15 @@ const SalesDashboard = {
             const orderJson = JSON.stringify(order).replace(/"/g, '&quot;');
             const itemsJson = JSON.stringify(order.items).replace(/"/g, '&quot;');
 
+            const isWebOrder = order.origen === 'web' || order.esWeb === true || !!order.fechaAprobacion || (order.telefono && order.telefono.length > 0);
+
             return `
-                <div class="in-progress-card">
+                <div class="in-progress-card ${isWebOrder ? 'is-web-ticket' : ''}">
                     <div class="in-progress-card-header">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             <span class="in-progress-number">#${order.num_pedido || order.id.slice(-5).toUpperCase()}</span>
                             <span class="in-progress-customer">${order.cliente}</span>
+                            ${isWebOrder ? `<span class="badge-web-order" title="Pedido recibido por WhatsApp / Web"><i class="fab fa-whatsapp"></i> WhatsApp</span>` : ''}
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <span class="in-progress-time" title="${timeStr}"><i class="far fa-clock"></i> ${elapsedText}</span>
@@ -3521,7 +3590,10 @@ const SalesDashboard = {
                     </ul>
 
                     <div class="in-progress-meta">
-                        <span style="font-size: 0.85rem; opacity: 0.8;"><i class="fas fa-money-bill-wave"></i> ${order.metodoPago || 'Efectivo'}</span>
+                        <span style="font-size: 0.85rem; opacity: 0.8;">
+                            <i class="fas fa-money-bill-wave"></i> ${order.metodoPago || 'Efectivo'}
+                            ${order.telefono ? `<span style="margin-left: 8px; color: #25d366; font-weight: 700;"><i class="fab fa-whatsapp"></i> ${order.telefono}</span>` : ''}
+                        </span>
                         <span class="in-progress-total">₡${(order.total || 0).toLocaleString()}</span>
                     </div>
 
@@ -3529,6 +3601,11 @@ const SalesDashboard = {
                         <button class="btn-mark-delivered" onclick="SalesDashboard.markOrderDelivered('${order.id}')">
                             <i class="fas fa-check-circle"></i> Marcar Entregado
                         </button>
+                        ${isWebOrder ? `
+                        <button class="btn-in-progress-whatsapp" onclick="SalesDashboard.notifyCustomerReady('${order.id}')" title="Avisar por WhatsApp al cliente que su pedido está listo para retirar">
+                            <i class="fab fa-whatsapp"></i> Avisar Listo
+                        </button>
+                        ` : ''}
                         <button class="btn-in-progress-print" onclick="CartManager.imprimirTiquete(${orderJson})" title="Reimprimir Tiquete">
                             <i class="fas fa-print"></i>
                         </button>
@@ -3541,15 +3618,48 @@ const SalesDashboard = {
         }).join('');
     },
 
+    notifyCustomerReady(orderId, optOrder) {
+        const order = optOrder || this.allOrders.find(o => o.id === orderId);
+        if (!order) return;
+        
+        const clientName = order.cliente || 'Cliente';
+        const orderNum = order.num_pedido ? `*#${order.num_pedido}*` : '';
+        let phone = (order.telefono || '').replace(/\D/g, '');
+        
+        if (!phone) {
+            const inputPhone = prompt(`Ingresa el número de WhatsApp de ${clientName} (8 dígitos):`, '');
+            if (!inputPhone) return;
+            phone = inputPhone.replace(/\D/g, '');
+        }
+        
+        if (phone.length === 8) {
+            phone = '506' + phone;
+        }
+        
+        const msg = `¡Hola ${clientName}! ☕🍛\n\nTu pedido ${orderNum} en *Sr. & Sra. Pinto* ya está *LISTO PARA RETIRAR* 🎉.\n\n¡Te esperamos con la comida calientita!`;
+        const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    },
+
     async markOrderDelivered(orderId) {
         try {
             const db = window.FirebaseDB;
+            const order = this.allOrders.find(o => o.id === orderId);
             await db.collection("pedidos").doc(orderId).update({
                 estado: "listo",
                 fechaEntrega: new Date().toISOString()
             });
             console.log("✅ Comanda marcada como entregada:", orderId);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+            const isWebOrder = order && (order.origen === 'web' || order.esWeb === true || !!order.fechaAprobacion || !!order.telefono);
+            if (isWebOrder) {
+                const clientName = order.cliente || 'el cliente';
+                const wantNotify = confirm(`¿Deseas enviar el mensaje de WhatsApp a ${clientName} avisando que su pedido está listo para retirar?`);
+                if (wantNotify) {
+                    this.notifyCustomerReady(orderId, order);
+                }
+            }
         } catch (err) {
             console.error("Error al marcar entregado:", err);
             alert("No se pudo marcar la comanda como entregada.");
@@ -3636,6 +3746,8 @@ const SalesDashboard = {
             statusColor = '#95a5a6';
         }
         
+        const isWebOrder = order.origen === 'web' || order.esWeb === true || !!order.fechaAprobacion || !!order.telefono;
+
         const body = document.getElementById('sale-details-body');
         body.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -3644,7 +3756,11 @@ const SalesDashboard = {
                     <span style="font-size: 0.8rem; opacity: 0.7;">${dateStr}</span>
                 </div>
                 <div style="font-size: 0.95rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <span><strong>Cliente:</strong> ${order.cliente}</span>
+                    <span style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <strong>Cliente:</strong> ${order.cliente}
+                        ${isWebOrder ? `<span class="badge-web-order"><i class="fab fa-whatsapp"></i> WhatsApp</span>` : ''}
+                        ${order.telefono ? `<span style="color: #25d366; font-size: 0.85rem;"><i class="fas fa-phone-alt"></i> ${order.telefono}</span>` : ''}
+                    </span>
                     <span style="background: ${statusColor}; color: #000; font-size: 0.75rem; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">${statusText}</span>
                 </div>
                 
@@ -3660,16 +3776,21 @@ const SalesDashboard = {
                     <span style="font-size: 1.35rem; font-weight: 900; color: #2ecc71;">₡${(order.total || 0).toLocaleString()}</span>
                 </div>
                 
-                <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; width: 100%;">
+                <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end; width: 100%; flex-wrap: wrap;">
                     ${isPending ? `
-                        <button onclick="SalesDashboard.markOrderDelivered('${order.id}'); SalesDashboard.closeSaleDetails();" style="flex: 1; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #2ecc71, #27ae60); color: #0b2212; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
+                        <button onclick="SalesDashboard.markOrderDelivered('${order.id}'); SalesDashboard.closeSaleDetails();" style="flex: 1; min-width: 130px; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #2ecc71, #27ae60); color: #0b2212; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
                             <i class="fas fa-check-circle"></i> Entregado
                         </button>
                     ` : ''}
-                    <button onclick="CartManager.imprimirTiquete(SalesDashboard.selectedOrderDetailOrder)" style="flex: 1; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
+                    ${isWebOrder ? `
+                        <button onclick="SalesDashboard.notifyCustomerReady('${order.id}')" style="flex: 1; min-width: 130px; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #25d366, #128c7e); color: white; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
+                            <i class="fab fa-whatsapp"></i> Avisar WhatsApp
+                        </button>
+                    ` : ''}
+                    <button onclick="CartManager.imprimirTiquete(SalesDashboard.selectedOrderDetailOrder)" style="flex: 1; min-width: 120px; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
                         <i class="fas fa-print"></i> Reimprimir
                     </button>
-                    <button onclick="SalesDashboard.closeSaleDetails()" style="flex: 1; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); color: white; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
+                    <button onclick="SalesDashboard.closeSaleDetails()" style="flex: 1; min-width: 90px; padding: 12px; font-size: 0.9rem; font-family: 'Gotham', sans-serif; font-weight: 800; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); color: white; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase;">
                         Cerrar
                     </button>
                 </div>
@@ -3986,13 +4107,19 @@ const SalesDashboard = {
             }
 
             await db.collection("pedidos").doc(id).update({
-                estado: "listo",
+                estado: "en_proceso",
                 num_pedido: numPedido,
+                esWeb: true,
+                origen: 'web',
                 fechaAprobacion: new Date().toISOString()
             });
             
             console.log("✅ Pedido web aprobado con número secuencial:", numPedido);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            
+            // Cerrar modal de pedidos web y abrir comandas en proceso
+            this.closeWebOrders();
+            this.openInProgressOrders();
         } catch (error) {
             console.error("Error al aprobar pedido:", error);
             alert("No se pudo aprobar el pedido.");
@@ -4004,10 +4131,14 @@ const SalesDashboard = {
         try {
             const db = window.FirebaseDB;
             await db.collection("pedidos").doc(id).update({
-                estado: "listo",
+                estado: "en_proceso",
+                esWeb: true,
+                origen: 'web',
                 fechaAprobacion: new Date().toISOString()
             });
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            this.closeWebOrders();
+            this.openInProgressOrders();
         } catch (error) {
             console.error("Error al aprobar pedido:", error);
         }

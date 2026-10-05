@@ -140,6 +140,7 @@ const CartManager = {
     items: [],
     selectedPaymentMethod: 'Efectivo',
     customerName: '',
+    customerPhone: '',
     isDefaultName: true,
     siguienteNumeroComanda: 1,
     hasAllergies: false,
@@ -425,6 +426,10 @@ const CartManager = {
         }
     },
 
+    updatePhone(phone) {
+        this.customerPhone = phone ? phone.trim() : '';
+    },
+
     toggleAllergies(checked) {
         this.hasAllergies = checked;
         const textArea = document.getElementById('allergies-text');
@@ -523,6 +528,7 @@ const CartManager = {
 
             const pedido = {
                 cliente: this.customerName || (isSalesPOS ? `Comanda #${this.siguienteNumeroComanda || 1}` : 'Cliente sin nombre'),
+                telefono: this.customerPhone ? this.customerPhone.trim() : '',
                 alergias: this.hasAllergies ? this.allergiesText : '',
                 metodoPago: this.selectedPaymentMethod,
                 total: this.getTotal(),
@@ -532,6 +538,8 @@ const CartManager = {
                     cantidad: item.quantity,
                     precio: item.precio
                 })),
+                esWeb: !isSalesPOS,
+                origen: isSalesPOS ? 'pos' : 'web',
                 estado: estadoInicial,
                 fecha: new Date().toISOString()
             };
@@ -651,7 +659,9 @@ const CartManager = {
                         });
 
                         let message = `☕ *NUEVO PEDIDO — Sr. & Sra. Pinto*\n\n`;
-                        if (this.customerName) { message += `👤 *Cliente:* ${this.customerName}\n\n`; }
+                        if (this.customerName) { message += `👤 *Cliente:* ${this.customerName}\n`; }
+                        if (this.customerPhone) { message += `📞 *Teléfono:* ${this.customerPhone}\n`; }
+                        message += `\n`;
                         if (this.hasAllergies && this.allergiesText.trim() !== '') { message += `⚠️ *Alergias / Restricciones:*\n${this.allergiesText.trim()}\n\n`; }
                         message += `📝 *Detalle del pedido:*\n${itemsList}\n`;
                         message += `💰 *TOTAL: ₡${this.getTotal().toLocaleString()}*\n`;
@@ -698,6 +708,10 @@ const CartManager = {
             this.isDefaultName = true;
             if (nameInput) nameInput.value = '';
         }
+
+        this.customerPhone = '';
+        const phoneInput = document.getElementById('order-phone');
+        if (phoneInput) phoneInput.value = '';
 
         const allergiesCheck = document.getElementById('has-allergies');
         if (allergiesCheck) { allergiesCheck.checked = false; this.toggleAllergies(false); }

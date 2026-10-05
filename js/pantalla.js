@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Escuchar pedidos pendientes (en proceso) e inyectar en tiempo real
     db.collection("pedidos")
-        .where("estado", "in", ["pendiente", "listo"])
+        .where("estado", "in", ["pendiente", "en_proceso", "listo"])
         .onSnapshot((snapshot) => {
 
             // Registrar el momento del último evento recibido (para el health check)

@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const pedidosRef = window.Firestore.collection(window.FirebaseDB, "pedidos");
     
     // Escuchar cambios en tiempo real
-    pedidosRef.where("estado", "==", "pendiente").onSnapshot((snapshot) => {
+    pedidosRef.where("estado", "in", ["pendiente", "en_proceso"]).onSnapshot((snapshot) => {
         let hasNewOrders = false;
         
         // Convertir docs a array para ordenarlos por fecha (del más antiguo al más reciente)

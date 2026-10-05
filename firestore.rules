@@ -41,7 +41,7 @@ service cloud.firestore {
                     && request.resource.data.items is list
                     && request.resource.data.items.size() > 0
                     && request.resource.data.items.size() <= 100;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['estado', 'items', 'total', 'notas', 'metodoPago', 'pagado', 'vuelto', 'entregado', 'completado'])
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasAny(['estado', 'items', 'total', 'notas', 'metodoPago', 'pagado', 'vuelto', 'entregado', 'completado', 'num_pedido', 'fechaAprobacion', 'fechaEntrega', 'esWeb', 'origen', 'telefono', 'fechaListo'])
                     && isValidNumber(request.resource.data.total);
       allow delete: if true;
     }
