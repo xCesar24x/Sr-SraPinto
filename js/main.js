@@ -22,6 +22,16 @@ window.isCafeCombo = function(dish) {
     return id.includes('cafe') || id.includes('café') || nombre.includes('+ café') || nombre.includes('+ cafe') || (nombre.includes('combo') && (nombre.includes('café') || nombre.includes('cafe')));
 };
 
+window.isComboDish = function(dish) {
+    if (!dish) return false;
+    if (dish.badge && dish.badge.toLowerCase().includes('combo')) return true;
+    if (dish.badgeClass && (dish.badgeClass.includes('highlight') || dish.badgeClass.includes('badge-value'))) return true;
+    const id = (dish.id || '').toLowerCase();
+    const nombre = (dish.nombre || '').toLowerCase();
+    if (id.startsWith('b-cafe') || id === 'b-cafe-8oz' || id === 'b-cafe-12oz') return false;
+    return nombre.includes('combo') || id.includes('combo') || nombre.includes('+ café') || nombre.includes('+ cafe') || (id.includes('cafe') && (id.includes('pinto') || id.includes('empanada') || id.includes('burrote')));
+};
+
 // ========================================
 // 6 OPCIONES OFICIALES DE EMPANADAS (CANÓNICAS)
 // ========================================
@@ -1031,6 +1041,16 @@ const MenuController = {
             precio: 3500,
             img: '<img src="images-catalogo/Quesopinto.jpeg" alt="Queso Pinto">'
         },
+        {
+            id: 'c-queso-pinto-cafe',
+            categoria: 'pintos',
+            nombre: 'Combo: Queso Pinto + Café',
+            desc: 'Gallo pinto envuelto en queso mozzarella, con huevo y natilla, acompañado de Café Grande.',
+            precio: 3000,
+            img: '<img src="images-catalogo/promo_quesopinto.jpg" alt="Combo: Queso Pinto + Café" class="img-fit">',
+            badge: 'Combo',
+            badgeClass: 'badge-value'
+        },
 
         // ── SNACKS & ANTOJOS ──
         {
@@ -1536,6 +1556,14 @@ const MenuController = {
                     if (this.customPrices && this.customPrices[d.id] !== undefined && !isNaN(this.customPrices[d.id])) {
                         itemPrecio = this.customPrices[d.id];
                     }
+                    const isCombo = (typeof window.isComboDish === 'function' ? window.isComboDish(d) : false) ||
+                                    (d.badge && d.badge.toLowerCase().includes('combo')) ||
+                                    (original && original.badge && original.badge.toLowerCase().includes('combo')) ||
+                                    (canonical && canonical.badge && canonical.badge.toLowerCase().includes('combo'));
+
+                    const itemBadge = d.badge || (original ? original.badge : (canonical ? canonical.badge : (isCombo ? 'Combo' : null)));
+                    const itemBadgeClass = d.badgeClass || (original ? original.badgeClass : (canonical ? canonical.badgeClass : (isCombo ? 'badge-value' : null)));
+
                     return {
                         id: d.id,
                         categoria: d.categoria,
@@ -1543,13 +1571,28 @@ const MenuController = {
                         desc: d.desc || (original ? original.desc : (canonical ? canonical.desc : '')),
                         precio: itemPrecio,
                         costo: d.costo || (original ? original.costo : (canonical ? canonical.costo : 0)),
-                        badge: d.badge || (original ? original.badge : (canonical ? canonical.badge : null)),
-                        badgeClass: d.badgeClass || (original ? original.badgeClass : (canonical ? canonical.badgeClass : null)),
+                        badge: itemBadge,
+                        badgeClass: itemBadgeClass,
                         requiresOptions: d.requiresOptions !== undefined ? d.requiresOptions : (canonical ? true : (original ? original.requiresOptions : isEmp)),
                         options: (d.options && d.options.length) ? d.options : (canonical ? canonical.options : (original ? original.options : (isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null))),
                         img: d.img && d.img.startsWith('<') ? d.img : `<img src="${d.img || (original && original.img ? (original.img.match(/src="([^"]+)"/) ? original.img.match(/src="([^"]+)"/)[1] : original.img) : (canonical ? canonical.img : 'images-catalogo/Señor Pinto.jpeg'))}" alt="${d.nombre}" class="img-fit">`
                     };
                 });
+
+            // Sincronizar badge y badgeClass de combos en Firestore si no los tienen
+            if (window.FirebaseDB && this.volioDishes && this.volioDishes.length > 0) {
+                this.volioDishes.forEach(vd => {
+                    const isCombo = typeof window.isComboDish === 'function' && window.isComboDish(vd);
+                    if (isCombo && (!vd.badge || !vd.badgeClass)) {
+                        vd.badge = 'Combo';
+                        vd.badgeClass = 'badge-value';
+                        window.FirebaseDB.collection('volio_platillos').doc(vd.id).update({
+                            badge: 'Combo',
+                            badgeClass: 'badge-value'
+                        }).catch(err => console.warn("Firestore combo badge update skipped:", err));
+                    }
+                });
+            }
 
             this.MENU_DATA = mappedVolio;
 
@@ -1577,7 +1620,13 @@ const MenuController = {
                             item.requiresOptions = true;
                             item.options = (vd.options && vd.options.length) ? vd.options : ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
                         }
+                        const isCombo = typeof window.isComboDish === 'function' ? window.isComboDish(vd) : false;
+                        if (isCombo && (!item.badge || !item.badgeClass)) {
+                            item.badge = 'Combo';
+                            item.badgeClass = 'badge-value';
+                        }
                     } else {
+                        const isCombo = typeof window.isComboDish === 'function' ? window.isComboDish(vd) : false;
                         const newDish = {
                             id: vd.id,
                             categoria: vd.categoria || 'snacks',
@@ -1586,6 +1635,8 @@ const MenuController = {
                             ingredientes: vd.ingredientes || '',
                             precio: vd.precio || 0,
                             costo: vd.costo || 0,
+                            badge: vd.badge || (isCombo ? 'Combo' : null),
+                            badgeClass: vd.badgeClass || (isCombo ? 'badge-value' : null),
                             requiresOptions: vd.requiresOptions !== undefined ? vd.requiresOptions : isEmp,
                             options: vd.options || (isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null),
                             img: vd.img && vd.img.startsWith('<') ? vd.img : `<img src="${vd.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${vd.nombre}" class="img-fit">`

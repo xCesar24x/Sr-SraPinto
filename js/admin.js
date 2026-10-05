@@ -2613,7 +2613,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     ingredientes: 'Pinto, queso frito, huevo frito, plátano maduro + café chorreado 12oz',
                     precio: 4000,
                     costo: 1350,
-                    img: 'images-catalogo/señorpintocombo.jpeg'
+                    img: 'images-catalogo/señorpintocombo.jpeg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value'
                 },
                 {
                     id: 'p-burrote',
@@ -2633,7 +2635,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     ingredientes: 'Tortilla de harina, pinto, queso, huevo, natilla + café chorreado 12oz',
                     precio: 3500,
                     costo: 1200,
-                    img: 'images-catalogo/BurrotedePintocafe.jpg'
+                    img: 'images-catalogo/BurrotedePintocafe.jpg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value'
                 },
                 {
                     id: 'p-queso-pinto',
@@ -2651,9 +2655,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     categoria: 'desayuno',
                     desc: 'Gallo pinto con abundante queso acompañado de Café Premium.',
                     ingredientes: 'Gallo pinto, doble queso frito + café 12oz',
-                    precio: 4000,
+                    precio: 3000,
                     costo: 1350,
-                    img: 'images-catalogo/promo_quesopinto.jpg'
+                    img: 'images-catalogo/promo_quesopinto.jpg',
+                    badge: 'Combo',
+                    badgeClass: 'badge-value'
                 },
 
                 // 🥩 ALMUERZOS
