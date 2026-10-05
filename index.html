@@ -656,8 +656,11 @@
         .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
         .hero-overlay {
             position: absolute; bottom: 20px; left: 20px; font-family: 'Rotio', 'Bebas Neue', cursive;
-            font-size: 1.8rem; color: white; background: rgba(0,0,0,0.6); padding: 5px 15px;
-            border-radius: 10px; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 10px;
+            font-size: 1.8rem; color: white; background: rgba(0,0,0,0.65); padding: 6px 16px;
+            border-radius: 10px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 40px);
+            pointer-events: none;
             transform: translateY(10px); opacity: 0; transition: all 0.5s ease 0.5s;
         }
         .carousel-slide.active .hero-overlay { transform: translateY(0); opacity: 1; }
@@ -840,7 +843,7 @@
         @media (max-width: 600px) {
             .hub-buttons-grid { grid-template-columns: 1fr; }
             .hero-card { height: 230px; }
-            .hero-overlay { font-size: 1.15rem; bottom: 12px; left: 12px; padding: 4px 10px; }
+            .hero-overlay { font-size: 1.15rem; bottom: 12px; left: 12px; padding: 4px 12px; max-width: calc(100% - 24px); }
         }
 
         /* MENU VIEW */
@@ -1297,36 +1300,36 @@
             <!-- Hero Carousel -->
             <div class="hero-card" id="hero-carousel">
                 <div class="carousel-slide active">
-                    <img src="images-catalogo/carrusel_combopinto.png" alt="Combo Señor Pinto">
-                    <div class="hero-overlay">☕ COMBOS CON CAFÉ CHORREADO</div>
+                    <img src="images-catalogo/carrusel_combopinto.png" alt="Señor Pinto">
+                    <div class="hero-overlay">☕ Señor Pinto</div>
                 </div>
                 <div class="carousel-slide">
-                    <img src="images-catalogo/carrusel_casado.jpg" alt="Casado con Carne en Salsa">
-                    <div class="hero-overlay">🍛 CASADOS TRADICIONALES</div>
+                    <img src="images-catalogo/carrusel_casado.jpg" alt="Casados Tradicionales">
+                    <div class="hero-overlay">🍛 Casados Tradicionales</div>
                 </div>
                 <div class="carousel-slide">
-                    <img src="images-catalogo/carrusel_canastas_birria.jpg" alt="Canastas de Birria y Queso">
-                    <div class="hero-overlay">🧀 CANASTAS DE BIRRIA Y QUESO</div>
+                    <img src="images-catalogo/carrusel_canastas_birria.jpg" alt="Patacones">
+                    <div class="hero-overlay">🧀 Patacones</div>
                 </div>
                 <div class="carousel-slide">
-                    <img src="images-catalogo/carrusel_quesadilla.jpg" alt="Quesadilla con Carne y Queso">
-                    <div class="hero-overlay">🌮 QUESADILLAS GOURMET</div>
+                    <img src="images-catalogo/carrusel_quesadilla.jpg" alt="Quesadillas">
+                    <div class="hero-overlay">🌮 Quesadillas</div>
                 </div>
                 <div class="carousel-slide">
-                    <img src="images-catalogo/carrusel_hamburguesa.jpg" alt="Sra. Hamburguesa con Papas">
-                    <div class="hero-overlay">🍔 SRA. HAMBURGUESA ARTESANAL</div>
+                    <img src="images-catalogo/carrusel_hamburguesa.jpg" alt="Sra. Hamburguesa con papas">
+                    <div class="hero-overlay">🍔 Sra. Hamburguesa con papas</div>
                 </div>
                 <div class="carousel-slide">
-                    <img src="images-catalogo/carrusel_tacotico.jpg" alt="Taco Tico Tradicional">
-                    <div class="hero-overlay">🌮 TACO TICO CRUJIENTE</div>
+                    <img src="images-catalogo/carrusel_tacotico.jpg" alt="Taco Tico Crujiente">
+                    <div class="hero-overlay">🌮 Taco Tico Crujiente</div>
                 </div>
                 <div class="carousel-slide">
-                    <img src="images-catalogo/carrusel_papascargadas.jpg" alt="Papas Cargadas con Carne Mechada">
-                    <div class="hero-overlay">🍟 PAPAS CARGADAS CON CARNE</div>
+                    <img src="images-catalogo/carrusel_papascargadas.jpg" alt="PapiCarne">
+                    <div class="hero-overlay">🍟 PapiCarne</div>
                 </div>
                 <div class="carousel-slide">
-                    <img src="images-catalogo/carrusel_quesopinto.jpg" alt="Queso Pinto con Natilla">
-                    <div class="hero-overlay">🍳 QUESO PINTO CRUJIENTE</div>
+                    <img src="images-catalogo/carrusel_quesopinto.jpg" alt="Queso Pinto Crujiente">
+                    <div class="hero-overlay">🍳 Queso Pinto Crujiente</div>
                 </div>
             </div>
 
