@@ -1685,7 +1685,8 @@
         }
 
         .pos-ticket-items-wrap {
-            flex: 1;
+            flex: 1 1 0px;
+            min-height: 0;
             overflow-y: auto;
             padding: 12px 16px;
             display: flex;
@@ -1787,6 +1788,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .pos-ticket-pay-title {
@@ -2081,6 +2083,15 @@
             min-width: 18px;
             text-align: center;
         }
+        .pos-mob-open-btn.btn-has-items {
+            background: linear-gradient(135deg, #25d366, #20bf6b) !important;
+            color: #0b2212 !important;
+            box-shadow: 0 4px 18px rgba(37, 211, 102, 0.5) !important;
+        }
+        .pos-mob-open-btn.btn-has-items .pos-mob-btn-badge {
+            background: #0b2212 !important;
+            color: #2ecc71 !important;
+        }
 
         /* ─── RESPONSIVE MÓVIL Y VERTICAL (SUNMI V2 / TABLET / CELULAR) ─── */
         @media (max-width: 992px), (orientation: portrait) {
@@ -2189,10 +2200,16 @@
             /* COMANDA EN PANTALLA COMPLETA DESLIZANTE */
             .pos-ticket-sidebar {
                 position: fixed !important;
-                inset: 0 !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
                 width: 100vw !important;
                 max-width: 100vw !important;
-                height: 100vh !important;
+                height: 100% !important;
+                height: 100dvh !important;
+                max-height: 100% !important;
+                max-height: 100dvh !important;
                 z-index: 99990 !important;
                 background: #140306 !important;
                 display: flex !important;
@@ -2202,6 +2219,8 @@
                 transform: translateY(105%) !important;
                 opacity: 0 !important;
                 pointer-events: none !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
                 transition: transform 0.28s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.2s ease !important;
             }
             .pos-ticket-sidebar.mobile-open {
@@ -2251,6 +2270,7 @@
             }
 
             .pos-ticket-header {
+                flex-shrink: 0 !important;
                 padding: 10px 14px;
                 background: #190107;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -2264,6 +2284,7 @@
                 font-size: 0.75rem;
             }
             .pos-ticket-client-box {
+                flex-shrink: 0 !important;
                 padding: 10px 14px;
                 gap: 8px;
             }
@@ -2274,8 +2295,10 @@
             .pos-ticket-items-wrap {
                 padding: 10px 14px;
                 gap: 8px;
-                flex: 1;
-                overflow-y: auto;
+                flex: 1 1 0px !important;
+                min-height: 0 !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
             }
             .pos-ticket-item {
                 padding: 10px 12px;
@@ -2309,10 +2332,15 @@
                 min-width: 18px;
             }
             .pos-ticket-footer {
-                padding: 12px 14px 16px 14px;
-                background: #0f0104;
-                border-top: 1.5px solid rgba(255, 255, 255, 0.1);
-                gap: 10px;
+                flex-shrink: 0 !important;
+                position: sticky !important;
+                bottom: 0 !important;
+                padding: 10px 14px max(14px, env(safe-area-inset-bottom)) 14px !important;
+                background: #0f0104 !important;
+                border-top: 2px solid rgba(46, 204, 113, 0.35) !important;
+                box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.9) !important;
+                z-index: 50 !important;
+                gap: 8px !important;
             }
             .pos-ticket-pay-title {
                 font-size: 0.72rem;
@@ -2326,7 +2354,7 @@
                 border-radius: 8px;
             }
             .pos-ticket-total-row {
-                padding: 4px 0;
+                padding: 2px 0;
             }
             .pos-ticket-total-label {
                 font-size: 1.05rem;
@@ -2335,9 +2363,16 @@
                 font-size: 1.45rem;
             }
             .pos-ticket-btn-submit {
-                padding: 13px 12px;
-                font-size: 0.95rem;
-                border-radius: 12px;
+                display: flex !important;
+                width: 100% !important;
+                padding: 13px 12px !important;
+                font-size: 0.95rem !important;
+                font-weight: 900 !important;
+                border-radius: 12px !important;
+                background: linear-gradient(135deg, #25d366, #20bf6b) !important;
+                color: #0b2212 !important;
+                box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45) !important;
+                cursor: pointer !important;
             }
         }
 
@@ -2688,7 +2723,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=4.0"></script>
+<script src="js/main.js?v=4.1"></script>
 
 <script>
 /**
@@ -3082,7 +3117,30 @@ const PosManager = {
         if (mobBtnBadge) mobBtnBadge.textContent = count;
 
         const topBadge = document.getElementById('top-comanda-badge');
-        if (topBadge) topBadge.textContent = count;
+        if (topBadge) {
+            topBadge.textContent = count;
+            topBadge.style.background = count > 0 ? '#2ecc71' : '#f7b731';
+            topBadge.style.color = '#1a0307';
+        }
+
+        const mobOpenBtn = document.getElementById('pos-mob-open-btn');
+        if (mobOpenBtn) {
+            if (count > 0) {
+                mobOpenBtn.classList.add('btn-has-items');
+                mobOpenBtn.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <span>Completar Venta</span>
+                    <span id="pos-mob-btn-badge" class="pos-mob-btn-badge" style="background:#0b2212; color:#2ecc71;">${count}</span>
+                `;
+            } else {
+                mobOpenBtn.classList.remove('btn-has-items');
+                mobOpenBtn.innerHTML = `
+                    <i class="fas fa-receipt"></i>
+                    <span>Ver Comanda</span>
+                    <span id="pos-mob-btn-badge" class="pos-mob-btn-badge">0</span>
+                `;
+            }
+        }
     },
 
     openComandaModal() {

@@ -365,7 +365,25 @@ const CartManager = {
         // Toggle visibility of checkout button
         const checkoutBtn = document.getElementById('btn-checkout');
         if (checkoutBtn) {
-            checkoutBtn.style.display = this.items.length > 0 ? 'flex' : 'none';
+            const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+            if (isSalesPOS) {
+                checkoutBtn.style.display = 'flex';
+                if (this.items.length === 0) {
+                    checkoutBtn.style.opacity = '0.55';
+                    checkoutBtn.style.background = 'rgba(255, 255, 255, 0.15)';
+                    checkoutBtn.style.color = '#ffffff';
+                    checkoutBtn.style.boxShadow = 'none';
+                    checkoutBtn.innerHTML = '<i class="fas fa-shopping-basket"></i> Agrega platillos para cobrar';
+                } else {
+                    checkoutBtn.style.opacity = '1';
+                    checkoutBtn.style.background = 'linear-gradient(135deg, #25d366, #20bf6b)';
+                    checkoutBtn.style.color = '#0b2212';
+                    checkoutBtn.style.boxShadow = '0 6px 20px rgba(37, 211, 102, 0.45)';
+                    checkoutBtn.innerHTML = `<i class="fas fa-bolt"></i> Cobrar ₡${this.getTotal().toLocaleString()} / Guardar Comanda`;
+                }
+            } else {
+                checkoutBtn.style.display = this.items.length > 0 ? 'flex' : 'none';
+            }
         }
     },
 
@@ -469,9 +487,13 @@ const CartManager = {
     },
 
     async procesarPedido() {
-        if (this.items.length === 0) return;
-
         const isSalesPOS = window.location.pathname.includes('ventas') || window.location.href.includes('ventas');
+        if (this.items.length === 0) {
+            if (isSalesPOS) {
+                alert("⚠️ La comanda está vacía. Por favor agregá al menos un platillo.");
+            }
+            return;
+        }
 
         if (!this.customerName || this.customerName.trim() === '') {
             if (isSalesPOS) {
