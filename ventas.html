@@ -2093,6 +2093,15 @@
             color: #2ecc71 !important;
         }
 
+        /* Cuando la comanda está abierta, OCULTAR TOTALMENTE la barra móvil inferior para que NUNCA tape el botón de cobrar */
+        body.pos-comanda-open #pos-mobile-bar {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            opacity: 0 !important;
+            z-index: -100 !important;
+        }
+
         /* ─── RESPONSIVE MÓVIL Y VERTICAL (SUNMI V2 / TABLET / CELULAR) ─── */
         @media (max-width: 992px), (orientation: portrait) {
             #pos-top-nav {
@@ -2125,6 +2134,8 @@
                 margin-top: 56px !important;
                 width: 100% !important;
                 overflow: hidden !important;
+                position: static !important;
+                z-index: auto !important;
             }
 
             /* CATÁLOGO A PANTALLA COMPLETA (100% ANCHO EN VERTICAL) */
@@ -2210,7 +2221,7 @@
                 height: 100dvh !important;
                 max-height: 100% !important;
                 max-height: 100dvh !important;
-                z-index: 99990 !important;
+                z-index: 999999 !important;
                 background: #140306 !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -2335,11 +2346,11 @@
                 flex-shrink: 0 !important;
                 position: sticky !important;
                 bottom: 0 !important;
-                padding: 10px 14px max(14px, env(safe-area-inset-bottom)) 14px !important;
+                padding: 10px 14px max(20px, env(safe-area-inset-bottom)) 14px !important;
                 background: #0f0104 !important;
-                border-top: 2px solid rgba(46, 204, 113, 0.35) !important;
-                box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.9) !important;
-                z-index: 50 !important;
+                border-top: 2px solid rgba(46, 204, 113, 0.4) !important;
+                box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.95) !important;
+                z-index: 999999 !important;
                 gap: 8px !important;
             }
             .pos-ticket-pay-title {
@@ -2365,14 +2376,17 @@
             .pos-ticket-btn-submit {
                 display: flex !important;
                 width: 100% !important;
-                padding: 13px 12px !important;
-                font-size: 0.95rem !important;
+                padding: 15px 12px !important;
+                font-size: 1.02rem !important;
                 font-weight: 900 !important;
-                border-radius: 12px !important;
+                border-radius: 14px !important;
                 background: linear-gradient(135deg, #25d366, #20bf6b) !important;
                 color: #0b2212 !important;
-                box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45) !important;
+                box-shadow: 0 4px 20px rgba(37, 211, 102, 0.5) !important;
                 cursor: pointer !important;
+                position: relative !important;
+                z-index: 100 !important;
+                margin-top: 4px !important;
             }
         }
 
@@ -2723,7 +2737,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=4.1"></script>
+<script src="js/main.js?v=4.2"></script>
 
 <script>
 /**
@@ -3147,6 +3161,9 @@ const PosManager = {
         const sidebar = document.getElementById('pos-ticket-sidebar');
         if (sidebar) {
             sidebar.classList.add('mobile-open');
+            document.body.classList.add('pos-comanda-open');
+            const mobBar = document.getElementById('pos-mobile-bar');
+            if (mobBar) mobBar.style.setProperty('display', 'none', 'important');
             if (navigator.vibrate) navigator.vibrate(35);
         }
     },
@@ -3155,6 +3172,9 @@ const PosManager = {
         const sidebar = document.getElementById('pos-ticket-sidebar');
         if (sidebar) {
             sidebar.classList.remove('mobile-open');
+            document.body.classList.remove('pos-comanda-open');
+            const mobBar = document.getElementById('pos-mobile-bar');
+            if (mobBar) mobBar.style.removeProperty('display');
             if (navigator.vibrate) navigator.vibrate(25);
         }
     },
@@ -3162,7 +3182,16 @@ const PosManager = {
     toggleComandaModal() {
         const sidebar = document.getElementById('pos-ticket-sidebar');
         if (sidebar) {
-            sidebar.classList.toggle('mobile-open');
+            const isOpen = sidebar.classList.toggle('mobile-open');
+            document.body.classList.toggle('pos-comanda-open', isOpen);
+            const mobBar = document.getElementById('pos-mobile-bar');
+            if (mobBar) {
+                if (isOpen) {
+                    mobBar.style.setProperty('display', 'none', 'important');
+                } else {
+                    mobBar.style.removeProperty('display');
+                }
+            }
             if (navigator.vibrate) navigator.vibrate(30);
         }
     },
