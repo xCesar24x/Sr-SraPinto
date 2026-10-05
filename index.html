@@ -649,7 +649,7 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
         .carousel-slide {
-            position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out;
+            position: absolute; inset: 0; opacity: 0; transition: opacity 0.8s ease-in-out;
             z-index: 0;
         }
         .carousel-slide.active { opacity: 1; z-index: 1; }
@@ -661,7 +661,7 @@
             border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             display: inline-flex; align-items: center; gap: 8px; max-width: calc(100% - 40px);
             pointer-events: none;
-            transform: translateY(10px); opacity: 0; transition: all 0.5s ease 0.5s;
+            transform: translateY(10px); opacity: 0; transition: all 0.4s ease 0.2s;
         }
         .carousel-slide.active .hero-overlay { transform: translateY(0); opacity: 1; }
 
@@ -1575,7 +1575,7 @@ if(slides.length > 0) {
         slides[currentSlide].classList.remove('active');
         currentSlide = (currentSlide + 1) % slides.length;
         slides[currentSlide].classList.add('active');
-    }, 5500);
+    }, 3000);
 }
 
 </script>
