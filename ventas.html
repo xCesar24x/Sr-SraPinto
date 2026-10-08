@@ -3297,7 +3297,27 @@ const PosManager = {
             CartManager.items = [];
             CartManager.save();
             CartManager.updateCartUI();
+            this.renderDishes();
+            this.syncCartUI();
         }
+    },
+
+    registrarOtraVenta() {
+        if (window.CartManager) {
+            window.CartManager.items = [];
+            window.CartManager.hasAllergies = false;
+            window.CartManager.allergiesText = '';
+            window.CartManager.editingOrderId = null;
+            window.CartManager.customerPhone = '';
+            window.CartManager.save();
+            window.CartManager.updateCartUI();
+            window.CartManager.syncDefaultCustomerName();
+        }
+        this.renderDishes();
+        this.syncCartUI();
+        this.closeComandaModal();
+        const successOverlay = document.getElementById('success-overlay');
+        if (successOverlay) successOverlay.classList.remove('active');
     }
 };
 
@@ -3320,7 +3340,7 @@ window.PosManager = PosManager;
             <button class="success-btn" onclick="CartManager.imprimirTiquete(window.lastProcessedOrder)" style="background: linear-gradient(135deg, #f7b731, #f39c12); color: #2B0A11; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="fas fa-print"></i> IMPRIMIR TIQUETE
             </button>
-            <button class="success-btn" onclick="CartManager.resetAndClose()">
+            <button class="success-btn" onclick="if(window.PosManager && window.PosManager.registrarOtraVenta){window.PosManager.registrarOtraVenta();}else{CartManager.resetAndClose();}">
                 <i class="fas fa-plus-circle"></i> REGISTRAR OTRA VENTA
             </button>
         </div>
@@ -3329,7 +3349,11 @@ window.PosManager = PosManager;
 <script>
     document.getElementById('success-overlay').addEventListener('click', (e) => {
         if(e.target === document.getElementById('success-overlay')) {
-            CartManager.resetAndClose();
+            if (window.PosManager && typeof window.PosManager.registrarOtraVenta === 'function') {
+                window.PosManager.registrarOtraVenta();
+            } else if (window.CartManager) {
+                window.CartManager.resetAndClose();
+            }
         }
     });
 </script>

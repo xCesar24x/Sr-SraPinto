@@ -627,6 +627,21 @@ const CartManager = {
                     console.log("✅ Pedido creado en Firebase");
                     window.lastProcessedOrder = { ...pedido, id: docRef.id };
 
+                    // Limpieza inmediata del carrito en POS para evitar que la próxima orden herede platillos
+                    if (isSalesPOS) {
+                        this.items = [];
+                        this.hasAllergies = false;
+                        this.allergiesText = '';
+                        this.editingOrderId = null;
+                        this.customerPhone = '';
+                        this.save();
+                        this.updateCartUI();
+                        if (window.PosManager) {
+                            if (typeof window.PosManager.renderDishes === 'function') window.PosManager.renderDishes();
+                            if (typeof window.PosManager.syncCartUI === 'function') window.PosManager.syncCartUI();
+                        }
+                    }
+
                     // Disparar auto-impresión inmediata en Sunmi V2 si está activada
                     const autoPrintVal = localStorage.getItem('pos_auto_print');
                     const shouldAutoPrint = autoPrintVal === null ? true : (autoPrintVal === 'true');
@@ -725,14 +740,16 @@ const CartManager = {
         this.save();
         this.updateCartUI();
         
+        if (window.PosManager) {
+            if (typeof window.PosManager.syncCartUI === 'function') window.PosManager.syncCartUI();
+            if (typeof window.PosManager.renderDishes === 'function') window.PosManager.renderDishes();
+            if (typeof window.PosManager.closeComandaModal === 'function') window.PosManager.closeComandaModal();
+        }
+
         const successOverlay = document.getElementById('success-overlay');
         if (successOverlay) successOverlay.classList.remove('active');
         
-        if (isSalesPOS) {
-            if (window.PosManager && typeof window.PosManager.closeComandaModal === 'function') {
-                window.PosManager.closeComandaModal();
-            }
-        } else {
+        if (!isSalesPOS && typeof UIController !== 'undefined' && typeof UIController.toggleCart === 'function') {
             UIController.toggleCart(); // Cierra el carrito solo en web externa
         }
     },
