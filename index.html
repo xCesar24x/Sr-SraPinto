@@ -1281,7 +1281,7 @@
                 <div class="schedule-grid" style="grid-template-columns: 1fr;">
                     <div class="sched-item" style="text-align: center; border-color: rgba(37, 211, 102, 0.4); background: rgba(37, 211, 102, 0.05);">
                         <div class="sched-day" style="font-size: 1.1rem; margin-bottom: 5px; color: var(--blanco);">ABIERTOS DE LUNES A VIERNES</div>
-                        <div class="sched-hour" style="color: #25d366; font-size: 1rem;">¡Te esperamos!</div>
+                        <div class="sched-hour" style="color: #25d366; font-size: 1rem;">6:00 am - 3:00 pm • ¡Te esperamos!</div>
                     </div>
                 </div>
             </div>
@@ -1516,51 +1516,79 @@ function showCategory(cat) {
 
 
 /**
- * LÓGICA DE HORARIO (STATUS ENGINE) — Ahora controlado por el Admin via Firebase
+ * LÓGICA DE HORARIO (STATUS ENGINE) — Abierto por defecto Lun-Vie 6am a 3pm con soporte de control manual
  */
-function checkStatus() {
+function isWithinDefaultHours(date = new Date()) {
+    const crDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }));
+    const day = crDate.getDay(); // 0: Dom, 1: Lun, ..., 5: Vie, 6: Sáb
+    const hour = crDate.getHours();
+    const minutes = crDate.getMinutes();
+    const currentMinutes = hour * 60 + minutes;
+    const isWeekday = (day >= 1 && day <= 5);
+    const isWorkingHours = (currentMinutes >= 6 * 60 && currentMinutes < 15 * 60);
+    return isWeekday && isWorkingHours;
+}
+
+function getCRDateString(date = new Date()) {
+    const crDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }));
+    const y = crDate.getFullYear();
+    const m = String(crDate.getMonth() + 1).padStart(2, '0');
+    const d = String(crDate.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function resolveStoreStatus(estadoData, date = new Date()) {
+    const defaultOpen = isWithinDefaultHours(date);
+    if (!estadoData) {
+        return { abierto: defaultOpen, isManual: false };
+    }
+    const todayStr = getCRDateString(date);
+    if (estadoData.manualOverride === true && estadoData.overrideDate === todayStr) {
+        return {
+            abierto: estadoData.abierto === true,
+            isManual: true
+        };
+    }
+    return {
+        abierto: defaultOpen,
+        isManual: false
+    };
+}
+
+let latestEstadoDoc = null;
+
+function renderStatusBadge() {
     const dot = document.getElementById('status-dot');
     const text = document.getElementById('status-text');
-    
-    // Intentar escuchar Firebase para el estado en tiempo real
-    if (window.FirebaseDB) {
-        window.FirebaseDB.collection('config').doc('estado').onSnapshot((doc) => {
-            if (doc.exists && doc.data().abierto === true) {
-                dot.style.color = "#25d366";
-                dot.style.background = "#25d366";
-                dot.style.boxShadow = "0 0 15px #25d366";
-                text.innerText = "Abierto ahora • ¡Hacé tu pedido!";
-            } else {
-                dot.style.color = "#ff2200";
-                dot.style.background = "#ff2200";
-                dot.style.boxShadow = "0 0 15px #ff2200";
-                text.innerText = "Cerrado ahora • Revisá el horario";
-            }
-        });
+    if (!dot || !text) return;
+
+    const status = resolveStoreStatus(latestEstadoDoc);
+    if (status.abierto) {
+        dot.style.color = "#25d366";
+        dot.style.background = "#25d366";
+        dot.style.boxShadow = "0 0 15px #25d366";
+        text.innerText = "Abierto ahora • ¡Hacé tu pedido!";
     } else {
-        // Fallback: si Firebase no carga, usar horario fijo
-        const now = new Date();
-        const day = now.getDay();
-        const hour = now.getHours();
-        let isOpen = false;
-        if (day === 6 || day === 0) {
-            if (hour >= 10 && hour < 18) isOpen = true;
-        }
-        if (isOpen) {
-            dot.style.color = "#25d366";
-            dot.style.background = "#25d366";
-            dot.style.boxShadow = "0 0 15px #25d366";
-            text.innerText = "Abierto ahora • ¡Hacé tu pedido!";
-        } else {
-            dot.style.color = "#ff2200";
-            dot.style.background = "#ff2200";
-            dot.style.boxShadow = "0 0 15px #ff2200";
-            text.innerText = "Cerrado ahora • Revisá el horario";
-        }
+        dot.style.color = "#ff2200";
+        dot.style.background = "#ff2200";
+        dot.style.boxShadow = "0 0 15px #ff2200";
+        text.innerText = "Cerrado ahora • Lun-Vie 6am a 3pm";
     }
 }
-// Esperar un momento a que Firebase cargue y luego ejecutar
-setTimeout(checkStatus, 2000);
+
+function checkStatus() {
+    renderStatusBadge();
+    if (window.FirebaseDB) {
+        window.FirebaseDB.collection('config').doc('estado').onSnapshot((doc) => {
+            latestEstadoDoc = doc.exists ? doc.data() : null;
+            renderStatusBadge();
+        });
+    }
+}
+
+// Inicializar y chequear transiciones horarias cada minuto
+checkStatus();
+setInterval(renderStatusBadge, 60000);
 
 // EFECTO GLOW DINÁMICO
 document.querySelectorAll('.link-card').forEach(card => {

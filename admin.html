@@ -96,9 +96,10 @@
                             <div>
                                 <h3>Estado del Local</h3>
                                 <p id="toggle-subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.5);">Cargando...</p>
+                                <span id="toggle-schedule-badge" onclick="AdminManager.resetStoreSchedule()" style="display: none; font-size: 0.72rem; color: #f1c40f; text-decoration: underline; cursor: pointer; margin-top: 3px;" title="Volver al horario automático">Restablecer horario automático</span>
                             </div>
                         </div>
-                        <button class="toggle-btn closed" id="toggle-btn" onclick="AdminManager.toggleStore()">
+                        <button class="toggle-btn closed" id="toggle-btn" onclick="AdminManager.toggleStore()" title="Tocar para cambiar estado manualmente">
                             <span class="toggle-knob"></span>
                         </button>
                     </div>

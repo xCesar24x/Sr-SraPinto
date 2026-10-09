@@ -276,6 +276,47 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================
+    // CONTROL DE HORARIO DINÁMICO (Lun-Vie 6am a 3pm por defecto con soporte de override)
+    // ========================================
+    function isWithinDefaultHours(date = new Date()) {
+        const crDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }));
+        const day = crDate.getDay(); // 0: Dom, 1: Lun, ..., 5: Vie, 6: Sáb
+        const hour = crDate.getHours();
+        const minutes = crDate.getMinutes();
+        const currentMinutes = hour * 60 + minutes;
+        const isWeekday = (day >= 1 && day <= 5);
+        const isWorkingHours = (currentMinutes >= 6 * 60 && currentMinutes < 15 * 60);
+        return isWeekday && isWorkingHours;
+    }
+
+    function getCRDateString(date = new Date()) {
+        const crDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }));
+        const y = crDate.getFullYear();
+        const m = String(crDate.getMonth() + 1).padStart(2, '0');
+        const d = String(crDate.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+
+    function resolveStoreStatus(estadoData, date = new Date()) {
+        const defaultOpen = isWithinDefaultHours(date);
+        if (!estadoData) {
+            return { abierto: defaultOpen, isManual: false };
+        }
+        const todayStr = getCRDateString(date);
+        if (estadoData.manualOverride === true && estadoData.overrideDate === todayStr) {
+            return {
+                abierto: estadoData.abierto === true,
+                isManual: true,
+                actualizadoPor: estadoData.actualizadoPor || 'Admin'
+            };
+        }
+        return {
+            abierto: defaultOpen,
+            isManual: false
+        };
+    }
+
+    // ========================================
     // MÓDULO: Navegación & Admin Manager
     // ========================================
     window.AdminManager = {
@@ -489,21 +530,44 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
 
-        // Toggle del estado del local (Abierto / Cerrado)
+        // Toggle del estado del local (Abierto / Cerrado con soporte manual)
         async toggleStore() {
             const card = document.getElementById('store-toggle-card');
             const isCurrentlyOpen = card.classList.contains('open');
             const newState = !isCurrentlyOpen;
 
             try {
+                const todayStr = getCRDateString();
+                const defaultOpen = isWithinDefaultHours();
+                const isOverriding = (newState !== defaultOpen);
+
                 await db.collection('config').doc('estado').set({
                     abierto: newState,
-                    actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'admin',
+                    manualOverride: isOverriding,
+                    overrideDate: isOverriding ? todayStr : null,
+                    actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'Admin',
                     fecha: new Date().toISOString()
                 });
             } catch (error) {
                 console.error("Error al cambiar estado del local:", error);
                 alert("No se pudo cambiar el estado.");
+            }
+        },
+
+        // Restablecer al horario automático programado (Lun-Vie 6am a 3pm)
+        async resetStoreSchedule() {
+            try {
+                const defaultOpen = isWithinDefaultHours();
+                await db.collection('config').doc('estado').set({
+                    abierto: defaultOpen,
+                    manualOverride: false,
+                    overrideDate: null,
+                    actualizadoPor: localStorage.getItem('srsrapinto_cedula') || 'Admin',
+                    fecha: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error("Error al restablecer horario:", error);
+                alert("No se pudo restablecer el horario.");
             }
         },
 
@@ -903,32 +967,68 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // Escuchar el estado del local en tiempo real
-    db.collection('config').doc('estado').onSnapshot((doc) => {
+    // Escuchar el estado del local en tiempo real con horario automático (Lun-Vie 6am - 3pm)
+    let latestEstadoData = null;
+
+    function renderStoreStatusUI() {
         const card = document.getElementById('store-toggle-card');
         const btn = document.getElementById('toggle-btn');
         const icon = document.getElementById('toggle-icon');
         const title = card ? card.querySelector('h3') : null;
         const subtitle = document.getElementById('toggle-subtitle');
+        const badge = document.getElementById('toggle-schedule-badge');
 
         if (!card || !btn) return;
 
-        if (doc.exists && doc.data().abierto === true) {
+        const resolved = resolveStoreStatus(latestEstadoData);
+
+        if (resolved.abierto) {
             card.classList.add('open');
             btn.classList.add('open');
             btn.classList.remove('closed');
-            icon.innerHTML = '<i class="fas fa-store"></i>';
-            if(title) title.innerText = '¡Local Abierto!';
-            if(subtitle) subtitle.innerText = 'Los clientes ven que estás abierto.';
+            if (icon) icon.innerHTML = '<i class="fas fa-store"></i>';
+            if (title) title.innerText = '¡Local Abierto!';
+            if (subtitle) {
+                subtitle.innerText = resolved.isManual
+                    ? `Control manual (${resolved.actualizadoPor || 'Admin'})`
+                    : 'Horario automático (Lun-Vie 6am - 3pm)';
+            }
         } else {
             card.classList.remove('open');
             btn.classList.remove('open');
             btn.classList.add('closed');
-            icon.innerHTML = '<i class="fas fa-store-slash"></i>';
-            if(title) title.innerText = 'Local Cerrado';
-            if(subtitle) subtitle.innerText = 'Los clientes ven que estás cerrado.';
+            if (icon) icon.innerHTML = '<i class="fas fa-store-slash"></i>';
+            if (title) title.innerText = 'Local Cerrado';
+            if (subtitle) {
+                subtitle.innerText = resolved.isManual
+                    ? `Cierre manual (${resolved.actualizadoPor || 'Admin'})`
+                    : 'Fuera de horario (Abre Lun-Vie a las 6am)';
+            }
         }
+
+        if (badge) {
+            badge.style.display = resolved.isManual ? 'inline-block' : 'none';
+        }
+
+        // Auto-sincronizar documento en Firestore si expiró el override o si no coincide con el horario por defecto
+        if (latestEstadoData && !resolved.isManual && latestEstadoData.abierto !== resolved.abierto) {
+            db.collection('config').doc('estado').update({
+                abierto: resolved.abierto,
+                manualOverride: false,
+                overrideDate: null
+            }).catch(e => console.warn("Auto-sync store state error:", e));
+        }
+    }
+
+    db.collection('config').doc('estado').onSnapshot((doc) => {
+        latestEstadoData = doc.exists ? doc.data() : null;
+        renderStoreStatusUI();
     });
+
+    // Re-evaluar transiciones horarias (por ejemplo a las 6:00am y a las 3:00pm) cada minuto
+    setInterval(() => {
+        renderStoreStatusUI();
+    }, 60000);
 
     // Escuchar el estado del turno en tiempo real
     db.collection('config').doc('turno').onSnapshot((doc) => {
