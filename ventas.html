@@ -2802,6 +2802,7 @@
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
 <script src="js/main.js?v=4.4"></script>
+<script src="js/cierre-automatico.js"></script>
 
 <script>
 /**
@@ -3411,8 +3412,17 @@ window.PosManager = PosManager;
 <div id="sales-history-modal" class="dashboard-modal">
     <div class="dashboard-modal-content" style="max-width: 800px; width: 95%;">
         <div class="dashboard-modal-header">
-            <h3 class="dashboard-modal-title"><i class="fas fa-history" style="color: #3498db;"></i> Historial de Ventas</h3>
+            <h3 class="dashboard-modal-title"><i class="fas fa-history" style="color: #3498db;"></i> Historial de Ventas de Hoy</h3>
             <button onclick="SalesDashboard.closeSalesHistory()" class="dashboard-modal-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="sales-history-summary-bar" style="background: rgba(52, 152, 219, 0.12); border-bottom: 1px solid rgba(52, 152, 219, 0.25); padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; flex-wrap: wrap; gap: 8px;">
+            <span style="color: rgba(255,255,255,0.8); display: flex; align-items: center; gap: 7px;">
+                <i class="fas fa-receipt" style="color: #3498db;"></i> Comandas facturadas hoy: <strong id="sales-history-total-orders" style="color: white; font-weight: 800;">0</strong>
+            </span>
+            <span style="display: flex; align-items: center; gap: 7px;">
+                <span style="color: rgba(255,255,255,0.7); font-size: 0.82rem;">Total Facturado:</span>
+                <strong id="sales-history-total-amount" style="font-size: 1.15rem; font-weight: 900; color: #2ecc71;">₡0</strong>
+            </span>
         </div>
         <div class="dashboard-modal-body" style="padding: 10px; overflow-y: auto;">
             <div class="audit-table-container">
@@ -3906,8 +3916,15 @@ const SalesDashboard = {
         // Ordenar pedidos de más reciente a más antiguo (el primero arriba)
         filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
+        // Actualizar barra de resumen superior
+        const totalHoy = filteredOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const totalOrdersEl = document.getElementById('sales-history-total-orders');
+        const totalAmountEl = document.getElementById('sales-history-total-amount');
+        if (totalOrdersEl) totalOrdersEl.innerText = `${filteredOrders.length} ${filteredOrders.length === 1 ? 'comanda' : 'comandas'}`;
+        if (totalAmountEl) totalAmountEl.innerText = `₡${totalHoy.toLocaleString()}`;
+
         if (filteredOrders.length === 0) {
-            container.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; opacity: 0.5;">No hay pedidos registrados hoy.</td></tr>`;
+            container.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 25px; opacity: 0.6; font-size: 0.9rem;"><i class="fas fa-info-circle"></i> No hay pedidos registrados hoy aún.</td></tr>`;
             return;
         }
 
@@ -3916,7 +3933,7 @@ const SalesDashboard = {
             const dateStr = dateObj.toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit' }) + ' ' + 
                             dateObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
             
-            let detailsText = order.items.map(i => `${i.cantidad}x ${i.nombre.split(' (')[0]}`).join(', ');
+            let detailsText = (order.items || []).map(i => `${i.cantidad || 1}x ${(i.nombre || '').split(' (')[0]}`).join(', ');
             if (detailsText.length > 40) detailsText = detailsText.substring(0, 37) + '...';
 
             let statusBadge = '';
@@ -3939,7 +3956,7 @@ const SalesDashboard = {
                     <td style="font-weight:700;">[#${order.num_pedido || order.id.slice(-5).toUpperCase()}] ${order.cliente} ${statusBadge}</td>
                     <td style="font-weight:900; color: var(--mostaza);">₡${(order.total || 0).toLocaleString()}</td>
                     <td><span class="user-badge badge-${methodClass}">${payMethod}</span></td>
-                    <td style="font-size: 0.8rem; opacity: 0.8;" title="${order.items.map(i => `${i.cantidad}x ${i.nombre}`).join('\n')}">${detailsText}</td>
+                    <td style="font-size: 0.8rem; opacity: 0.8;" title="${(order.items || []).map(i => `${i.cantidad || 1}x ${i.nombre || ''}`).join('\n')}">${detailsText}</td>
                 </tr>
             `;
         }).join('');
@@ -4160,18 +4177,33 @@ const SalesDashboard = {
             
             // Transacción atómica para obtener comanda secuencial
             try {
+                const nowCR = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }));
+                const todayStr = `${nowCR.getFullYear()}-${String(nowCR.getMonth() + 1).padStart(2, '0')}-${String(nowCR.getDate()).padStart(2, '0')}`;
+
                 const turnoRef = db.collection('config').doc('turno');
                 await db.runTransaction(async (transaction) => {
                     const turnoDoc = await transaction.get(turnoRef);
                     if (!turnoDoc.exists) {
-                        transaction.set(turnoRef, { activo: true, siguiente_numero: 2, fecha: new Date().toISOString() });
+                        transaction.set(turnoRef, { activo: true, siguiente_numero: 2, fechaTurno: todayStr, fecha: new Date().toISOString() });
                         numPedido = 1;
                     } else {
-                        const data = turnoDoc.data();
-                        if (data.activo) {
+                        const data = turnoDoc.data() || {};
+                        const turnoDate = data.fechaTurno || (data.fecha ? data.fecha.split('T')[0] : '');
+
+                        // Si es un nuevo día, reiniciar automáticamente a la comanda #1
+                        if (turnoDate && turnoDate !== todayStr) {
+                            numPedido = 1;
+                            transaction.update(turnoRef, { 
+                                siguiente_numero: 2,
+                                fechaTurno: todayStr,
+                                activo: true,
+                                fechaActualizacion: new Date().toISOString()
+                            });
+                        } else if (data.activo) {
                             numPedido = data.siguiente_numero || 1;
                             transaction.update(turnoRef, { 
                                 siguiente_numero: numPedido + 1,
+                                fechaTurno: todayStr,
                                 fechaActualizacion: new Date().toISOString()
                             });
                         } else {

@@ -317,12 +317,19 @@
                             <select id="report-period-select" onchange="ReportsManager.handlePeriodChange()" class="report-select">
                                 <option value="hoy" selected>Hoy</option>
                                 <option value="ayer">Ayer</option>
+                                <option value="dia_especifico">Día Específico 📅</option>
                                 <option value="7dias">Últimos 7 días</option>
                                 <option value="mes">Este Mes</option>
-                                <option value="rango">Rango Personalizado 📅</option>
+                                <option value="rango">Rango de Fechas 📆</option>
                                 <option value="todos">Histórico Completo</option>
                             </select>
                             
+                            <!-- Single Date Picker Container (visible when dia_especifico is selected) -->
+                            <div id="single-date-container" style="display: none; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);">
+                                <span style="font-size: 0.8rem; color: var(--mostaza); font-weight: 700;"><i class="fas fa-calendar-day"></i> Día:</span>
+                                <input type="date" id="report-single-date" onchange="ReportsManager.loadAnalytics()" class="report-select" style="padding: 5px; font-size: 0.85rem;">
+                            </div>
+
                             <!-- Custom Date Range Picker Container (hidden by default) -->
                             <div id="custom-range-container" style="display: none; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--border);">
                                 <input type="date" id="report-start-date" onchange="ReportsManager.loadAnalytics()" class="report-select" style="padding: 5px; font-size: 0.85rem;">
@@ -344,6 +351,43 @@
                     </button>
                 </div>
 
+                <!-- RESUMEN FINANCIERO PRINCIPAL (Ventas, Costos, Utilidad, Unidades) -->
+                <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 15px;">
+                    <div class="stat-card" style="border-color: rgba(46, 204, 113, 0.4); background: linear-gradient(145deg, rgba(46, 204, 113, 0.08), rgba(0,0,0,0.25));">
+                        <div class="stat-icon" style="color: #2ecc71; background: rgba(46, 204, 113, 0.15);"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-info">
+                            <h3 style="color: #2ecc71; font-weight: 800; font-size: 0.85rem;">Total de Ventas</h3>
+                            <p id="stat-revenue" style="color: #2ecc71; font-size: 1.55rem; font-weight: 900;">₡0</p>
+                            <span id="stat-revenue-orders" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">0 pedidos facturados</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(231, 76, 60, 0.4); background: linear-gradient(145deg, rgba(231, 76, 60, 0.08), rgba(0,0,0,0.25));">
+                        <div class="stat-icon" style="color: #e74c3c; background: rgba(231, 76, 60, 0.15);"><i class="fas fa-tags"></i></div>
+                        <div class="stat-info">
+                            <h3 style="color: #ff6b6b; font-weight: 800; font-size: 0.85rem;">Total del Costo (COGS)</h3>
+                            <p id="stat-cogs" style="color: #e74c3c; font-size: 1.55rem; font-weight: 900;">₡0</p>
+                            <span id="stat-cogs-pct" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">0% sobre ventas</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(241, 196, 15, 0.4); background: linear-gradient(145deg, rgba(241, 196, 15, 0.08), rgba(0,0,0,0.25));">
+                        <div class="stat-icon" style="color: #f1c40f; background: rgba(241, 196, 15, 0.15);"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div class="stat-info">
+                            <h3 style="color: #f1c40f; font-weight: 800; font-size: 0.85rem;">Utilidad Neta</h3>
+                            <p id="stat-profit" style="color: #f1c40f; font-size: 1.55rem; font-weight: 900;">₡0</p>
+                            <span id="stat-margin" style="font-size: 0.75rem; color: #2ecc71; font-weight: 800;">0% margen</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-color: rgba(52, 152, 219, 0.4); background: linear-gradient(145deg, rgba(52, 152, 219, 0.08), rgba(0,0,0,0.25));">
+                        <div class="stat-icon" style="color: #3498db; background: rgba(52, 152, 219, 0.15);"><i class="fas fa-boxes"></i></div>
+                        <div class="stat-info">
+                            <h3 style="color: #3498db; font-weight: 800; font-size: 0.85rem;">Productos Vendidos</h3>
+                            <p id="stat-products-qty" style="color: #3498db; font-size: 1.55rem; font-weight: 900;">0</p>
+                            <span id="stat-products-types" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);">0 variedades</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MÉTRICAS OPERATIVAS EXISTENTES (Comandas, Ticket, Platillo, Categoría, Dieta, Regalías) -->
                 <div class="dashboard-stats" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
                     <div class="stat-card">
                         <div class="stat-icon" style="color: #3498db; background: rgba(52, 152, 219, 0.1);"><i class="fas fa-receipt"></i></div>
@@ -403,6 +447,41 @@
                         <div class="chart-container-canvas">
                             <canvas id="category-chart"></canvas>
                         </div>
+                    </div>
+                </div>
+
+                <!-- TABLA DETALLE DE PRODUCTOS VENDIDOS Y CANTIDADES -->
+                <div class="report-box" style="margin-top: 25px; margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.15rem; margin-bottom: 4px;">
+                                <i class="fas fa-utensils" style="color: var(--mostaza);"></i> Desglose de Productos Vendidos
+                            </h3>
+                            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin: 0;">Detalle completo de unidades vendidas, ingresos generados, costo de producción y utilidad por platillo.</p>
+                        </div>
+                        <span id="products-table-summary" style="font-size: 0.85rem; font-weight: 800; color: #2ecc71; background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.3); padding: 6px 14px; border-radius: 8px;">
+                            0 productos | 0 unidades
+                        </span>
+                    </div>
+                    <div class="audit-table-container">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Platillo / Producto</th>
+                                    <th>Categoría</th>
+                                    <th style="text-align: center;">Cantidad</th>
+                                    <th style="text-align: right;">Precio Prom.</th>
+                                    <th style="text-align: right;">Total Ventas</th>
+                                    <th style="text-align: right;">Costo Est.</th>
+                                    <th style="text-align: right;">Utilidad</th>
+                                    <th style="text-align: center;">Margen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sold-products-list">
+                                <tr><td colspan="8" style="text-align: center; padding: 25px; opacity: 0.5;">Cargando productos vendidos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="reports-split">
@@ -428,10 +507,11 @@
                                         <th>Total</th>
                                         <th>Método</th>
                                         <th>Detalles</th>
+                                        <th style="text-align: center; width: 105px;">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody id="audit-orders-list">
-                                    <tr><td colspan="5" style="text-align: center; padding: 20px; opacity: 0.5;">Cargando historial...</td></tr>
+                                    <tr><td colspan="6" style="text-align: center; padding: 20px; opacity: 0.5;">Cargando historial...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1781,7 +1861,8 @@
     <script src="js/security.js"></script>
     
     <!-- ADMIN JS -->
-    <script src="js/admin.js?v=3.3"></script>
+    <script src="js/admin.js?v=3.4"></script>
+    <script src="js/cierre-automatico.js"></script>
 
 </body>
 </html>

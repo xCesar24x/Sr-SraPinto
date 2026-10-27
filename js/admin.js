@@ -1077,9 +1077,11 @@ document.addEventListener("DOMContentLoaded", () => {
         currentShift: 'full', // 'full', 'morning', 'afternoon', 'night'
 
         init() {
-            // Inicializar las fechas por defecto para el rango personalizado si no tienen valor
+            // Inicializar las fechas por defecto para el rango personalizado y día específico si no tienen valor
             const startInput = document.getElementById('report-start-date');
             const endInput = document.getElementById('report-end-date');
+            const singleDateInput = document.getElementById('report-single-date');
+            
             if (startInput && !startInput.value) {
                 const oneWeekAgo = new Date();
                 oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -1087,6 +1089,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             if (endInput && !endInput.value) {
                 endInput.value = new Date().toISOString().split('T')[0];
+            }
+            if (singleDateInput && !singleDateInput.value) {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                singleDateInput.value = `${yyyy}-${mm}-${dd}`;
             }
 
             if (ordersListener) return;
@@ -1127,11 +1136,27 @@ document.addEventListener("DOMContentLoaded", () => {
         handlePeriodChange() {
             const period = document.getElementById('report-period-select').value;
             const customRangeContainer = document.getElementById('custom-range-container');
+            const singleDateContainer = document.getElementById('single-date-container');
             
             if (period === 'rango') {
-                customRangeContainer.style.display = 'flex';
+                if (customRangeContainer) customRangeContainer.style.display = 'flex';
+                if (singleDateContainer) singleDateContainer.style.display = 'none';
+            } else if (period === 'dia_especifico') {
+                if (customRangeContainer) customRangeContainer.style.display = 'none';
+                if (singleDateContainer) {
+                    singleDateContainer.style.display = 'flex';
+                    const singleInput = document.getElementById('report-single-date');
+                    if (singleInput && !singleInput.value) {
+                        const today = new Date();
+                        const yyyy = today.getFullYear();
+                        const mm = String(today.getMonth() + 1).padStart(2, '0');
+                        const dd = String(today.getDate()).padStart(2, '0');
+                        singleInput.value = `${yyyy}-${mm}-${dd}`;
+                    }
+                }
             } else {
-                customRangeContainer.style.display = 'none';
+                if (customRangeContainer) customRangeContainer.style.display = 'none';
+                if (singleDateContainer) singleDateContainer.style.display = 'none';
             }
 
             this.loadAnalytics();
@@ -1163,6 +1188,142 @@ document.addEventListener("DOMContentLoaded", () => {
             this.loadAnalytics();
         },
 
+        // Helper para resolver el costo de producción unitario de un item
+        getProductCost(item) {
+            if (!item) return 0;
+            
+            // 1. Coincidencia directa por item.id en COSTOS_PRODUCTOS
+            if (typeof COSTOS_PRODUCTOS !== 'undefined' && item.id && COSTOS_PRODUCTOS[item.id] !== undefined) {
+                return Number(COSTOS_PRODUCTOS[item.id]) || 0;
+            }
+
+            // 2. Coincidencia por nombre exacto en NOMBRES_PRODUCTOS
+            const name = (item.nombre || '').trim();
+            if (this.NOMBRES_PRODUCTOS) {
+                for (const [id, officialName] of Object.entries(this.NOMBRES_PRODUCTOS)) {
+                    if (officialName.toLowerCase() === name.toLowerCase()) {
+                        if (typeof COSTOS_PRODUCTOS !== 'undefined' && COSTOS_PRODUCTOS[id] !== undefined) {
+                            return Number(COSTOS_PRODUCTOS[id]) || 0;
+                        }
+                    }
+                }
+            }
+
+            // 3. Coincidencia inteligente por palabras clave conocidas en el nombre
+            const nameLower = name.toLowerCase();
+            if (typeof COSTOS_PRODUCTOS !== 'undefined') {
+                if (nameLower.includes('burrote') && (nameLower.includes('café') || nameLower.includes('cafe'))) return COSTOS_PRODUCTOS['c-burrote-cafe'] || 1250;
+                if (nameLower.includes('burrote')) return COSTOS_PRODUCTOS['p-burrote'] || 1000;
+                if (nameLower.includes('queso pinto') && (nameLower.includes('café') || nameLower.includes('cafe'))) return COSTOS_PRODUCTOS['c-queso-pinto-cafe'] || 1300;
+                if (nameLower.includes('queso pinto')) return COSTOS_PRODUCTOS['p-queso-pinto'] || 1100;
+                if (nameLower.includes('señor pinto') || nameLower.includes('senor pinto') || nameLower.includes('pinto')) {
+                    if (nameLower.includes('café') || nameLower.includes('cafe')) return COSTOS_PRODUCTOS['c-senor-pinto-cafe'] || 1450;
+                    return COSTOS_PRODUCTOS['p-senor-pinto'] || 1200;
+                }
+                if (nameLower.includes('patacón caribeño') || nameLower.includes('patacon caribeno')) return COSTOS_PRODUCTOS['p-patacon-caribeno'] || 1400;
+                if (nameLower.includes('patacón') || nameLower.includes('patacon')) return COSTOS_PRODUCTOS['p-sr-patacon'] || 1300;
+                if (nameLower.includes('quesadilla')) return COSTOS_PRODUCTOS['p-sra-quesadilla'] || 1400;
+                if (nameLower.includes('hamburguesa')) return COSTOS_PRODUCTOS['p-sra-hamburguesa'] || 1900;
+                if (nameLower.includes('salchipapa')) return COSTOS_PRODUCTOS['p-cono-salchipapa'] || 950;
+                if (nameLower.includes('papi carne') || nameLower.includes('papicarne')) return COSTOS_PRODUCTOS['p-sr-papi-carne'] || 1200;
+                if (nameLower.includes('empanada')) {
+                    if (nameLower.includes('carne y queso')) return COSTOS_PRODUCTOS['p-empanada-carne-queso'] || 850;
+                    if (nameLower.includes('carne')) return COSTOS_PRODUCTOS['p-empanada-carne'] || 800;
+                    if (nameLower.includes('queso')) return COSTOS_PRODUCTOS['p-empanada-queso'] || 750;
+                    if (nameLower.includes('arreglada')) return COSTOS_PRODUCTOS['p-empanada-arreglada'] || 950;
+                    return COSTOS_PRODUCTOS['p-empanada-sencilla'] || 750;
+                }
+                if (nameLower.includes('café') || nameLower.includes('cafe')) return COSTOS_PRODUCTOS['b-cafe-premium'] || 300;
+                if (nameLower.includes('agua')) return COSTOS_PRODUCTOS['b-agua'] || 200;
+                if (nameLower.includes('gaseosa')) return COSTOS_PRODUCTOS['b-gaseosas'] || 450;
+                if (nameLower.includes('hidratante')) return COSTOS_PRODUCTOS['b-hidratante'] || 500;
+            }
+
+            // 4. Fallback estándar para restaurante (40% del precio de venta)
+            const price = Number(item.precio) || 0;
+            return price > 0 ? Math.round(price * 0.40) : 0;
+        },
+
+        renderSoldProductsTable(productBreakdown, totalRevenue, totalCost) {
+            const container = document.getElementById('sold-products-list');
+            const summaryBadge = document.getElementById('products-table-summary');
+            if (!container) return;
+
+            const items = Object.values(productBreakdown);
+            if (items.length === 0) {
+                container.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 25px; opacity: 0.5;">No hay productos vendidos en este período.</td></tr>`;
+                if (summaryBadge) summaryBadge.innerText = '0 productos | 0 unidades';
+                return;
+            }
+
+            // Ordenar de mayor cantidad vendida a menor (y luego por ventas)
+            items.sort((a, b) => b.cantidad - a.cantidad || b.revenue - a.revenue);
+
+            const totalQty = items.reduce((acc, cur) => acc + cur.cantidad, 0);
+            if (summaryBadge) {
+                summaryBadge.innerText = `${items.length} variedades | ${totalQty.toLocaleString()} unidades vendidas`;
+            }
+
+            const rows = items.map(item => {
+                const avgPrice = item.cantidad > 0 ? Math.round(item.revenue / item.cantidad) : item.precioProm;
+                const profit = item.revenue - item.costoTotal;
+                const marginPct = item.revenue > 0 ? Math.round((profit / item.revenue) * 100) : 0;
+                const marginColor = profit >= 0 ? '#2ecc71' : '#e74c3c';
+
+                let catColor = '#3498db';
+                if (item.categoria === 'Desayunos') catColor = 'var(--mostaza, #f1c40f)';
+                else if (item.categoria === 'Almuerzos') catColor = '#e67e22';
+                else if (item.categoria === 'Bebidas') catColor = '#9b59b6';
+
+                return `
+                    <tr>
+                        <td style="font-weight: 700; color: #fff;">
+                            ${item.nombre}
+                        </td>
+                        <td>
+                            <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: ${catColor}; border: 1px solid ${catColor}44;">
+                                ${item.categoria}
+                            </span>
+                        </td>
+                        <td style="text-align: center; font-weight: 800; font-size: 0.95rem; color: #3498db;">
+                            ${item.cantidad.toLocaleString()}
+                        </td>
+                        <td style="text-align: right; opacity: 0.85;">
+                            ₡${avgPrice.toLocaleString()}
+                        </td>
+                        <td style="text-align: right; font-weight: 800; color: #2ecc71;">
+                            ₡${item.revenue.toLocaleString()}
+                        </td>
+                        <td style="text-align: right; color: #e74c3c; font-weight: 600;">
+                            ₡${item.costoTotal.toLocaleString()}
+                        </td>
+                        <td style="text-align: right; font-weight: 800; color: ${marginColor};">
+                            ₡${profit.toLocaleString()}
+                        </td>
+                        <td style="text-align: center; font-weight: 800; color: ${marginColor};">
+                            ${marginPct}%
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            const totalProfit = totalRevenue - totalCost;
+            const overallMargin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0;
+            const footerRow = `
+                <tr style="background: rgba(255, 255, 255, 0.05); font-weight: 900; border-top: 2px solid rgba(255,255,255,0.15);">
+                    <td colspan="2" style="text-transform: uppercase; letter-spacing: 1px; color: var(--mostaza, #f1c40f);">TOTAL GENERAL</td>
+                    <td style="text-align: center; color: #3498db; font-size: 1.05rem;">${totalQty.toLocaleString()}</td>
+                    <td style="text-align: right; opacity: 0.5;">-</td>
+                    <td style="text-align: right; color: #2ecc71; font-size: 1.05rem;">₡${totalRevenue.toLocaleString()}</td>
+                    <td style="text-align: right; color: #e74c3c; font-size: 1.05rem;">₡${totalCost.toLocaleString()}</td>
+                    <td style="text-align: right; color: ${totalProfit >= 0 ? '#2ecc71' : '#e74c3c'}; font-size: 1.05rem;">₡${totalProfit.toLocaleString()}</td>
+                    <td style="text-align: center; color: ${totalProfit >= 0 ? '#2ecc71' : '#e74c3c'}; font-size: 1.05rem;">${overallMargin}%</td>
+                </tr>
+            `;
+
+            container.innerHTML = rows + footerRow;
+        },
+
         loadAnalytics() {
             const period = document.getElementById('report-period-select').value;
             const now = new Date();
@@ -1180,6 +1341,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 startLimit.setHours(0,0,0,0);
                 endLimit.setDate(endLimit.getDate() - 1);
                 endLimit.setHours(23,59,59,999);
+            } else if (period === 'dia_especifico') {
+                const singleDateVal = document.getElementById('report-single-date')?.value;
+                if (singleDateVal) {
+                    const parts = singleDateVal.split('-').map(Number);
+                    if (parts.length === 3) {
+                        startLimit = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0);
+                        endLimit = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999);
+                    } else {
+                        startLimit.setHours(0,0,0,0);
+                        endLimit.setHours(23,59,59,999);
+                    }
+                } else {
+                    startLimit.setHours(0,0,0,0);
+                    endLimit.setHours(23,59,59,999);
+                }
             } else if (period === '7dias') {
                 startLimit.setDate(startLimit.getDate() - 7);
                 startLimit.setHours(0,0,0,0);
@@ -1231,14 +1407,17 @@ document.addEventListener("DOMContentLoaded", () => {
             // Ordenar pedidos de más reciente a más antiguo para el log de auditoría
             filteredOrders.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-            // Calcular Métricas Operativas (Comandas, Ticket Promedio, Productos y Categorías)
+            // Calcular Métricas Operativas y Financieras (Ventas, Costos, Utilidad, Unidades, Categorías)
             let totalRevenue = 0;
+            let totalCost = 0;
+            let totalUnitsSold = 0;
             let cashOrdersCount = 0;
             let dietaBryanTotal = 0;
             let regaliaTotal = 0;
             
             const selectedProduct = this.selectedProductFilter;
             const productSales = {};
+            const productBreakdown = {};
             const categorySales = {
                 'Desayunos': { qty: 0, revenue: 0 },
                 'Almuerzos': { qty: 0, revenue: 0 },
@@ -1252,34 +1431,57 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 let orderHasProduct = false;
                 let productRevenue = 0;
+                let orderProductCost = 0;
                 
-                if (order.items) {
+                if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
-                        const qty = item.cantidad || 0;
-                        const subtotal = (item.precio || 0) * qty;
+                        const qty = Number(item.cantidad) || 1;
+                        const unitPrice = Number(item.precio) || 0;
+                        const subtotal = unitPrice * qty;
+                        const prodName = item.nombre || 'Producto';
+                        
+                        const unitCost = this.getProductCost(item);
+                        const itemTotalCost = unitCost * qty;
                         
                         // Contabilizar productos vendidos
-                        productSales[item.nombre] = (productSales[item.nombre] || 0) + qty;
+                        productSales[prodName] = (productSales[prodName] || 0) + qty;
+                        totalUnitsSold += qty;
+                        orderProductCost += itemTotalCost;
 
                         // Clasificar por categoría
-                        const nameLower = (item.nombre || '').toLowerCase();
+                        const nameLower = prodName.toLowerCase();
                         const idLower = (item.id || '').toLowerCase();
+                        let cat = 'Snacks';
                         if (nameLower.includes('pinto') || nameLower.includes('burrote') || nameLower.includes('desayuno') || idLower.startsWith('p-senor') || idLower.startsWith('p-burrote') || idLower.startsWith('p-queso-pinto')) {
-                            categorySales['Desayunos'].qty += qty;
-                            categorySales['Desayunos'].revenue += subtotal;
+                            cat = 'Desayunos';
                         } else if (nameLower.includes('casado') || nameLower.includes('almuerzo') || idLower.startsWith('v-casado')) {
-                            categorySales['Almuerzos'].qty += qty;
-                            categorySales['Almuerzos'].revenue += subtotal;
-                        } else if (nameLower.includes('café') || nameLower.includes('fresco') || nameLower.includes('agua') || nameLower.includes('gaseosa') || idLower.startsWith('b-')) {
-                            categorySales['Bebidas'].qty += qty;
-                            categorySales['Bebidas'].revenue += subtotal;
-                        } else {
-                            categorySales['Snacks'].qty += qty;
-                            categorySales['Snacks'].revenue += subtotal;
+                            cat = 'Almuerzos';
+                        } else if (nameLower.includes('café') || nameLower.includes('cafe') || nameLower.includes('fresco') || nameLower.includes('agua') || nameLower.includes('gaseosa') || idLower.startsWith('b-')) {
+                            cat = 'Bebidas';
                         }
+                        
+                        categorySales[cat].qty += qty;
+                        categorySales[cat].revenue += subtotal;
+
+                        // Acumular en desglose detallado de productos
+                        if (!productBreakdown[prodName]) {
+                            productBreakdown[prodName] = {
+                                id: item.id || '',
+                                nombre: prodName,
+                                categoria: cat,
+                                cantidad: 0,
+                                revenue: 0,
+                                costoTotal: 0,
+                                precioProm: unitPrice,
+                                unitCost: unitCost
+                            };
+                        }
+                        productBreakdown[prodName].cantidad += qty;
+                        productBreakdown[prodName].revenue += subtotal;
+                        productBreakdown[prodName].costoTotal += itemTotalCost;
 
                         if (selectedProduct) {
-                            if (item.nombre === selectedProduct) {
+                            if (prodName === selectedProduct) {
                                 orderHasProduct = true;
                                 productRevenue += subtotal;
                             }
@@ -1291,6 +1493,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (orderHasProduct) {
                         if (!isSpecial) {
                             totalRevenue += productRevenue;
+                            totalCost += orderProductCost;
                             cashOrdersCount += 1;
                         } else {
                             if (method === 'Dieta Bryan') dietaBryanTotal += productRevenue;
@@ -1299,16 +1502,45 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 } else {
                     if (!isSpecial) {
-                        totalRevenue += (order.total || 0);
+                        totalRevenue += (Number(order.total) || 0);
+                        totalCost += orderProductCost;
                         cashOrdersCount += 1;
                     } else {
-                        if (method === 'Dieta Bryan') dietaBryanTotal += (order.total || 0);
-                        else if (method === 'Regalía') regaliaTotal += (order.total || 0);
+                        if (method === 'Dieta Bryan') dietaBryanTotal += (Number(order.total) || 0);
+                        else if (method === 'Regalía') regaliaTotal += (Number(order.total) || 0);
                     }
                 }
             });
 
+            const totalProfit = totalRevenue - totalCost;
+            const profitMarginPct = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0';
+            const cogsPct = totalRevenue > 0 ? ((totalCost / totalRevenue) * 100).toFixed(1) : '0';
             const avgTicket = cashOrdersCount > 0 ? Math.round(totalRevenue / cashOrdersCount) : 0;
+
+            // Renderizar KPIs Financieros Principales
+            const elRevenue = document.getElementById('stat-revenue');
+            const elRevenueOrders = document.getElementById('stat-revenue-orders');
+            const elCogs = document.getElementById('stat-cogs');
+            const elCogsPct = document.getElementById('stat-cogs-pct');
+            const elProfit = document.getElementById('stat-profit');
+            const elMargin = document.getElementById('stat-margin');
+            const elProductsQty = document.getElementById('stat-products-qty');
+            const elProductsTypes = document.getElementById('stat-products-types');
+
+            if (elRevenue) elRevenue.innerText = `₡${totalRevenue.toLocaleString()}`;
+            if (elRevenueOrders) elRevenueOrders.innerText = `${cashOrdersCount} pedidos facturados`;
+            if (elCogs) elCogs.innerText = `₡${totalCost.toLocaleString()}`;
+            if (elCogsPct) elCogsPct.innerText = `${cogsPct}% sobre ventas`;
+            if (elProfit) {
+                elProfit.innerText = `₡${totalProfit.toLocaleString()}`;
+                elProfit.style.color = totalProfit >= 0 ? '#2ecc71' : '#e74c3c';
+            }
+            if (elMargin) {
+                elMargin.innerText = `${profitMarginPct}% margen`;
+                elMargin.style.color = totalProfit >= 0 ? '#2ecc71' : '#e74c3c';
+            }
+            if (elProductsQty) elProductsQty.innerText = totalUnitsSold.toLocaleString();
+            if (elProductsTypes) elProductsTypes.innerText = `${Object.keys(productBreakdown).length} variedades`;
 
             // Renderizar métricas operativas en pantalla
             const elOrdersCount = document.getElementById('stat-orders-count');
@@ -1350,8 +1582,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            // Compatibilidad si existen viejos elementos
-            if (document.getElementById('stat-revenue')) document.getElementById('stat-revenue').innerText = `₡${totalRevenue.toLocaleString()}`;
+            // Renderizar tabla detallada de productos vendidos
+            this.renderSoldProductsTable(productBreakdown, totalRevenue, totalCost);
 
             // Procesar Gráficos e Ingredientes
             this.processBestsellers(filteredOrders);
@@ -1591,7 +1823,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 : orders;
 
             if (ordersToShow.length === 0) {
-                container.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; opacity: 0.5;">No hay pedidos registrados en este período.</td></tr>`;
+                container.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; opacity: 0.5;">No hay pedidos registrados en este período.</td></tr>`;
                 return;
             }
 
@@ -1600,7 +1832,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const dateStr = dateObj.toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit' }) + ' ' + 
                                 dateObj.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
                 
-                let detailsText = order.items.map(i => `${i.cantidad}x ${i.nombre.split(' (')[0]}`).join(', ');
+                let detailsText = (order.items || []).map(i => `${i.cantidad || 1}x ${(i.nombre || '').split(' (')[0]}`).join(', ');
                 if (detailsText.length > 30) detailsText = detailsText.substring(0, 27) + '...';
 
                 let statusBadge = '';
@@ -1610,16 +1842,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 const payMethod = order.metodoPago || 'Efectivo';
                 let methodClass = payMethod.toLowerCase().replace(/\s/g, '');
 
+                const orderNum = order.num_pedido || order.id.slice(-5).toUpperCase();
+                const safeCliente = (order.cliente || 'Cliente').replace(/['"\\]/g, ' ');
+
                 return `
                     <tr>
                         <td style="font-size: 0.8rem;">${dateStr}</td>
-                        <td style="font-weight:700;">[#${order.num_pedido || order.id.slice(-5).toUpperCase()}] ${order.cliente} ${statusBadge}</td>
+                        <td style="font-weight:700;">[#${orderNum}] ${order.cliente} ${statusBadge}</td>
                         <td style="font-weight:900;">₡${(order.total || 0).toLocaleString()}</td>
                         <td><span class="user-badge badge-${methodClass}">${payMethod}</span></td>
-                        <td style="font-size: 0.8rem; opacity: 0.8;" title="${order.items.map(i => `${i.cantidad}x ${i.nombre}`).join('\n')}">${detailsText}</td>
+                        <td style="font-size: 0.8rem; opacity: 0.8;" title="${(order.items || []).map(i => `${i.cantidad || 1}x ${i.nombre || ''}`).join('\n')}">${detailsText}</td>
+                        <td style="text-align: center;">
+                            <button onclick="ReportsManager.eliminarComanda('${order.id}', '${orderNum}', '${safeCliente}', ${order.total || 0})" class="btn-delete-order" title="Eliminar comanda duplicada o errónea">
+                                <i class="fas fa-trash-alt"></i> Borrar
+                            </button>
+                        </td>
                     </tr>
                 `;
             }).join('');
+        },
+
+        async eliminarComanda(orderId, numPedido, cliente, total) {
+            const confirmMsg = `¿Deseas eliminar permanentemente la Comanda #${numPedido} (${cliente}) por ₡${Number(total || 0).toLocaleString()}?\n\nEsta acción quitará el pedido de la base de datos y actualizará los totales y métricas de inmediato.`;
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const btn = event?.currentTarget;
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                }
+
+                await db.collection("pedidos").doc(orderId).delete();
+                console.log(`✅ Comanda #${numPedido} (${orderId}) eliminada exitosamente.`);
+                alert(`✅ Comanda #${numPedido} eliminada exitosamente.`);
+            } catch (error) {
+                console.error("Error al eliminar comanda:", error);
+                alert("❌ No se pudo eliminar la comanda. Verifica la conexión a internet.");
+            }
         },
 
         async exportPDFReport(autoSendEmail = true) {
@@ -4424,10 +4684,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (diffTotal > 0) badgeClass = 'diff-badge-excess';
                     else if (diffTotal < 0) badgeClass = 'diff-badge-short';
 
+                    const isAuto = (c.tipo === 'automatico' || c.periodo === 'cierre_automatico_9pm');
+                    const userHtml = isAuto 
+                        ? '<span class="user-badge" style="background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.4); font-size: 0.75rem;"><i class="fas fa-moon"></i> Cierre Auto (9pm)</span>'
+                        : this.sanitize(c.usuario || 'admin');
+
                     rows.push(`
                         <tr>
                             <td style="font-size: 0.8rem; font-weight: 700;">${fecha}</td>
-                            <td>${this.sanitize(c.usuario || 'admin')}</td>
+                            <td>${userHtml}</td>
                             <td style="font-size: 0.85rem;">₡${(c.contado?.efectivo || 0).toLocaleString()} <span style="opacity: 0.5; font-size: 0.75rem;">/ ₡${(c.esperado?.efectivo || 0).toLocaleString()}</span></td>
                             <td style="font-size: 0.85rem;">₡${(c.contado?.sinpe || 0).toLocaleString()} <span style="opacity: 0.5; font-size: 0.75rem;">/ ₡${(c.esperado?.sinpe || 0).toLocaleString()}</span></td>
                             <td style="font-size: 0.85rem;">₡${(c.contado?.tarjeta || 0).toLocaleString()} <span style="opacity: 0.5; font-size: 0.75rem;">/ ₡${(c.esperado?.tarjeta || 0).toLocaleString()}</span></td>

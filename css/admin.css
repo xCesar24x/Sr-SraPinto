@@ -926,4 +926,32 @@ body {
     color: #000;
 }
 
+/* BOTÓN ELIMINAR COMANDA DUPLICADA */
+.btn-delete-order {
+    background: rgba(231, 76, 60, 0.15);
+    border: 1px solid rgba(231, 76, 60, 0.4);
+    color: #e74c3c;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.btn-delete-order:hover {
+    background: #e74c3c;
+    color: #ffffff;
+    border-color: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+.btn-delete-order:active {
+    transform: translateY(0);
+}
+
+
 

@@ -583,18 +583,33 @@ const CartManager = {
                     if (isSalesPOS) {
                         let numPedido = null;
                         try {
+                            const nowCR = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Costa_Rica' }));
+                            const todayStr = `${nowCR.getFullYear()}-${String(nowCR.getMonth() + 1).padStart(2, '0')}-${String(nowCR.getDate()).padStart(2, '0')}`;
+
                             const turnoRef = db.collection('config').doc('turno');
                             await db.runTransaction(async (transaction) => {
                                 const turnoDoc = await transaction.get(turnoRef);
                                 if (!turnoDoc.exists) {
-                                    transaction.set(turnoRef, { activo: true, siguiente_numero: 2, fecha: new Date().toISOString() });
+                                    transaction.set(turnoRef, { activo: true, siguiente_numero: 2, fechaTurno: todayStr, fecha: new Date().toISOString() });
                                     numPedido = 1;
                                 } else {
-                                    const data = turnoDoc.data();
-                                    if (data.activo) {
+                                    const data = turnoDoc.data() || {};
+                                    const turnoDate = data.fechaTurno || (data.fecha ? data.fecha.split('T')[0] : '');
+
+                                    // Si es un nuevo día, reiniciar automáticamente a la comanda #1
+                                    if (turnoDate && turnoDate !== todayStr) {
+                                        numPedido = 1;
+                                        transaction.update(turnoRef, { 
+                                            siguiente_numero: 2,
+                                            fechaTurno: todayStr,
+                                            activo: true,
+                                            fechaActualizacion: new Date().toISOString()
+                                        });
+                                    } else if (data.activo) {
                                         numPedido = data.siguiente_numero || 1;
                                         transaction.update(turnoRef, { 
                                             siguiente_numero: numPedido + 1,
+                                            fechaTurno: todayStr,
                                             fechaActualizacion: new Date().toISOString()
                                         });
                                     } else {
