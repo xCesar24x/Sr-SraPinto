@@ -310,6 +310,10 @@
                                 <i class="fas fa-trash-alt"></i> Corte de Datos
                             </button>
 
+                            <button onclick="ReportsManager.exportSalesCSV()" class="btn-primary" style="background: linear-gradient(135deg, #1e7e34, #28a745); border: none; color: #fff; padding: 10px 15px; font-size: 0.85rem; font-weight: 700; box-shadow: 0 4px 10px rgba(40,167,69,0.3);">
+                                <i class="fas fa-file-excel"></i> Descargar Excel / CSV
+                            </button>
+
                             <button onclick="ReportsManager.exportPDFReport(true)" class="btn-primary" style="background: transparent; border: 1px solid var(--mostaza); color: var(--blanco); padding: 10px 15px; font-size: 0.85rem;">
                                 <i class="fas fa-file-pdf"></i> Exportar PDF
                             </button>
@@ -447,6 +451,46 @@
                         <div class="chart-container-canvas">
                             <canvas id="category-chart"></canvas>
                         </div>
+                    </div>
+                </div>
+
+                <!-- TABLA DESGLOSE DIARIO DE VENTAS, COSTOS Y UTILIDAD -->
+                <div class="report-box" id="daily-breakdown-box" style="margin-top: 25px; margin-bottom: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="display: flex; align-items: center; gap: 8px; font-size: 1.15rem; margin-bottom: 4px;">
+                                <i class="fas fa-calendar-alt" style="color: var(--mostaza);"></i> Desglose Diario de Ventas, Costos y Rentabilidad
+                            </h3>
+                            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.5); margin: 0;">Detalle día por día de ventas facturadas, costo de materia prima y utilidad durante el rango seleccionado.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <span id="daily-table-summary" style="font-size: 0.85rem; font-weight: 800; color: var(--mostaza); background: rgba(241, 196, 15, 0.12); border: 1px solid rgba(241, 196, 15, 0.3); padding: 6px 14px; border-radius: 8px;">
+                                0 días con ventas
+                            </span>
+                            <button onclick="ReportsManager.exportSalesCSV()" class="btn-primary" style="background: linear-gradient(135deg, #1e7e34, #28a745); border: none; font-size: 0.8rem; padding: 7px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(40,167,69,0.3);">
+                                <i class="fas fa-file-excel"></i> Descargar Excel / CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="audit-table-container">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha / Día</th>
+                                    <th style="text-align: center;">Pedidos</th>
+                                    <th style="text-align: center;">Unidades</th>
+                                    <th style="text-align: right;">Ventas Totales</th>
+                                    <th style="text-align: right;">Costo (COGS)</th>
+                                    <th style="text-align: right;">Utilidad Bruta</th>
+                                    <th style="text-align: center;">Margen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="daily-sales-list">
+                                <tr><td colspan="7" style="text-align: center; padding: 25px; opacity: 0.5;">Cargando desglose diario...</td></tr>
+                            </tbody>
+                            <tfoot id="daily-sales-footer">
+                            </tfoot>
+                        </table>
                     </div>
                 </div>
 
@@ -1899,7 +1943,7 @@
     <script src="js/security.js"></script>
     
     <!-- ADMIN JS -->
-    <script src="js/admin.js?v=3.6"></script>
+    <script src="js/admin.js?v=3.7"></script>
     <script src="js/cierre-automatico.js"></script>
 
 </body>

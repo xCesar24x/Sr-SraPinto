@@ -1334,6 +1334,284 @@ document.addEventListener("DOMContentLoaded", () => {
             container.innerHTML = rows + footerRow;
         },
 
+        renderDailyBreakdownTable(dailyBreakdown, totalRevenue, totalCost) {
+            const container = document.getElementById('daily-sales-list');
+            const footerContainer = document.getElementById('daily-sales-footer');
+            const summaryBadge = document.getElementById('daily-table-summary');
+            if (!container) return;
+
+            const days = Object.values(dailyBreakdown || {});
+            if (days.length === 0) {
+                container.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 25px; opacity: 0.5;">No hay ventas registradas en las fechas seleccionadas.</td></tr>`;
+                if (footerContainer) footerContainer.innerHTML = '';
+                if (summaryBadge) summaryBadge.innerText = '0 días con ventas';
+                return;
+            }
+
+            // Ordenar de más reciente a más antiguo
+            days.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+
+            const totalDays = days.length;
+            const totalOrders = days.reduce((acc, d) => acc + d.pedidos, 0);
+            const totalUnits = days.reduce((acc, d) => acc + d.unidades, 0);
+
+            if (summaryBadge) {
+                summaryBadge.innerText = `${totalDays} ${totalDays === 1 ? 'día' : 'días'} con ventas | ${totalOrders} pedidos`;
+            }
+
+            const rows = days.map(d => {
+                const marginColor = d.utilidad >= 0 ? '#2ecc71' : '#e74c3c';
+                return `
+                    <tr>
+                        <td style="font-weight: 700; color: #fff;">
+                            <div style="font-size: 0.95rem;">${d.dayName}</div>
+                            <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${d.dateKey}</div>
+                        </td>
+                        <td style="text-align: center; font-weight: 700; color: #fff;">
+                            ${d.pedidos.toLocaleString()}
+                        </td>
+                        <td style="text-align: center; font-weight: 800; font-size: 0.95rem; color: #3498db;">
+                            ${d.unidades.toLocaleString()}
+                        </td>
+                        <td style="text-align: right; font-weight: 800; color: #2ecc71; font-size: 0.95rem;">
+                            ₡${d.ventas.toLocaleString()}
+                        </td>
+                        <td style="text-align: right; color: #e74c3c; font-weight: 600;">
+                            ₡${d.costo.toLocaleString()}
+                        </td>
+                        <td style="text-align: right; font-weight: 800; color: ${marginColor}; font-size: 0.95rem;">
+                            ₡${d.utilidad.toLocaleString()}
+                        </td>
+                        <td style="text-align: center; font-weight: 800; color: ${marginColor};">
+                            <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: ${marginColor}22; border: 1px solid ${marginColor}44;">
+                                ${d.margenPct}%
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            const totalProfit = totalRevenue - totalCost;
+            const overallMargin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0;
+            const totalMarginColor = totalProfit >= 0 ? '#2ecc71' : '#e74c3c';
+
+            const footerRow = `
+                <tr style="background: rgba(255, 255, 255, 0.05); font-weight: 900; border-top: 2px solid rgba(255,255,255,0.15);">
+                    <td style="text-transform: uppercase; letter-spacing: 1px; color: var(--mostaza, #f1c40f);">TOTAL GENERAL</td>
+                    <td style="text-align: center; color: #fff; font-size: 1.05rem;">${totalOrders.toLocaleString()}</td>
+                    <td style="text-align: center; color: #3498db; font-size: 1.05rem;">${totalUnits.toLocaleString()}</td>
+                    <td style="text-align: right; color: #2ecc71; font-size: 1.05rem;">₡${totalRevenue.toLocaleString()}</td>
+                    <td style="text-align: right; color: #e74c3c; font-size: 1.05rem;">₡${totalCost.toLocaleString()}</td>
+                    <td style="text-align: right; color: ${totalMarginColor}; font-size: 1.05rem;">₡${totalProfit.toLocaleString()}</td>
+                    <td style="text-align: center; color: ${totalMarginColor}; font-size: 1.05rem;">${overallMargin}%</td>
+                </tr>
+            `;
+
+            container.innerHTML = rows;
+            if (footerContainer) footerContainer.innerHTML = footerRow;
+        },
+
+        exportSalesCSV() {
+            const periodSelect = document.getElementById('report-period-select');
+            const periodText = periodSelect ? periodSelect.options[periodSelect.selectedIndex]?.text : 'Periodo';
+            const periodVal = periodSelect ? periodSelect.value : 'hoy';
+
+            let shiftText = 'Todo el Día';
+            if (this.currentShift === 'morning') shiftText = 'Mañana (Corte 12pm)';
+            else if (this.currentShift === 'afternoon') shiftText = 'Tarde (Corte 6pm)';
+            else if (this.currentShift === 'night') shiftText = 'Noche (Cierre)';
+
+            const revenue = this.currentTotalRevenue || 0;
+            const cogs = this.currentTotalCost || 0;
+            const profit = revenue - cogs;
+            const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) + '%' : '0%';
+
+            const filteredOrders = this.currentFilteredOrders || [];
+            const cashOrders = filteredOrders.filter(o => o.metodoPago !== 'Dieta Bryan' && o.metodoPago !== 'Regalía');
+            const ordersCount = cashOrders.length;
+            const avgTicket = ordersCount > 0 ? Math.round(revenue / ordersCount) : 0;
+
+            const now = new Date();
+            const dateFormatted = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const timeFormatted = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            const lines = [];
+
+            const escapeCSV = (val) => {
+                if (val === null || val === undefined) return '""';
+                const s = String(val);
+                if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+                    return `"${s.replace(/"/g, '""')}"`;
+                }
+                return `"${s}"`;
+            };
+
+            // Encabezado
+            lines.push([escapeCSV('SEÑOR Y SEÑORA PINTO - REPORTE DE VENTAS, COSTOS Y RENTABILIDAD')].join(','));
+            lines.push([escapeCSV('Generado:'), escapeCSV(`${dateFormatted} ${timeFormatted}`)].join(','));
+            lines.push([escapeCSV('Período:'), escapeCSV(periodText)].join(','));
+            lines.push([escapeCSV('Turno:'), escapeCSV(shiftText)].join(','));
+            if (this.selectedProductFilter) {
+                lines.push([escapeCSV('Filtro de Producto:'), escapeCSV(this.selectedProductFilter)].join(','));
+            }
+            lines.push('');
+
+            // 1. Resumen Financiero Ejecutivo
+            lines.push([escapeCSV('=== 1. RESUMEN FINANCIERO EJECUTIVO ===')].join(','));
+            lines.push([escapeCSV('Indicador'), escapeCSV('Valor')].join(','));
+            lines.push([escapeCSV('Ventas Totales Facturadas'), escapeCSV(`₡${revenue.toLocaleString()}`)].join(','));
+            lines.push([escapeCSV('Costo de Insumos y Materia Prima (COGS)'), escapeCSV(`₡${cogs.toLocaleString()}`)].join(','));
+            lines.push([escapeCSV('Utilidad Bruta'), escapeCSV(`₡${profit.toLocaleString()}`)].join(','));
+            lines.push([escapeCSV('Margen de Utilidad Bruta'), escapeCSV(margin)].join(','));
+            lines.push([escapeCSV('Pedidos Facturados'), escapeCSV(ordersCount)].join(','));
+            lines.push([escapeCSV('Ticket Promedio'), escapeCSV(`₡${avgTicket.toLocaleString()}`)].join(','));
+            lines.push('');
+
+            // 2. Desglose Día por Día
+            lines.push([escapeCSV('=== 2. DESGLOSE DIARIO DE VENTAS, COSTOS Y UTILIDAD ===')].join(','));
+            lines.push([
+                escapeCSV('Fecha (YYYY-MM-DD)'),
+                escapeCSV('Día de la Semana'),
+                escapeCSV('Pedidos'),
+                escapeCSV('Unidades Vendidas'),
+                escapeCSV('Ventas Totales (₡)'),
+                escapeCSV('Costo Insumos (₡)'),
+                escapeCSV('Utilidad Bruta (₡)'),
+                escapeCSV('Margen %')
+            ].join(','));
+
+            const dailyDays = Object.values(this.currentDailyBreakdown || {});
+            dailyDays.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+
+            dailyDays.forEach(d => {
+                lines.push([
+                    escapeCSV(d.dateKey),
+                    escapeCSV(d.dayName),
+                    escapeCSV(d.pedidos),
+                    escapeCSV(d.unidades),
+                    escapeCSV(d.ventas),
+                    escapeCSV(d.costo),
+                    escapeCSV(d.utilidad),
+                    escapeCSV(`${d.margenPct}%`)
+                ].join(','));
+            });
+
+            // Fila de totales diarios
+            const totalDailyOrders = dailyDays.reduce((acc, d) => acc + d.pedidos, 0);
+            const totalDailyUnits = dailyDays.reduce((acc, d) => acc + d.unidades, 0);
+            lines.push([
+                escapeCSV('TOTALES'),
+                escapeCSV(`${dailyDays.length} días`),
+                escapeCSV(totalDailyOrders),
+                escapeCSV(totalDailyUnits),
+                escapeCSV(revenue),
+                escapeCSV(cogs),
+                escapeCSV(profit),
+                escapeCSV(margin)
+            ].join(','));
+            lines.push('');
+
+            // 3. Detalle de Productos Vendidos
+            lines.push([escapeCSV('=== 3. DETALLE DE PRODUCTOS VENDIDOS Y RENTABILIDAD ===')].join(','));
+            lines.push([
+                escapeCSV('Producto'),
+                escapeCSV('Categoría'),
+                escapeCSV('Unidades Vendidas'),
+                escapeCSV('Precio Promedio (₡)'),
+                escapeCSV('Ventas Totales (₡)'),
+                escapeCSV('Costo Total (₡)'),
+                escapeCSV('Utilidad Bruta (₡)'),
+                escapeCSV('Margen %')
+            ].join(','));
+
+            const products = Object.values(this.currentProductBreakdown || {});
+            products.sort((a, b) => b.cantidad - a.cantidad || b.revenue - a.revenue);
+
+            products.forEach(p => {
+                const pProfit = p.revenue - p.costoTotal;
+                const pMargin = p.revenue > 0 ? Math.round((pProfit / p.revenue) * 100) : 0;
+                const avgPrice = p.cantidad > 0 ? Math.round(p.revenue / p.cantidad) : p.precioProm;
+                lines.push([
+                    escapeCSV(p.nombre),
+                    escapeCSV(p.categoria),
+                    escapeCSV(p.cantidad),
+                    escapeCSV(avgPrice),
+                    escapeCSV(p.revenue),
+                    escapeCSV(p.costoTotal),
+                    escapeCSV(pProfit),
+                    escapeCSV(`${pMargin}%`)
+                ].join(','));
+            });
+            lines.push('');
+
+            // 4. Detalle y Auditoría de Comandas
+            lines.push([escapeCSV('=== 4. REGISTRO Y AUDITORÍA DE COMANDAS ===')].join(','));
+            lines.push([
+                escapeCSV('Fecha'),
+                escapeCSV('Hora'),
+                escapeCSV('N° Comanda / ID'),
+                escapeCSV('Cliente'),
+                escapeCSV('Método de Pago'),
+                escapeCSV('Tipo de Entrega'),
+                escapeCSV('Venta Total (₡)'),
+                escapeCSV('Costo Estimado (₡)'),
+                escapeCSV('Utilidad Estimada (₡)'),
+                escapeCSV('Productos / Detalle')
+            ].join(','));
+
+            filteredOrders.forEach(order => {
+                const orderDate = new Date(order.fecha);
+                const fFecha = !isNaN(orderDate.getTime()) 
+                    ? `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}-${String(orderDate.getDate()).padStart(2, '0')}`
+                    : '';
+                const fHora = !isNaN(orderDate.getTime())
+                    ? `${String(orderDate.getHours()).padStart(2, '0')}:${String(orderDate.getMinutes()).padStart(2, '0')}`
+                    : '';
+                const orderId = order.id || '';
+                const client = order.cliente || order.nombreCliente || '-';
+                const payment = order.metodoPago || 'Efectivo';
+                const delivery = order.tipoEntrega || 'Mesa / Local';
+                const total = Number(order.total) || 0;
+
+                let orderCost = 0;
+                let itemsSummary = [];
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(it => {
+                        const q = Number(it.cantidad) || 1;
+                        const c = this.getProductCost(it) * q;
+                        orderCost += c;
+                        itemsSummary.push(`${q}x ${it.nombre || 'Item'}`);
+                    });
+                }
+                const oProfit = total - orderCost;
+
+                lines.push([
+                    escapeCSV(fFecha),
+                    escapeCSV(fHora),
+                    escapeCSV(orderId),
+                    escapeCSV(client),
+                    escapeCSV(payment),
+                    escapeCSV(delivery),
+                    escapeCSV(total),
+                    escapeCSV(orderCost),
+                    escapeCSV(oProfit),
+                    escapeCSV(itemsSummary.join(' | '))
+                ].join(','));
+            });
+
+            // Descarga automática con BOM UTF-8 (\uFEFF)
+            const csvBlob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const downloadUrl = URL.createObjectURL(csvBlob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = downloadUrl;
+            const safePeriodName = (periodText || 'periodo').replace(/[^a-zA-Z0-9_-]/g, '_');
+            downloadLink.download = `Reporte_Ventas_Sr_Sra_Pinto_${safePeriodName}_${dateFormatted}.csv`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(downloadUrl);
+        },
+
         loadAnalytics() {
             const period = document.getElementById('report-period-select').value;
             const now = new Date();
@@ -1428,6 +1706,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const selectedProduct = this.selectedProductFilter;
             const productSales = {};
             const productBreakdown = {};
+            const dailyBreakdown = {};
+            const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
             const categorySales = {
                 'Desayunos': { qty: 0, revenue: 0 },
                 'Almuerzos': { qty: 0, revenue: 0 },
@@ -1442,6 +1722,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 let orderHasProduct = false;
                 let productRevenue = 0;
                 let orderProductCost = 0;
+                let orderItemsUnits = 0;
+                let selectedProductUnits = 0;
                 
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
@@ -1453,6 +1735,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         const unitCost = this.getProductCost(item);
                         const itemTotalCost = unitCost * qty;
                         
+                        orderItemsUnits += qty;
+
                         // Contabilizar productos vendidos
                         productSales[prodName] = (productSales[prodName] || 0) + qty;
                         totalUnitsSold += qty;
@@ -1494,17 +1778,47 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (prodName === selectedProduct) {
                                 orderHasProduct = true;
                                 productRevenue += subtotal;
+                                selectedProductUnits += qty;
                             }
                         }
                     });
                 }
                 
+                // Extraer fecha del pedido para agrupar en el desglose día por día
+                const orderDate = new Date(order.fecha);
+                const validDate = !isNaN(orderDate.getTime()) ? orderDate : new Date();
+                const yyyy = validDate.getFullYear();
+                const mm = String(validDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(validDate.getDate()).padStart(2, '0');
+                const dateKey = `${yyyy}-${mm}-${dd}`;
+                const dayName = daysOfWeek[validDate.getDay()];
+                const dateLabel = `${dayName} ${dd}/${mm}/${yyyy}`;
+
+                if (!dailyBreakdown[dateKey]) {
+                    dailyBreakdown[dateKey] = {
+                        dateKey: dateKey,
+                        dateLabel: dateLabel,
+                        dayName: dayName,
+                        pedidos: 0,
+                        unidades: 0,
+                        ventas: 0,
+                        costo: 0,
+                        utilidad: 0,
+                        margenPct: 0
+                    };
+                }
+
                 if (selectedProduct) {
                     if (orderHasProduct) {
                         if (!isSpecial) {
                             totalRevenue += productRevenue;
                             totalCost += orderProductCost;
                             cashOrdersCount += 1;
+
+                            dailyBreakdown[dateKey].pedidos += 1;
+                            dailyBreakdown[dateKey].unidades += selectedProductUnits;
+                            dailyBreakdown[dateKey].ventas += productRevenue;
+                            dailyBreakdown[dateKey].costo += orderProductCost;
                         } else {
                             if (method === 'Dieta Bryan') dietaBryanTotal += productRevenue;
                             else if (method === 'Regalía') regaliaTotal += productRevenue;
@@ -1512,15 +1826,34 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 } else {
                     if (!isSpecial) {
-                        totalRevenue += (Number(order.total) || 0);
+                        const orderTot = (Number(order.total) || 0);
+                        totalRevenue += orderTot;
                         totalCost += orderProductCost;
                         cashOrdersCount += 1;
+
+                        dailyBreakdown[dateKey].pedidos += 1;
+                        dailyBreakdown[dateKey].unidades += orderItemsUnits;
+                        dailyBreakdown[dateKey].ventas += orderTot;
+                        dailyBreakdown[dateKey].costo += orderProductCost;
                     } else {
                         if (method === 'Dieta Bryan') dietaBryanTotal += (Number(order.total) || 0);
                         else if (method === 'Regalía') regaliaTotal += (Number(order.total) || 0);
                     }
                 }
             });
+
+            // Calcular utilidades y márgenes de cada día en el desglose
+            Object.values(dailyBreakdown).forEach(day => {
+                day.utilidad = day.ventas - day.costo;
+                day.margenPct = day.ventas > 0 ? Math.round((day.utilidad / day.ventas) * 100) : 0;
+            });
+
+            // Guardar referencias en ReportsManager para exportaciones (CSV y PDF)
+            this.currentDailyBreakdown = dailyBreakdown;
+            this.currentProductBreakdown = productBreakdown;
+            this.currentFilteredOrders = filteredOrders;
+            this.currentTotalRevenue = totalRevenue;
+            this.currentTotalCost = totalCost;
 
             const totalProfit = totalRevenue - totalCost;
             const profitMarginPct = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0';
@@ -1591,6 +1924,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     elTopCatCount.innerText = '0 comandas';
                 }
             }
+
+            // Renderizar tabla de desglose diario de ventas y rentabilidad
+            this.renderDailyBreakdownTable(dailyBreakdown, totalRevenue, totalCost);
 
             // Renderizar tabla detallada de productos vendidos
             this.renderSoldProductsTable(productBreakdown, totalRevenue, totalCost);
@@ -1943,6 +2279,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 ingredientsHTML = `<tr><td colspan="2" style="padding: 10px; text-align: center; opacity: 0.5;">No hay consumo estimado.</td></tr>`;
             }
 
+            // Obtener filas para el desglose diario en el PDF
+            const dailyDays = Object.values(this.currentDailyBreakdown || {});
+            dailyDays.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+            let dailyTotalUnits = 0;
+            let dailyRowsHTML = '';
+            if (dailyDays.length > 0) {
+                dailyTotalUnits = dailyDays.reduce((acc, d) => acc + d.unidades, 0);
+                dailyRowsHTML = dailyDays.map(d => {
+                    const profitColor = d.utilidad >= 0 ? '#2ecc71' : '#e74c3c';
+                    return `
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 6px;"><strong>${d.dayName}</strong> <span style="color: #888; font-size: 10px;">(${d.dateKey})</span></td>
+                            <td style="padding: 6px; text-align: center;">${d.pedidos}</td>
+                            <td style="padding: 6px; text-align: center; color: #3498db; font-weight: bold;">${d.unidades}</td>
+                            <td style="padding: 6px; text-align: right; color: #2ecc71; font-weight: bold;">₡${d.ventas.toLocaleString()}</td>
+                            <td style="padding: 6px; text-align: right; color: #e74c3c;">₡${d.costo.toLocaleString()}</td>
+                            <td style="padding: 6px; text-align: right; font-weight: bold; color: ${profitColor};">₡${d.utilidad.toLocaleString()}</td>
+                            <td style="padding: 6px; text-align: center; font-weight: bold; color: ${profitColor};">${d.margenPct}%</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                dailyRowsHTML = `<tr><td colspan="7" style="padding: 10px; text-align: center; opacity: 0.5;">No hay ventas registradas en este período.</td></tr>`;
+            }
+
             // Crear el elemento temporal
             const element = document.createElement('div');
             element.style.padding = '30px';
@@ -2003,6 +2364,39 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <td style="padding: 8px; text-align: right;">${avgTicket}</td>
                             </tr>
                         </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="background: #fcf1f4; color: #E91350; padding: 6px 10px; margin: 0 0 15px 0; font-size: 13px; border-left: 4px solid #E91350; font-weight: bold;">
+                        DESGLOSE DÍA POR DÍA (VENTAS, COSTOS Y UTILIDAD)
+                    </h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 15px;">
+                        <thead>
+                            <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd; text-align: left;">
+                                <th style="padding: 6px;">Fecha / Día</th>
+                                <th style="padding: 6px; text-align: center;">Pedidos</th>
+                                <th style="padding: 6px; text-align: center;">Unidades</th>
+                                <th style="padding: 6px; text-align: right;">Ventas Totales</th>
+                                <th style="padding: 6px; text-align: right;">Costo Insumos</th>
+                                <th style="padding: 6px; text-align: right;">Utilidad Bruta</th>
+                                <th style="padding: 6px; text-align: center;">Margen %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dailyRowsHTML}
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #fafafa; font-weight: bold; border-top: 2px solid #ddd;">
+                                <td style="padding: 6px;">TOTALES</td>
+                                <td style="padding: 6px; text-align: center;">${orders}</td>
+                                <td style="padding: 6px; text-align: center; color: #3498db;">${dailyTotalUnits}</td>
+                                <td style="padding: 6px; text-align: right; color: #2ecc71;">${revenue}</td>
+                                <td style="padding: 6px; text-align: right; color: #e74c3c;">${cogs}</td>
+                                <td style="padding: 6px; text-align: right; color: #2ecc71;">${profit}</td>
+                                <td style="padding: 6px; text-align: center;">${margin}</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
 
