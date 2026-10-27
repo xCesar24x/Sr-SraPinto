@@ -207,15 +207,23 @@ const CartManager = {
         const product = MenuController.getProductById(productId);
         if (!product) return;
         
-        const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(product)) ||
-                      product.requiresOptions === true ||
-                      (product.id && product.id.toLowerCase().includes('empanada')) ||
-                      (product.nombre && product.nombre.toLowerCase().includes('empanada'));
+        const hasOptions = (window.isEmpanadaDish && window.isEmpanadaDish(product)) ||
+                          product.requiresOptions === true ||
+                          (product.options && product.options.length > 0) ||
+                          (product.id && (product.id.toLowerCase().includes('empanada') || product.id.toLowerCase().includes('adicional'))) ||
+                          (product.nombre && (product.nombre.toLowerCase().includes('empanada') || product.nombre.toLowerCase().includes('adicional')));
 
-        if (isEmp && !option) {
+        if (hasOptions && !option) {
             product.requiresOptions = true;
             if (!product.options || product.options.length === 0) {
-                product.options = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                const nomLower = (product.nombre || '').toLowerCase();
+                if (nomLower.includes('adicional')) {
+                    product.options = ['Queso', 'Carne', 'Salchichón', 'Pinto', 'Natilla', 'Plátanos', 'Tortillas', 'Huevo'];
+                } else if (nomLower.includes('gaseosa') || nomLower.includes('refresco')) {
+                    product.options = ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero', 'Té Blanco'];
+                } else {
+                    product.options = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                }
             }
             UIController.showOptionsModal(product);
             return;
@@ -1228,6 +1236,16 @@ const MenuController = {
             precio: 3500,
             img: '<img src="images-catalogo/Srpapicarne.jpeg" alt="Sr. Papi Carne">'
         },
+        {
+            id: 'p-adicional',
+            categoria: 'snacks',
+            nombre: 'Adicional',
+            desc: 'Porción adicional para acompañar tu platillo. Elige tu preferido.',
+            precio: 800,
+            img: '<img src="images-catalogo/Señor Pinto.jpeg" alt="Adicional">',
+            requiresOptions: true,
+            options: ['Queso', 'Carne', 'Salchichón', 'Pinto', 'Natilla', 'Plátanos', 'Tortillas', 'Huevo']
+        },
 
 
         // ── BEBIDAS (compartidas) ──
@@ -2227,7 +2245,7 @@ const UIController = {
                     flex-direction: column;
                     gap: 12px;
                 ">
-                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #f7b731; font-weight: 800;">
+                    <div id="options-modal-tag" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #f7b731; font-weight: 800;">
                         🥟 Selecciona el Relleno
                     </div>
                     <h3 id="options-title" style="
@@ -2276,21 +2294,51 @@ const UIController = {
         if (titleEl) titleEl.innerText = product.nombre;
         if (priceEl) priceEl.innerText = `₡${(product.precio || 0).toLocaleString()}`;
 
+        const nameLower = (product.nombre || '').toLowerCase();
+        const idLower = (product.id || '').toLowerCase();
+        let tagText = '✨ Selecciona una Opción';
+        if (nameLower.includes('empanada') || idLower.includes('empanada')) {
+            tagText = '🥟 Selecciona el Relleno';
+        } else if (nameLower.includes('gaseosa') || nameLower.includes('refresco') || nameLower.includes('fresco') || nameLower.includes('bebida') || idLower.startsWith('b-')) {
+            tagText = '🥤 Selecciona el Sabor / Bebida';
+        } else if (nameLower.includes('adicional') || idLower.includes('adicional')) {
+            tagText = '✨ Selecciona el Adicional';
+        }
+        const tagEl = document.getElementById('options-modal-tag');
+        if (tagEl) tagEl.innerText = tagText;
+
         // Mapeo de emojis para cada opción
         const flavorIcons = {
             'Queso': '🧀',
             'Carne': '🥩',
             'Pinto': '🍚',
             'Carne y Queso': '🧀🥩',
+            'Salchichon': '🌭',
+            'Salchichón': '🌭',
+            'Natilla': '🍶',
+            'Platanos': '🍌',
+            'Plátanos': '🍌',
+            'Tortillas': '🫓',
+            'Huevo': '🍳',
             'Coca Cola': '🥤',
             'Fresca': '🥤',
             'Fanta': '🥤',
             'Gingerale': '🥤',
             'Coca Zero': '🥤',
-            'Té Blanco': '🧃'
+            'Té Blanco': '🧃',
+            'Te Blanco': '🧃'
         };
 
-        const optionsToRender = (product.options && product.options.length) ? product.options : ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+        let optionsToRender = (product.options && product.options.length) ? product.options : null;
+        if (!optionsToRender) {
+            if (nameLower.includes('adicional') || idLower.includes('adicional')) {
+                optionsToRender = ['Queso', 'Carne', 'Salchichón', 'Pinto', 'Natilla', 'Plátanos', 'Tortillas', 'Huevo'];
+            } else if (nameLower.includes('gaseosa') || nameLower.includes('refresco') || idLower.startsWith('b-')) {
+                optionsToRender = ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero', 'Té Blanco'];
+            } else {
+                optionsToRender = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+            }
+        }
         if (listEl) {
             listEl.innerHTML = optionsToRender.map(opt => {
                 const icon = flavorIcons[opt] || '✨';

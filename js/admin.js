@@ -26,6 +26,7 @@ let COSTOS_PRODUCTOS = {
     'c-sra-empanada-cafe': 1400,
     'p-cono-salchipapa': 950,
     'p-sr-papi-carne': 1200,
+    'p-adicional': 350,
 
     // BEBIDAS
     'b-cafe-premium': 300,
@@ -1226,6 +1227,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (nameLower.includes('hamburguesa')) return COSTOS_PRODUCTOS['p-sra-hamburguesa'] || 1900;
                 if (nameLower.includes('salchipapa')) return COSTOS_PRODUCTOS['p-cono-salchipapa'] || 950;
                 if (nameLower.includes('papi carne') || nameLower.includes('papicarne')) return COSTOS_PRODUCTOS['p-sr-papi-carne'] || 1200;
+                if (nameLower.includes('adicional')) return COSTOS_PRODUCTOS['p-adicional'] || 350;
                 if (nameLower.includes('empanada')) {
                     if (nameLower.includes('carne y queso')) return COSTOS_PRODUCTOS['p-empanada-carne-queso'] || 850;
                     if (nameLower.includes('carne')) return COSTOS_PRODUCTOS['p-empanada-carne'] || 800;
@@ -2141,6 +2143,7 @@ document.addEventListener("DOMContentLoaded", () => {
             'c-sra-empanada-cafe': 'Combo: Señora Empanada + Café',
             'p-cono-salchipapa': 'Sr. Cono de SalchiPapas',
             'p-sr-papi-carne': 'Sr. Papi Carne',
+            'p-adicional': 'Adicional',
 
             // Bebidas
             'b-cafe-premium': 'Café Premium Grande (12 onzas)',
@@ -2914,6 +2917,28 @@ document.addEventListener("DOMContentLoaded", () => {
                         db.collection('config').doc('precios').set(priceSync, { merge: true }).catch(err => console.warn("Sync precios:", err));
                     }
 
+                    // Asegurar que el platillo "Adicional" con sus variantes exista en el catálogo
+                    const hasAdicional = this.dishes.some(d => d.id === 'p-adicional' || (d.nombre && d.nombre.toLowerCase().trim() === 'adicional'));
+                    if (!hasAdicional) {
+                        const adicionalDoc = {
+                            id: 'p-adicional',
+                            nombre: 'Adicional',
+                            categoria: 'snacks',
+                            desc: 'Porción adicional para acompañar tu platillo. Elige tu preferido.',
+                            ingredientes: 'Porción individual de acompañamiento adicional',
+                            precio: 800,
+                            costo: 350,
+                            recetaItems: [],
+                            requiresOptions: true,
+                            options: ['Queso', 'Carne', 'Salchichón', 'Pinto', 'Natilla', 'Plátanos', 'Tortillas', 'Huevo'],
+                            img: 'images-catalogo/Señor Pinto.jpeg',
+                            actualizadoEn: new Date().toISOString()
+                        };
+                        db.collection('volio_platillos').doc('p-adicional').set(adicionalDoc).catch(err => console.warn("Error creando adicional:", err));
+                        db.collection('config').doc('precios').set({ 'p-adicional': 800 }, { merge: true }).catch(err => console.warn("Sync precios adicional:", err));
+                        db.collection('config').doc('costos').set({ 'p-adicional': 350 }, { merge: true }).catch(err => console.warn("Sync costos adicional:", err));
+                    }
+
                     // Limpieza activa: si existen IDs viejos o duplicados en Firestore, eliminarlos permanentemente
                     const badIds = [
                         'c-empanada-sencilla-cafe', 'c-empanada-arreglada-cafe',
@@ -3255,7 +3280,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     ingredientes: 'Lata / botella de refresco gaseoso',
                     precio: 1200,
                     costo: 600,
-                    img: 'images-catalogo/gaseosas.jpg'
+                    img: 'images-catalogo/gaseosas.jpg',
+                    requiresOptions: true,
+                    options: ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero', 'Té Blanco']
                 },
                 {
                     id: 'b-hidratante',
@@ -3266,6 +3293,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     precio: 1300,
                     costo: 650,
                     img: 'images-catalogo/hidratantes.jpg'
+                },
+                {
+                    id: 'p-adicional',
+                    nombre: 'Adicional',
+                    categoria: 'snacks',
+                    desc: 'Porción adicional para acompañar tu platillo. Elige tu preferido.',
+                    ingredientes: 'Porción individual de acompañamiento adicional',
+                    precio: 800,
+                    costo: 350,
+                    img: 'images-catalogo/Señor Pinto.jpeg',
+                    requiresOptions: true,
+                    options: ['Queso', 'Carne', 'Salchichón', 'Pinto', 'Natilla', 'Plátanos', 'Tortillas', 'Huevo']
                 }
             ];
 
@@ -3865,6 +3904,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 dish = this.dishes.find(d => d.id === id);
             }
 
+            const chkOptions = document.getElementById('volio-dish-has-options');
+            const containerOptions = document.getElementById('volio-options-container');
+            const txtOptions = document.getElementById('volio-dish-options');
+
             if (dish) {
                 title.innerHTML = `<i class="fas fa-edit"></i> Editar Producto: ${this.sanitize(dish.nombre)}`;
                 document.getElementById('volio-dish-name').value = dish.nombre || '';
@@ -3873,6 +3916,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('volio-dish-desc').value = dish.desc || '';
                 document.getElementById('volio-dish-price').value = dish.precio || '';
                 document.getElementById('volio-dish-img').value = dish.img || 'images-catalogo/Señor Pinto.jpeg';
+
+                const hasOptions = !!(dish.requiresOptions || (dish.options && dish.options.length > 0));
+                if (chkOptions) chkOptions.checked = hasOptions;
+                if (containerOptions) containerOptions.style.display = hasOptions ? 'block' : 'none';
+                if (txtOptions) {
+                    txtOptions.value = (dish.options && Array.isArray(dish.options)) ? dish.options.join(', ') : (hasOptions ? 'Queso, Carne, Pinto, Carne y Queso' : '');
+                }
 
                 if (dish.recetaItems && Array.isArray(dish.recetaItems) && dish.recetaItems.length > 0) {
                     this.activeRecipeItems = JSON.parse(JSON.stringify(dish.recetaItems));
@@ -3888,6 +3938,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('volio-dish-price').value = '';
                 document.getElementById('volio-dish-cost').value = '0';
                 document.getElementById('volio-dish-img').value = 'images-catalogo/Señor Pinto.jpeg';
+
+                if (chkOptions) chkOptions.checked = false;
+                if (containerOptions) containerOptions.style.display = 'none';
+                if (txtOptions) txtOptions.value = '';
+
                 this.activeRecipeItems = [
                     { inventarioId: 'pinto', cantidad: 1 },
                     { inventarioId: 'caja_empaque', cantidad: 1 }
@@ -4047,6 +4102,43 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
 
+        toggleOptionsConfig(checked) {
+            const container = document.getElementById('volio-options-container');
+            if (container) {
+                container.style.display = checked ? 'block' : 'none';
+                if (checked) {
+                    const input = document.getElementById('volio-dish-options');
+                    if (input && !input.value.trim()) {
+                        const name = (document.getElementById('volio-dish-name')?.value || '').toLowerCase();
+                        if (name.includes('adicional')) {
+                            input.value = 'Queso, Carne, Salchichón, Pinto, Natilla, Plátanos, Tortillas, Huevo';
+                        } else if (name.includes('empanada')) {
+                            input.value = 'Queso, Carne, Pinto, Carne y Queso';
+                        } else if (name.includes('gaseosa') || name.includes('refresco')) {
+                            input.value = 'Coca Cola, Fresca, Fanta, Gingerale, Coca Zero, Té Blanco';
+                        }
+                    }
+                }
+            }
+        },
+
+        applyOptionTemplate(template) {
+            const chk = document.getElementById('volio-dish-has-options');
+            if (chk) chk.checked = true;
+            const container = document.getElementById('volio-options-container');
+            if (container) container.style.display = 'block';
+            const input = document.getElementById('volio-dish-options');
+            if (!input) return;
+
+            if (template === 'adicional') {
+                input.value = 'Queso, Carne, Salchichón, Pinto, Natilla, Plátanos, Tortillas, Huevo';
+            } else if (template === 'empanada') {
+                input.value = 'Queso, Carne, Pinto, Carne y Queso';
+            } else if (template === 'gaseosa') {
+                input.value = 'Coca Cola, Fresca, Fanta, Gingerale, Coca Zero, Té Blanco';
+            }
+        },
+
         closeDishModal() {
             document.getElementById('volio-dish-modal').classList.remove('active');
         },
@@ -4088,7 +4180,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const isEmp = (id && id.toLowerCase().includes('empanada')) || (nombre && nombre.toLowerCase().includes('empanada'));
+            const hasOptions = document.getElementById('volio-dish-has-options')?.checked || false;
+            let optionsList = null;
+            if (hasOptions) {
+                const rawOptions = document.getElementById('volio-dish-options')?.value || '';
+                optionsList = rawOptions
+                    .split(/[\n,]/)
+                    .map(o => o.trim())
+                    .filter(o => o.length > 0);
+
+                if (optionsList.length === 0) {
+                    const nameLower = nombre.toLowerCase();
+                    if (nameLower.includes('adicional')) {
+                        optionsList = ['Queso', 'Carne', 'Salchichón', 'Pinto', 'Natilla', 'Plátanos', 'Tortillas', 'Huevo'];
+                    } else if (nameLower.includes('refresco') || nameLower.includes('gaseosa')) {
+                        optionsList = ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero', 'Té Blanco'];
+                    } else {
+                        optionsList = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                    }
+                }
+            }
+
             const dishData = {
                 nombre,
                 categoria,
@@ -4097,8 +4209,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 precio,
                 costo,
                 recetaItems: this.activeRecipeItems || [],
-                requiresOptions: isEmp ? true : false,
-                options: isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null,
+                requiresOptions: hasOptions,
+                options: optionsList,
                 img: img || 'images-catalogo/Señor Pinto.jpeg',
                 actualizadoEn: new Date().toISOString()
             };

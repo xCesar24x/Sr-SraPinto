@@ -2801,7 +2801,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-init.js"></script>
 <script src="js/recetas.js"></script>
-<script src="js/main.js?v=4.4"></script>
+<script src="js/main.js?v=4.5"></script>
 <script src="js/cierre-automatico.js"></script>
 
 <script>
@@ -2949,8 +2949,8 @@ const PosManager = {
                         desc: vd.desc || '',
                         precio: vd.precio || 0,
                         costo: vd.costo || 0,
-                        requiresOptions: vd.requiresOptions !== undefined ? vd.requiresOptions : isEmp,
-                        options: vd.options || (isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null),
+                        requiresOptions: vd.requiresOptions !== undefined ? vd.requiresOptions : (isEmp || (vd.options && vd.options.length > 0)),
+                        options: (vd.options && Array.isArray(vd.options) && vd.options.length > 0) ? vd.options : (isEmp ? ['Queso', 'Carne', 'Pinto', 'Carne y Queso'] : null),
                         img: vd.img && vd.img.startsWith('<') ? vd.img : `<img src="${vd.img || 'images-catalogo/Señor Pinto.jpeg'}" alt="${vd.nombre}" class="img-fit">`
                     });
                     existingIds.add(vd.id);
@@ -3133,15 +3133,23 @@ const PosManager = {
         const product = window.MenuController ? window.MenuController.getProductById(dishId) : null;
         if (!product) return;
 
-        const isEmp = (window.isEmpanadaDish && window.isEmpanadaDish(product)) ||
-                      product.requiresOptions === true ||
-                      (product.id && product.id.toLowerCase().includes('empanada')) ||
-                      (product.nombre && product.nombre.toLowerCase().includes('empanada'));
+        const hasOptions = (window.isEmpanadaDish && window.isEmpanadaDish(product)) ||
+                          product.requiresOptions === true ||
+                          (product.options && product.options.length > 0) ||
+                          (product.id && (product.id.toLowerCase().includes('empanada') || product.id.toLowerCase().includes('adicional'))) ||
+                          (product.nombre && (product.nombre.toLowerCase().includes('empanada') || product.nombre.toLowerCase().includes('adicional')));
 
-        if (isEmp) {
+        if (hasOptions) {
             product.requiresOptions = true;
             if (!product.options || product.options.length === 0) {
-                product.options = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                const nomLower = (product.nombre || '').toLowerCase();
+                if (nomLower.includes('adicional')) {
+                    product.options = ['Queso', 'Carne', 'Salchichón', 'Pinto', 'Natilla', 'Plátanos', 'Tortillas', 'Huevo'];
+                } else if (nomLower.includes('gaseosa') || nomLower.includes('refresco')) {
+                    product.options = ['Coca Cola', 'Fresca', 'Fanta', 'Gingerale', 'Coca Zero', 'Té Blanco'];
+                } else {
+                    product.options = ['Queso', 'Carne', 'Pinto', 'Carne y Queso'];
+                }
             }
             UIController.showOptionsModal(product);
         } else {
