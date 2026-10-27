@@ -1198,6 +1198,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 return Number(COSTOS_PRODUCTOS[item.id]) || 0;
             }
 
+            // 1.1 Coincidencia en catálogo en vivo de VolioManager (platillos o bebidas creadas/editadas)
+            if (window.VolioManager && Array.isArray(window.VolioManager.dishes)) {
+                const foundVolio = window.VolioManager.dishes.find(d => d.id === item.id || (item.nombre && d.nombre && d.nombre.toLowerCase().trim() === item.nombre.toLowerCase().trim()));
+                if (foundVolio && foundVolio.costo !== undefined && foundVolio.costo !== null) {
+                    return Number(foundVolio.costo) || 0;
+                }
+            }
+
             // 2. Coincidencia por nombre exacto en NOMBRES_PRODUCTOS
             const name = (item.nombre || '').trim();
             if (this.NOMBRES_PRODUCTOS) {
@@ -2237,16 +2245,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 ];
             }
 
+            // Incluir platillos y bebidas del catálogo de VolioManager para que cualquier producto nuevo se pueda ajustar
+            if (window.VolioManager && Array.isArray(window.VolioManager.dishes)) {
+                window.VolioManager.dishes.forEach(d => {
+                    if (d.id && !activeProductIds.includes(d.id)) {
+                        activeProductIds.push(d.id);
+                    }
+                    if (d.costo !== undefined && (COSTOS_PRODUCTOS[d.id] === undefined || COSTOS_PRODUCTOS[d.id] === null)) {
+                        COSTOS_PRODUCTOS[d.id] = Number(d.costo) || 0;
+                    }
+                    if (d.nombre && !this.NOMBRES_PRODUCTOS[d.id]) {
+                        this.NOMBRES_PRODUCTOS[d.id] = d.nombre;
+                    }
+                });
+            }
+
             // Construir array con nombres legibles para ordenar correctamente
             const formattedCosts = Object.entries(COSTOS_PRODUCTOS)
                 .filter(([id]) => activeProductIds.includes(id))
                 .map(([id, cost]) => {
                     let name = this.NOMBRES_PRODUCTOS[id] || id.replace(/^(p|c|b|ce)-/, '').replace(/_/g, ' ').replace(/-/g, ' ');
                     let prefix = '';
+                    const isBebida = id.startsWith('b-') || (window.VolioManager?.dishes?.find(d => d.id === id)?.categoria === 'bebidas');
                     if (id.startsWith('p-')) prefix = '🍳 ';
                     else if (id.startsWith('c-')) prefix = '✨ ';
-                    else if (id.startsWith('b-')) prefix = '☕ ';
+                    else if (isBebida) prefix = '☕ ';
                     else if (id.startsWith('ce-')) prefix = '🎓 ';
+                    else prefix = '🍽️ ';
                     
                     return { id, cost, name, prefix };
                 });
@@ -2300,10 +2325,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 const updatedCosts = { ...COSTOS_PRODUCTOS, ...newCosts };
 
                 // Guardar en la base de datos Firestore de forma persistente
-                await db.collection('config').doc('costos').set(updatedCosts);
+                await db.collection('config').doc('costos').set(updatedCosts, { merge: true });
                 
                 // Actualizar nuestra variable local para el recálculo
                 COSTOS_PRODUCTOS = updatedCosts;
+
+                // Sincronizar también con volio_platillos para que la tabla de platillos refleje los nuevos costos inmediatamente
+                if (window.VolioManager && Array.isArray(window.VolioManager.dishes)) {
+                    for (const [id, cost] of Object.entries(newCosts)) {
+                        const dish = window.VolioManager.dishes.find(d => d.id === id);
+                        if (dish) {
+                            dish.costo = cost;
+                            db.collection('volio_platillos').doc(id).set({
+                                costo: cost,
+                                actualizadoEn: new Date().toISOString()
+                            }, { merge: true }).catch(console.warn);
+                        }
+                    }
+                    if (typeof window.VolioManager.renderDishesTable === 'function') {
+                        window.VolioManager.renderDishesTable();
+                    }
+                }
                 
                 this.closeCostsModal();
                 this.loadAnalytics(); // Recargar analíticas al instante con los nuevos costos
@@ -3611,12 +3653,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             container.innerHTML = filtered.map(dish => {
                 const precio = dish.precio || 0;
-                let costo = dish.costo || 0;
+                let costo = dish.costo !== undefined && dish.costo !== null ? Number(dish.costo) : 0;
 
-                // Calcular costo en vivo si el platillo tiene recetaItems definida
+                // Calcular costo en vivo si el platillo tiene recetaItems definida y no es costo manual directo
                 if (dish.recetaItems && Array.isArray(dish.recetaItems) && dish.recetaItems.length > 0) {
                     const liveCosto = this.calculateDishLiveCost(dish.recetaItems);
-                    if (liveCosto > 0) costo = liveCosto;
+                    if (liveCosto > 0 && (!dish.costoManual || costo === 0)) {
+                        costo = liveCosto;
+                    }
                 }
 
                 const margen = precio - costo;
@@ -3874,8 +3918,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (nameLower.includes('salchipapa')) items.push({ inventarioId: 'papas_fritas', cantidad: 1 }, { inventarioId: 'salchicha', cantidad: 1 });
             if (nameLower.includes('café') || nameLower.includes('cafe')) items.push({ inventarioId: 'cafe', cantidad: 1 }, { inventarioId: 'vaso_cafe_tapa', cantidad: 1 });
             if (nameLower.includes('agua')) items.push({ inventarioId: 'botella_agua', cantidad: 1 });
-            if (nameLower.includes('gaseosa')) items.push({ inventarioId: 'gaseosa', cantidad: 1 });
+            if (nameLower.includes('gaseosa') || nameLower.includes('refresco')) items.push({ inventarioId: 'gaseosa', cantidad: 1 });
             if (nameLower.includes('hidratante') || nameLower.includes('powerade')) items.push({ inventarioId: 'hidratante', cantidad: 1 });
+
+            // Si es bebida o adicional, no inyectar pinto por defecto
+            if (dish && (dish.categoria === 'bebidas' || dish.id === 'p-adicional' || nameLower.includes('adicional'))) {
+                return items;
+            }
 
             if (items.length === 0) {
                 items.push({ inventarioId: 'pinto', cantidad: 1 });
@@ -3915,6 +3964,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('volio-dish-ingredients').value = dish.ingredientes || '';
                 document.getElementById('volio-dish-desc').value = dish.desc || '';
                 document.getElementById('volio-dish-price').value = dish.precio || '';
+                const savedCost = dish.costo !== undefined && dish.costo !== null ? Number(dish.costo) : 0;
+                document.getElementById('volio-dish-cost').value = savedCost;
                 document.getElementById('volio-dish-img').value = dish.img || 'images-catalogo/Señor Pinto.jpeg';
 
                 const hasOptions = !!(dish.requiresOptions || (dish.options && dish.options.length > 0));
@@ -3924,7 +3975,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     txtOptions.value = (dish.options && Array.isArray(dish.options)) ? dish.options.join(', ') : (hasOptions ? 'Queso, Carne, Pinto, Carne y Queso' : '');
                 }
 
-                if (dish.recetaItems && Array.isArray(dish.recetaItems) && dish.recetaItems.length > 0) {
+                if (Array.isArray(dish.recetaItems)) {
                     this.activeRecipeItems = JSON.parse(JSON.stringify(dish.recetaItems));
                 } else {
                     this.activeRecipeItems = this.deriveDefaultRecipe(dish);
@@ -3932,7 +3983,9 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 title.innerHTML = `<i class="fas fa-plus"></i> Nuevo Producto / Platillo`;
                 document.getElementById('volio-dish-name').value = '';
-                document.getElementById('volio-dish-category').value = 'desayuno';
+                const filterCat = document.getElementById('volio-filter-cat')?.value;
+                const defaultCat = (filterCat && filterCat !== 'todas') ? filterCat : 'desayuno';
+                document.getElementById('volio-dish-category').value = defaultCat;
                 document.getElementById('volio-dish-ingredients').value = '';
                 document.getElementById('volio-dish-desc').value = '';
                 document.getElementById('volio-dish-price').value = '';
@@ -3943,10 +3996,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (containerOptions) containerOptions.style.display = 'none';
                 if (txtOptions) txtOptions.value = '';
 
-                this.activeRecipeItems = [
-                    { inventarioId: 'pinto', cantidad: 1 },
-                    { inventarioId: 'caja_empaque', cantidad: 1 }
-                ];
+                if (defaultCat === 'bebidas') {
+                    this.activeRecipeItems = [];
+                } else {
+                    this.activeRecipeItems = [
+                        { inventarioId: 'pinto', cantidad: 1 },
+                        { inventarioId: 'caja_empaque', cantidad: 1 }
+                    ];
+                }
             }
 
             this.updateImgPreview();
@@ -4055,7 +4112,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (this.activeRecipeItems && Array.isArray(this.activeRecipeItems)) {
                 this.activeRecipeItems.forEach(it => {
                     const found = inv.find(i => i.id === it.inventarioId);
-                    const cost = found ? (found.costoUnitario || 0) : 0;
+                    const cost = found ? (found.costoUnitario || 0) : (it.costoUnitario || 0);
                     const qty = typeof it.cantidad === 'number' ? it.cantidad : (parseFloat(it.cantidad) || 0);
                     const sub = Math.round(qty * cost);
                     if (found && found.tipo === 'empaque') {
@@ -4072,14 +4129,81 @@ document.addEventListener("DOMContentLoaded", () => {
             const elEmp = document.getElementById('receta-subtotal-emp');
             const elTotal = document.getElementById('receta-total-cost');
             const costInput = document.getElementById('volio-dish-cost');
+            const costBadge = document.getElementById('volio-cost-badge');
 
             if (elIng) elIng.innerText = `₡${subtotalIng.toLocaleString()}`;
             if (elEmp) elEmp.innerText = `₡${subtotalEmp.toLocaleString()}`;
-            if (elTotal) elTotal.innerText = `₡${total.toLocaleString()}`;
-            if (costInput) {
-                costInput.value = total;
+
+            if (this.activeRecipeItems && this.activeRecipeItems.length > 0) {
+                if (elTotal) elTotal.innerText = `₡${total.toLocaleString()}`;
+                if (costInput) costInput.value = total;
+                if (costBadge) {
+                    costBadge.innerHTML = '<i class="fas fa-link"></i> Vinculado al Escandallo';
+                    costBadge.style.color = '#2ecc71';
+                }
+            } else {
+                const currentVal = costInput ? (parseFloat(costInput.value) || 0) : 0;
+                if (elTotal) elTotal.innerText = `₡${currentVal.toLocaleString()} (Costo Directo)`;
+                if (costBadge) {
+                    costBadge.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Costo Directo / Manual';
+                    costBadge.style.color = '#f1c40f';
+                }
             }
 
+            this.calcCostMetrics();
+        },
+
+        onManualCostChanged(newCostVal) {
+            const newCost = parseFloat(newCostVal) || 0;
+            this.calcCostMetrics();
+
+            const elTotal = document.getElementById('receta-total-cost');
+            const costBadge = document.getElementById('volio-cost-badge');
+
+            if (!this.activeRecipeItems || this.activeRecipeItems.length === 0) {
+                if (elTotal) elTotal.innerText = `₡${newCost.toLocaleString()} (Costo Directo)`;
+                if (costBadge) {
+                    costBadge.innerHTML = '<i class="fas fa-hand-holding-usd"></i> Costo Directo / Manual';
+                    costBadge.style.color = '#f1c40f';
+                }
+                return;
+            }
+
+            // Si tiene exactamente 1 insumo asignado (bebida unitaria o empaque),
+            // sincronizar el costo de ese insumo para que el escandallo refleje el nuevo costo unitario ingresado
+            if (this.activeRecipeItems.length === 1) {
+                const item = this.activeRecipeItems[0];
+                const qty = typeof item.cantidad === 'number' ? item.cantidad : (parseFloat(item.cantidad) || 1);
+                item.costoUnitario = qty > 0 ? Math.round(newCost / qty) : newCost;
+                
+                const inv = window.currentInventory || [];
+                const invItem = inv.find(i => i.id === item.inventarioId);
+                if (invItem) {
+                    invItem.costoUnitario = item.costoUnitario;
+                }
+                
+                this.renderRecipeRows();
+                const costInput = document.getElementById('volio-dish-cost');
+                if (costInput && parseFloat(costInput.value) !== newCost) {
+                    costInput.value = newCost;
+                }
+                this.calcCostMetrics();
+            }
+        },
+
+        clearRecipeRows() {
+            this.activeRecipeItems = [];
+            this.renderRecipeRows();
+        },
+
+        onCategoryChanged(cat) {
+            if (cat === 'bebidas') {
+                // Si la receta actual tiene insumos de comida (como pinto o empaque de comida), limpiarla para bebidas
+                if (this.activeRecipeItems && this.activeRecipeItems.some(it => it.inventarioId === 'pinto' || it.inventarioId === 'caja_empaque')) {
+                    this.activeRecipeItems = [];
+                    this.renderRecipeRows();
+                }
+            }
             this.calcCostMetrics();
         },
 
@@ -4201,6 +4325,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            // Sincronizar costo en receta activa si tiene 1 insumo asignado
+            if (this.activeRecipeItems && this.activeRecipeItems.length === 1) {
+                this.activeRecipeItems[0].costoUnitario = costo;
+            }
+
+            const isManualCost = (!this.activeRecipeItems || this.activeRecipeItems.length === 0);
+
             const dishData = {
                 nombre,
                 categoria,
@@ -4208,6 +4339,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 desc,
                 precio,
                 costo,
+                costoManual: isManualCost,
                 recetaItems: this.activeRecipeItems || [],
                 requiresOptions: hasOptions,
                 options: optionsList,
@@ -4222,30 +4354,61 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const db = window.FirebaseDB;
                 const dishId = id || ('v-' + Date.now());
-                if (id) {
-                    await db.collection('volio_platillos').doc(id).update(dishData);
-                } else {
-                    await db.collection('volio_platillos').doc(dishId).set(dishData);
-                }
 
-                // Sincronizar precio y costo inmediatamente en config global para el menú de clientes y ventas
+                // Guardar platillo con .set(..., { merge: true }) para que funcione si el documento es nuevo o preexistente
+                await db.collection('volio_platillos').doc(dishId).set(dishData, { merge: true });
+
+                // Sincronizar precio y costo inmediatamente en config global para ventas y reportes
                 await db.collection('config').doc('precios').set({
                     [dishId]: precio
                 }, { merge: true }).catch(err => console.warn("Error sincronizando precio:", err));
 
-                if (costo > 0) {
-                    await db.collection('config').doc('costos').set({
-                        [dishId]: costo
-                    }, { merge: true }).catch(err => console.warn("Error sincronizando costo:", err));
+                await db.collection('config').doc('costos').set({
+                    [dishId]: costo
+                }, { merge: true }).catch(err => console.warn("Error sincronizando costo:", err));
+
+                // Si el platillo tiene un insumo de inventario único (como gaseosa, botella de agua, etc.),
+                // actualizar el costoUnitario de ese insumo en inventario en Firestore y en memoria
+                if (this.activeRecipeItems && this.activeRecipeItems.length === 1) {
+                    const invId = this.activeRecipeItems[0].inventarioId;
+                    if (invId) {
+                        await db.collection('inventario').doc(invId).set({
+                            costoUnitario: costo
+                        }, { merge: true }).catch(err => console.warn("Error actualizando costo en inventario:", err));
+
+                        const invItem = (window.currentInventory || []).find(i => i.id === invId);
+                        if (invItem) invItem.costoUnitario = costo;
+
+                        await db.collection('config').doc('costos').set({
+                            [invId]: costo
+                        }, { merge: true }).catch(console.warn);
+                    }
                 }
 
+                // Actualizar inmediatamente en memoria para no depender de la latencia de Firestore
+                if (typeof COSTOS_PRODUCTOS !== 'undefined') {
+                    COSTOS_PRODUCTOS[dishId] = costo;
+                }
+                if (window.ReportsManager && window.ReportsManager.NOMBRES_PRODUCTOS) {
+                    window.ReportsManager.NOMBRES_PRODUCTOS[dishId] = nombre;
+                }
+
+                const localIdx = this.dishes.findIndex(d => d.id === dishId);
+                if (localIdx >= 0) {
+                    this.dishes[localIdx] = { ...this.dishes[localIdx], ...dishData, id: dishId };
+                } else {
+                    this.dishes.push({ ...dishData, id: dishId });
+                    this.dishes.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+                }
+
+                this.renderDishesTable();
                 this.closeDishModal();
             } catch (err) {
                 console.error("Error al guardar platillo Volio:", err);
-                alert("Hubo un error al guardar el platillo.");
+                alert("Hubo un error al guardar el platillo: " + (err.message || err));
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = 'Guardar Platillo';
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Producto';
             }
         },
 

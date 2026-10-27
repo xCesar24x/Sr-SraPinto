@@ -1395,7 +1395,7 @@
                 </div>
                 <div class="form-group">
                     <label>Categoría del Menú</label>
-                    <select id="volio-dish-category">
+                    <select id="volio-dish-category" onchange="VolioManager.onCategoryChanged(this.value)">
                         <option value="desayuno">🍳 Desayuno</option>
                         <option value="almuerzo">🍲 Almuerzo</option>
                         <option value="snacks">🥟 Snacks & Antojos</option>
@@ -1411,9 +1411,14 @@
                             </div>
                             <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">Precios tomados en tiempo real desde el Inventario</span>
                         </div>
-                        <button type="button" class="btn-primary" onclick="VolioManager.addRecipeRow()" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
-                            <i class="fas fa-plus"></i> Agregar Insumo / Empaque
-                        </button>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn-secondary" onclick="VolioManager.clearRecipeRows()" style="padding: 6px 10px; font-size: 0.78rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.85); cursor: pointer;" title="Quitar todos los insumos y definir costo manual">
+                                <i class="fas fa-eraser"></i> Limpiar Insumos (Costo Directo)
+                            </button>
+                            <button type="button" class="btn-primary" onclick="VolioManager.addRecipeRow()" style="padding: 6px 12px; font-size: 0.8rem; background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
+                                <i class="fas fa-plus"></i> Agregar Insumo / Empaque
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Tabla de items de receta -->
@@ -1499,10 +1504,13 @@
                     </div>
                     <div class="form-group">
                         <label style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>Costo de Materia Prima (₡)</span>
-                            <span style="font-size: 0.7rem; color: #2ecc71; font-weight: 600;"><i class="fas fa-link"></i> Vinculado al Escandallo</span>
+                            <span>Costo de Materia Prima / Unitario (₡)</span>
+                            <span id="volio-cost-badge" style="font-size: 0.7rem; color: #2ecc71; font-weight: 600;"><i class="fas fa-link"></i> Vinculado al Escandallo</span>
                         </label>
-                        <input type="number" id="volio-dish-cost" oninput="VolioManager.calcCostMetrics()" placeholder="Ej: 1200" style="background: rgba(46, 204, 113, 0.1); border-color: rgba(46, 204, 113, 0.5); font-weight: 800; color: #2ecc71;">
+                        <input type="number" id="volio-dish-cost" oninput="VolioManager.onManualCostChanged(this.value)" placeholder="Ej: 500" style="background: rgba(46, 204, 113, 0.1); border-color: rgba(46, 204, 113, 0.5); font-weight: 800; color: #2ecc71;">
+                        <div style="font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-top: 3px;">
+                            <i class="fas fa-info-circle"></i> Puedes escribir el costo unitario directamente aquí (ideal para bebidas en lata/botella o insumos directos).
+                        </div>
                     </div>
                 </div>
                 <!-- Vista en tiempo real de ingeniería de menú -->
@@ -1891,7 +1899,7 @@
     <script src="js/security.js"></script>
     
     <!-- ADMIN JS -->
-    <script src="js/admin.js?v=3.5"></script>
+    <script src="js/admin.js?v=3.6"></script>
     <script src="js/cierre-automatico.js"></script>
 
 </body>
